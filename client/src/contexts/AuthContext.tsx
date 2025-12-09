@@ -1,0 +1,143 @@
+import React, { createContext, useContext, useState, useEffect } from 'react';
+
+interface User {
+  id: string;
+  email: string;
+  name: string;
+  credits: number;
+  premium: boolean;
+  price?: number;
+}
+
+interface AuthContextType {
+  user: User | null;
+  token: string | null;
+  login: (email: string, password: string) => Promise<void>;
+  register: (email: string, name: string, password: string) => Promise<void>;
+  logout: () => void;
+  loading: boolean;
+  error: string | null;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const API_BASE = (import.meta && (import.meta as any).env && (import.meta as any).env.VITE_API_BASE) || 'http://localhost:3000';
+
+  // Load token/user from localStorage on mount
+  useEffect(() => {
+    const stored = localStorage.getItem('pokerwizard_token');
+    const storedUser = localStorage.getItem('pokerwizard_user');
+    if (stored) {
+      setToken(stored);
+      // Validate token by fetching user info
+      fetchUserInfo(stored);
+    }
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (_) {
+        localStorage.removeItem('pokerwizard_user');
+      }
+    }
+  }, []);
+
+  async function fetchUserInfo(authToken: string) {
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/me`, {
+        headers: { 'Authorization': `Bearer ${authToken}` },
+      });
+      if (!res.ok) throw new Error('Failed to fetch user');
+      const data = await res.json();
+      setUser(data.user);
+      try { localStorage.setItem('pokerwizard_user', JSON.stringify(data.user)); } catch (e) {}
+    } catch (err) {
+      // Token might be expired
+      localStorage.removeItem('pokerwizard_token');
+      setToken(null);
+    }
+  }
+
+  async function login(email: string, password: string) {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || 'Login failed');
+      }
+
+      const data = await res.json();
+      setToken(data.token);
+      setUser(data.user);
+      try { localStorage.setItem('pokerwizard_token', data.token); } catch (e) {}
+      try { localStorage.setItem('pokerwizard_user', JSON.stringify(data.user)); } catch (e) {}
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function register(email: string, name: string, password: string) {
+    const PRICE = 5.90;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, name, password, price: PRICE }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || 'Registration failed');
+      }
+
+      const data = await res.json();
+      setToken(data.token);
+      setUser(data.user);
+      try { localStorage.setItem('pokerwizard_token', data.token); } catch (e) {}
+      try { localStorage.setItem('pokerwizard_user', JSON.stringify(data.user)); } catch (e) {}
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function logout() {
+    setUser(null);
+    setToken(null);
+    localStorage.removeItem('pokerwizard_token');
+    localStorage.removeItem('pokerwizard_user');
+  }
+
+  return (
+    <AuthContext.Provider value={{ user, token, login, register, logout, loading, error }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+export function useAuth() {
+  const ctx = useContext(AuthContext);
+  if (!ctx) {
+    throw new Error('useAuth must be used within AuthProvider');
+  }
+  return ctx;
+}

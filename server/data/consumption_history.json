@@ -1,0 +1,50 @@
+[
+  {
+    "id": "7473cafa-ee22-475e-b61a-d81eb8e80c08",
+    "userId": "3ba14051-e041-495a-8e18-030314b14da4",
+    "endpoint": "ai.analyze",
+    "at": "2025-12-08T22:59:53.674Z"
+  },
+  {
+    "id": "07d361fc-400a-46cc-abcb-b498f634fdaa",
+    "userId": "3ba14051-e041-495a-8e18-030314b14da4",
+    "endpoint": "ai.analyze",
+    "at": "2025-12-08T22:59:53.683Z"
+  },
+  {
+    "id": "53ba7b03-66aa-488c-8ebb-78d0c2bf092f",
+    "userId": "3ba14051-e041-495a-8e18-030314b14da4",
+    "endpoint": "ai.analyze",
+    "at": "2025-12-08T22:59:53.691Z"
+  },
+  {
+    "id": "e52b8bbd-935b-4ad2-ab67-2739fe85cbf9",
+    "userId": "4f6635f2-47f1-49ea-af31-ec1b128231d6",
+    "endpoint": "sharkscope.search",
+    "at": "2025-12-08T23:00:23.708Z"
+  },
+  {
+    "id": "713d65a3-ec41-471c-bad9-defb46a58580",
+    "userId": "4f6635f2-47f1-49ea-af31-ec1b128231d6",
+    "endpoint": "poker.import",
+    "at": "2025-12-08T23:00:23.721Z"
+  },
+  {
+    "id": "65927ca8-cef5-4554-868b-d54175e094b3",
+    "userId": "4f6635f2-47f1-49ea-af31-ec1b128231d6",
+    "endpoint": "poker.analyze",
+    "at": "2025-12-08T23:00:23.733Z"
+  },
+  {
+    "id": "d184ac2c-ef14-4ca2-a26e-a216dbfe7d92",
+    "userId": "1bcfce88-9efa-49cf-9b02-0b69223b57af",
+    "endpoint": "ai.analyze",
+    "at": "2025-12-08T23:00:43.255Z"
+  },
+  {
+    "id": "f73efbe9-2c3b-4c6e-82fc-263019c50fcb",
+    "userId": "1bcfce88-9efa-49cf-9b02-0b69223b57af",
+    "endpoint": "ai.analyze",
+    "at": "2025-12-08T23:00:43.262Z"
+  }
+]

@@ -1,0 +1,43 @@
+
+> pokerwizard-client-mini@0.1.0 dev
+> vite --host
+
+
+  [32m[1mVITE[22m v5.4.21[39m  [2mready in [0m[1m443[22m[2m[0m ms[22m
+
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://localhost:[1m5173[22m/[39m
+  [32m➜[39m  [1mNetwork[22m: [36mhttp://192.168.18.235:[1m5173[22m/[39m
+[2m[32m  ➜[39m[22m[2m  press [22m[1mh + enter[22m[2m to show help[22m
+[2m19:05:33[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/App.tsx[22m
+[2m19:06:30[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/App.tsx[22m
+[2m19:06:36[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/App.tsx[22m
+[2m19:10:16[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/pages/Analysis.tsx[22m
+[2m19:10:40[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/pages/Analysis.tsx[22m
+[2m19:18:00[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/App.tsx[22m
+[2m19:18:00[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/pages/Analysis.tsx[22m
+[2m19:32:31[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/pages/Trainer.tsx[22m
+[2m19:36:59[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/pages/Trainer.tsx[22m
+[2m19:37:34[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/pages/Trainer.tsx[22m
+[2m19:37:47[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/styles.css[22m
+[2m19:38:01[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/pages/Trainer.tsx[22m
+[2m19:41:30[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/pages/Trainer.tsx[22m
+[2m19:41:49[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/pages/Trainer.tsx[22m
+[2m20:03:10[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/App.tsx[22m
+[2m20:03:50[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/pages/Login.tsx[22m
+[2m20:04:17[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/pages/Premium.tsx[22m
+[2m20:04:18[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/pages/Premium.tsx[22m
+[2m20:05:51[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/App.tsx[22m
+[2m20:05:51[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/pages/Login.tsx[22m
+[2m20:05:51[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/components/CustomSelect.tsx[22m
+[2m20:05:51[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/styles.css[22m
+[2m20:05:51[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/pages/Trainer.tsx[22m
+[2m20:05:51[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/contexts/AuthContext.tsx[22m
+[2m20:05:51[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/pages/Premium.tsx[22m
+[2m20:06:44[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/pages/Trainer.tsx[22m
+[2m20:07:03[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/pages/Analysis.tsx[22m
+[2m20:08:00[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/pages/Trainer.tsx[22m
+[2m20:08:00[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/pages/Analysis.tsx[22m
+[2m20:10:11[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/App.tsx[22m
+[2m20:12:29[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/App.tsx[22m
+[2m20:50:16[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/pages/Premium.tsx[22m
+[2m21:08:33[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/pages/Premium.tsx[22m

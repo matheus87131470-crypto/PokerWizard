@@ -1,0 +1,41 @@
+[
+  {
+    "id": "3ba14051-e041-495a-8e18-030314b14da4",
+    "email": "test_1765234793404@test.com",
+    "name": "Test User",
+    "passwordHash": "$2a$10$QIDhCW65.Ew1H5ggeKYXuua0oJe1yk.jgGn.PXWiPbFr6ou0x6shK",
+    "price": 5.9,
+    "credits": 1000,
+    "usosRestantes": -1,
+    "statusPlano": "premium",
+    "premium": true,
+    "premiumUntil": "2026-01-07T22:59:53.711Z",
+    "createdAt": "2025-12-08T22:59:53.646Z"
+  },
+  {
+    "id": "4f6635f2-47f1-49ea-af31-ec1b128231d6",
+    "email": "test_shark_1765234823488@test.com",
+    "name": "SharkScope Tester",
+    "passwordHash": "$2a$10$AJ5c1KrBUxnSCbShwQGmuOriIwhA7uKxmyWvWhGC6Imq/KDZtfyma",
+    "price": 5.9,
+    "credits": 0,
+    "usosRestantes": 0,
+    "statusPlano": "free",
+    "premium": false,
+    "premiumUntil": null,
+    "createdAt": "2025-12-08T23:00:23.687Z"
+  },
+  {
+    "id": "1bcfce88-9efa-49cf-9b02-0b69223b57af",
+    "email": "persist_test_1765234843039@test.com",
+    "name": "Persistence Tester",
+    "passwordHash": "$2a$10$N/e.6UyLGmoaYXmFQvhT8eO6bFA5NfjJiQ5SxlSxkSBIusJYBZ2Wy",
+    "price": 5.9,
+    "credits": 1,
+    "usosRestantes": 1,
+    "statusPlano": "free",
+    "premium": false,
+    "premiumUntil": null,
+    "createdAt": "2025-12-08T23:00:43.234Z"
+  }
+]

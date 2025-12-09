@@ -1,0 +1,234 @@
+import React, { useState } from 'react';
+
+type PlayerSummary = {
+  id: string;
+  nickname: string;
+  totalProfit: number;
+  roi: number;
+  gamesPlayed: number;
+  country: string;
+  room: string;
+};
+
+type PlayerStats = {
+  id: string;
+  nickname: string;
+  totalProfit: number;
+  roi: number;
+  gamesPlayed: number;
+  averageBuyin: number;
+  winRate: number;
+  vpip: number;
+  pfr: number;
+  profitTrend: number[];
+};
+
+const API_BASE = (import.meta && (import.meta as any).env && (import.meta as any).env.VITE_API_BASE) || 'http://localhost:3000';
+
+export default function PlayerSearch() {
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState<PlayerSummary[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [selected, setSelected] = useState<PlayerStats | null>(null);
+  const [history, setHistory] = useState<any[]>([]);
+  const [historyLimit] = useState(20);
+  const [historyOffset, setHistoryOffset] = useState(0);
+  const [historyHasMore, setHistoryHasMore] = useState(true);
+  const [filterType, setFilterType] = useState<string>('');
+  const [filterRoom, setFilterRoom] = useState<string>('');
+
+  async function doSearch(e?: React.FormEvent) {
+    e?.preventDefault();
+    if (!query) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/players?q=${encodeURIComponent(query)}`);
+      const json = await res.json();
+      setResults(json.results || []);
+    } catch (err) {
+      console.error(err);
+      setResults([]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function openPlayer(id: string) {
+    setSelected(null);
+    setHistory([]);
+    try {
+      const [sRes, rRes] = await Promise.all([
+        fetch(`${API_BASE}/api/players/${id}/stats`),
+        fetch(`${API_BASE}/api/players/${id}/results?limit=${historyLimit}&offset=0&type=${encodeURIComponent(filterType)}&room=${encodeURIComponent(filterRoom)}`),
+      ]);
+
+      const sJson = await sRes.json();
+      const rJson = await rRes.json();
+
+      setSelected(sJson.stats || null);
+      setHistory(rJson.results || []);
+      setHistoryOffset((rJson.results || []).length);
+      setHistoryHasMore((rJson.results || []).length >= historyLimit);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  async function loadMoreHistory(playerId: string) {
+    try {
+      const rRes = await fetch(`${API_BASE}/api/players/${playerId}/results?limit=${historyLimit}&offset=${historyOffset}&type=${encodeURIComponent(filterType)}&room=${encodeURIComponent(filterRoom)}`);
+      const rJson = await rRes.json();
+      const newItems = rJson.results || [];
+      setHistory((prev) => [...prev, ...newItems]);
+      setHistoryOffset((prev) => prev + newItems.length);
+      if (newItems.length < historyLimit) setHistoryHasMore(false);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  React.useEffect(() => {
+    if (selected) {
+      openPlayer(selected.id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterType, filterRoom]);
+
+  return (
+    <div className="container">
+      <h1 style={{ marginBottom: 12 }}>Pesquisa de Jogadores</h1>
+
+      <div className="grid cols-3" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
+        <div className="card">
+          <form onSubmit={doSearch} style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Digite o nick do jogador..."
+              className="search-input"
+              style={{ flex: 1, padding: 8, borderRadius: 8, border: '1px solid rgba(0,0,0,0.06)' }}
+            />
+            <button type="submit" className="btn btn-primary" disabled={loading} style={{ padding: '8px 12px' }}>{loading ? 'Buscando...' : 'Buscar'}</button>
+          </form>
+
+          <div style={{ marginTop: 16 }}>
+            <h3 className="muted" style={{ marginBottom: 8 }}>Resultados</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {results.length === 0 && <div className="muted">Nenhum resultado</div>}
+              {results.map((p) => (
+                <button key={p.id} onClick={() => openPlayer(p.id)} className="nav-link" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 8, borderRadius: 8 }}>
+                  <div>
+                    <div style={{ fontWeight: 600 }}>{p.nickname}</div>
+                    <div className="muted" style={{ fontSize: 12 }}>{p.room} • {p.country}</div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontWeight: 700 }}>{p.roi.toFixed(1)}%</div>
+                    <div className="muted" style={{ fontSize: 12 }}>{p.gamesPlayed} jogos</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="card">
+          {!selected && <div className="muted">Selecione um jogador para ver estatísticas detalhadas.</div>}
+
+          {selected && (
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ width: 56, height: 56, borderRadius: 12, background: 'linear-gradient(135deg,#7c3aed,#06b6d4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>{selected.nickname.charAt(0).toUpperCase()}</div>
+                  <div>
+                    <div style={{ fontSize: 20, fontWeight: 700 }}>{selected.nickname}</div>
+                    <div className="muted">Lucro: {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(selected.totalProfit)}</div>
+                  </div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div className="muted">ROI</div>
+                  <div style={{ fontSize: 20, fontWeight: 800 }}>{selected.roi.toFixed(1)}%</div>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
+                <div className="stat card" style={{ flex: 1, padding: 12 }}>
+                  <div className="value">{selected.gamesPlayed}</div>
+                  <div className="label">Jogos</div>
+                </div>
+                <div className="stat card" style={{ flex: 1, padding: 12 }}>
+                  <div className="value">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(selected.averageBuyin)}</div>
+                  <div className="label">Buy-in médio</div>
+                </div>
+                <div className="stat card" style={{ flex: 1, padding: 12 }}>
+                  <div className="value">{selected.winRate}%</div>
+                  <div className="label">Win Rate</div>
+                </div>
+              </div>
+
+              <div style={{ marginBottom: 12 }}>
+                <h4 className="muted">Tendência de lucro</h4>
+                <div style={{ height: 80, background: 'linear-gradient(90deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02))', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>(gráfico placeholder)</div>
+              </div>
+
+              <div>
+                <h4 className="muted">Métricas</h4>
+                <div style={{ display: 'flex', gap: 12 }}>
+                  <div className="card" style={{ flex: 1 }}>
+                    <div className="muted">VPIP</div>
+                    <div style={{ fontWeight: 700 }}>{selected.vpip}%</div>
+                  </div>
+                  <div className="card" style={{ flex: 1 }}>
+                    <div className="muted">PFR</div>
+                    <div style={{ fontWeight: 700 }}>{selected.pfr}%</div>
+                  </div>
+                  <div className="card" style={{ flex: 1 }}>
+                    <div className="muted">ROI</div>
+                    <div style={{ fontWeight: 700 }}>{selected.roi.toFixed(1)}%</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="card">
+          <h3 className="muted">Histórico de resultados</h3>
+          <div style={{ marginTop: 8, overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr>
+                  <th style={{ textAlign: 'left', padding: 8 }}>Data</th>
+                  <th style={{ textAlign: 'left', padding: 8 }}>Torneio</th>
+                  <th style={{ textAlign: 'right', padding: 8 }}>Buy-in</th>
+                  <th style={{ textAlign: 'right', padding: 8 }}>Prêmio</th>
+                  <th style={{ textAlign: 'right', padding: 8 }}>Net</th>
+                  <th style={{ textAlign: 'left', padding: 8 }}>Tipo</th>
+                </tr>
+              </thead>
+              <tbody>
+                {history.length === 0 && (
+                  <tr><td colSpan={6} className="muted" style={{ padding: 14 }}>Nenhum resultado carregado</td></tr>
+                )}
+                {history.map((r) => (
+                  <tr key={r.id}>
+                    <td style={{ padding: 8 }}>{new Date(r.date).toLocaleDateString()}</td>
+                    <td style={{ padding: 8 }}>{r.tournament}</td>
+                    <td style={{ padding: 8, textAlign: 'right' }}>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(r.buyin)}</td>
+                    <td style={{ padding: 8, textAlign: 'right' }}>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(r.prize)}</td>
+                    <td style={{ padding: 8, textAlign: 'right', fontWeight: 700 }}>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(r.net)}</td>
+                    <td style={{ padding: 8 }}>{r.type}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {historyHasMore && selected && (
+            <div style={{ marginTop: 12, textAlign: 'center' }}>
+              <button onClick={() => loadMoreHistory(selected.id)} className="btn btn-primary">Carregar mais</button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
