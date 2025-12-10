@@ -1,5 +1,34 @@
 # 🚀 Scripts de Inicialização - PokerWizard
 
+## 🎯 Início Rápido
+
+### Passo 1: Iniciar Backend + Frontend
+```powershell
+.\start-pokerwizard.ps1
+```
+
+Isso vai abrir **2 janelas de PowerShell**:
+- Backend rodando em http://localhost:3001
+- Frontend rodando em http://localhost:3000
+
+### Passo 2: Aguardar Inicialização
+Aguarde até ver no terminal do backend:
+```
+Server running on http://localhost:3001
+```
+
+### Passo 3: Testar se está tudo OK
+```powershell
+.\test-pokerwizard.ps1
+```
+
+Se tudo estiver correto, você verá:
+```
+✅ Todos os testes passaram! Sistema pronto para uso.
+```
+
+---
+
 ## 📂 Arquivos Disponíveis
 
 ### 1. `start-pokerwizard.ps1` (Recomendado)
@@ -29,6 +58,24 @@ Executa ambos em **uma única janela** usando `concurrently`.
 ```powershell
 .\start-simple.ps1
 ```
+
+---
+
+### 3. `test-pokerwizard.ps1` ✨ NOVO!
+Testa se backend e frontend estão funcionando corretamente.
+
+**Como usar:**
+```powershell
+.\test-pokerwizard.ps1
+```
+
+**O que ele testa:**
+- ✅ Backend (http://localhost:3001)
+- ✅ Frontend (http://localhost:3000)
+- ✅ Endpoints principais da API
+- ✅ Gera relatório completo de sucessos/falhas
+
+**⚠️ IMPORTANTE:** Execute este script **APÓS** iniciar os serviços com `start-pokerwizard.ps1`
 
 ---
 
