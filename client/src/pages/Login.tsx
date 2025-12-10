@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { getGoogleAuthUrl } from '../config/googleAuth';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -13,12 +12,11 @@ export default function Login() {
   const auth = useAuth();
 
   // Get API base from environment
-  const API_BASE = (import.meta && (import.meta as any).env && (import.meta as any).env.VITE_API_BASE) || 'http://localhost:3000';
+  const API_BASE = (import.meta && (import.meta as any).env && (import.meta as any).env.VITE_API_BASE) || 'http://localhost:3001';
 
-  // LOGIN COM GOOGLE - Usando configuração centralizada
+  // LOGIN COM GOOGLE - Usando backend para autenticacao
   const handleGoogleLogin = () => {
-    const googleAuthUrl = getGoogleAuthUrl();
-    window.location.href = googleAuthUrl;
+    window.location.href = `${API_BASE}/api/auth/google`;
   };
 
   // LOGIN / REGISTRO
