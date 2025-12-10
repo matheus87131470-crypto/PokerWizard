@@ -26,7 +26,6 @@ export const getRedirectUri = () => {
 // Google OAuth login URL generator
 export const getGoogleAuthUrl = () => {
   const redirectUri = getRedirectUri();
-  const scope = encodeURIComponent("email profile");
   
-  return `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}`;
+  return `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${redirectUri}&response_type=code&scope=email profile`;
 };
