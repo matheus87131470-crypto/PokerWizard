@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import { generateToken, authMiddleware, AuthRequest } from '../middleware/auth';
 import { createUser, getUserByEmail, getUserById, verifyPassword } from '../services/userService';
+import { canCreateAccount, registerAccount, getRealIP } from '../services/antiFraud';
 import passport from 'passport';
 
 const router = express.Router();
@@ -8,10 +9,11 @@ const router = express.Router();
 /**
  * POST /auth/register
  * Register a new user with email and password
+ * Includes anti-fraud protection
  */
 router.post('/register', async (req: Request, res: Response) => {
   try {
-    const { email, name, password, price } = req.body;
+    const { email, name, password, price, deviceInfo } = req.body;
 
     if (!email || !name || !password) {
       return res.status(400).json({
@@ -20,7 +22,21 @@ router.post('/register', async (req: Request, res: Response) => {
       });
     }
 
+    // Anti-fraude: verificar se pode criar conta
+    const fraudCheck = canCreateAccount(req, email, deviceInfo);
+    if (!fraudCheck.allowed) {
+      return res.status(403).json({
+        error: 'account_creation_blocked',
+        message: fraudCheck.reason,
+        waitTime: fraudCheck.waitTime
+      });
+    }
+
     const user = await createUser(email, name, password, undefined, price);
+    
+    // Registrar conta criada para controle anti-fraude
+    registerAccount(req, email, deviceInfo);
+    
     const token = generateToken(user.id);
 
     return res.status(201).json({

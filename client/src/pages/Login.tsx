@@ -5,19 +5,12 @@ import { useAuth } from '../contexts/AuthContext';
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
   const auth = useAuth();
-
-  // Get API base from environment
-  const API_BASE = (import.meta && (import.meta as any).env && (import.meta as any).env.VITE_API_BASE) || 'http://localhost:3001';
-
-  // LOGIN COM GOOGLE - Usando backend para autenticacao
-  const handleGoogleLogin = () => {
-    window.location.href = `${API_BASE}/api/auth/google`;
-  };
 
   // LOGIN / REGISTRO
   const handleSubmit = async (e: React.FormEvent) => {
@@ -29,7 +22,15 @@ export default function Login() {
       if (isLogin) {
         await auth.login(email, password);
       } else {
-        await auth.register(email, email.split('@')[0], password);
+        // Validações básicas
+        if (password.length < 6) {
+          throw new Error('A senha deve ter pelo menos 6 caracteres');
+        }
+        if (!name.trim()) {
+          throw new Error('Por favor, informe seu nome');
+        }
+        
+        await auth.register(email, name.trim(), password);
       }
       navigate('/');
     } catch (err: any) {
@@ -69,6 +70,31 @@ export default function Login() {
           onSubmit={handleSubmit}
           style={{ display: 'flex', flexDirection: 'column', gap: 16 }}
         >
+          {!isLogin && (
+            <div>
+              <label
+                style={{
+                  display: 'block',
+                  fontSize: 13,
+                  fontWeight: 600,
+                  marginBottom: 8,
+                  color: 'var(--text-muted)'
+                }}
+              >
+                Nome Completo
+              </label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Seu nome"
+                className="search-input"
+                style={{ padding: '12px 14px' }}
+                required
+              />
+            </div>
+          )}
+
           <div>
             <label
               style={{
@@ -129,33 +155,6 @@ export default function Login() {
             {loading ? '⏳ Processando...' : isLogin ? '🔓 Entrar' : '✅ Criar Conta'}
           </button>
         </form>
-
-        {/* LOGIN COM GOOGLE */}
-        <button
-          onClick={handleGoogleLogin}
-          className="btn btn-primary"
-          style={{
-            width: '100%',
-            marginTop: 16,
-            padding: '12px 16px',
-            fontSize: 14,
-            fontWeight: 600,
-            backgroundColor: 'white',
-            color: 'black',
-            border: '1px solid var(--border-color)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 10
-          }}
-        >
-          <img
-            src="https://developers.google.com/identity/images/g-logo.png"
-            alt="Google"
-            style={{ width: 20, height: 20 }}
-          />
-          Entrar com Google
-        </button>
 
         {/* Alternar Login ↔ Registro */}
         <div
