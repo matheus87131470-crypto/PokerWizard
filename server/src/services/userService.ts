@@ -147,6 +147,15 @@ export async function updateUser(userId: string, updates: Partial<User>): Promis
   return user;
 }
 
+// Atualiza senha do usuário
+export async function updatePassword(email: string, newPassword: string): Promise<void> {
+  const user = usersByEmail.get(email);
+  if (!user) throw new Error('User not found');
+
+  user.passwordHash = bcrypt.hashSync(newPassword, 10);
+  await persistAll();
+}
+
 // Export snapshot for debugging
 export function getAllUsers() {
   return Array.from(users.values());
