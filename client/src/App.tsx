@@ -7,6 +7,8 @@ import Analysis from './pages/Analysis';
 import Login from './pages/Login';
 import Premium from './pages/Premium';
 import Profile from './pages/Profile';
+import Solutions from './pages/Solutions';
+import ForgotPassword from './pages/ForgotPassword';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 function Layout({ children }: { children: React.ReactNode }) {
@@ -28,6 +30,7 @@ function Layout({ children }: { children: React.ReactNode }) {
           <Link to="/rankings" className="nav-link">Rankings</Link>
           <Link to="/analysis" className="nav-link">Análise</Link>
           <Link to="/trainer" className="nav-link">Treinador</Link>
+          <Link to="/solutions" className="nav-link">GTO Solutions</Link>
           <Link to="/features" className="nav-link">Funcionalidades</Link>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             {auth.user ? (
@@ -252,7 +255,9 @@ export default function App() {
             <Route path="/analysis" element={<Analysis />} />
             <Route path="/trainer" element={<Trainer />} />
             <Route path="/features" element={<Features />} />
+            <Route path="/solutions" element={<Solutions />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/premium" element={<Premium />} />
             <Route path="/profile" element={<Profile />} />
           
