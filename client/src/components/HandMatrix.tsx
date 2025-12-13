@@ -30,12 +30,32 @@ const HAND_MATRIX_LAYOUT = [
   ['A2o', 'K2o', 'Q2o', 'J2o', 'T2o', '92o', '82o', '72o', '62o', '52o', '42o', '32o', '22'],
 ];
 
-const ACTION_COLORS: Record<HandAction, string> = {
-  allin: 'bg-gradient-to-br from-red-500 to-red-700 border-red-400 hover:from-red-400 hover:to-red-600 shadow-lg shadow-red-500/50',
-  raise: 'bg-gradient-to-br from-orange-500 to-orange-700 border-orange-400 hover:from-orange-400 hover:to-orange-600 shadow-lg shadow-orange-500/50',
-  call: 'bg-gradient-to-br from-green-500 to-green-700 border-green-400 hover:from-green-400 hover:to-green-600 shadow-lg shadow-green-500/50',
-  fold: 'bg-gradient-to-br from-blue-500 to-blue-700 border-blue-400 hover:from-blue-400 hover:to-blue-600 shadow-lg shadow-blue-500/50',
-  none: 'bg-gray-800 border-gray-700 hover:bg-gray-700',
+const ACTION_STYLES: Record<HandAction, { background: string; border: string; boxShadow: string }> = {
+  allin: {
+    background: 'linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)',
+    border: '2px solid #f87171',
+    boxShadow: '0 4px 14px 0 rgba(239, 68, 68, 0.5)',
+  },
+  raise: {
+    background: 'linear-gradient(135deg, #f97316 0%, #c2410c 100%)',
+    border: '2px solid #fb923c',
+    boxShadow: '0 4px 14px 0 rgba(249, 115, 22, 0.5)',
+  },
+  call: {
+    background: 'linear-gradient(135deg, #22c55e 0%, #15803d 100%)',
+    border: '2px solid #4ade80',
+    boxShadow: '0 4px 14px 0 rgba(34, 197, 94, 0.5)',
+  },
+  fold: {
+    background: 'linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)',
+    border: '2px solid #60a5fa',
+    boxShadow: '0 4px 14px 0 rgba(59, 130, 246, 0.5)',
+  },
+  none: {
+    background: '#1f2937',
+    border: '2px solid #374151',
+    boxShadow: 'none',
+  },
 };
 
 export default function HandMatrix({ hands, onHandClick, selectedHands = [] }: HandMatrixProps) {
@@ -44,9 +64,9 @@ export default function HandMatrix({ hands, onHandClick, selectedHands = [] }: H
     return found || { hand, action: 'none' };
   };
 
-  const getHandColor = (hand: string): string => {
+  const getHandStyles = (hand: string) => {
     const handData = getHandData(hand);
-    return ACTION_COLORS[handData.action] || ACTION_COLORS.none;
+    return ACTION_STYLES[handData.action] || ACTION_STYLES.none;
   };
 
   const isSelected = (hand: string): boolean => {
@@ -64,31 +84,40 @@ export default function HandMatrix({ hands, onHandClick, selectedHands = [] }: H
       }}>
         {HAND_MATRIX_LAYOUT.map((row, rowIndex) => (
           <React.Fragment key={rowIndex}>
-            {row.map((hand, colIndex) => (
-              <div
-                key={`${rowIndex}-${colIndex}`}
-                onClick={() => onHandClick?.(hand)}
-                style={{
-                  aspectRatio: '1',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  border: `2px solid ${isSelected(hand) ? '#facc15' : 'currentColor'}`,
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  fontFamily: 'monospace',
-                  fontSize: '12px',
-                  fontWeight: hand.includes('s') && !hand.includes('o') && hand.length > 2 ? '600' : '400',
-                  transform: isSelected(hand) ? 'scale(1.05)' : 'scale(1)',
-                  boxShadow: isSelected(hand) ? '0 0 0 4px rgba(250, 204, 21, 0.4)' : 'none',
-                }}
-                className={getHandColor(hand)}
-                title={hand}
-              >
-                <span style={{ color: 'white', userSelect: 'none' }}>{hand}</span>
-              </div>
-            ))}
+            {row.map((hand, colIndex) => {
+              const styles = getHandStyles(hand);
+              return (
+                <div
+                  key={`${rowIndex}-${colIndex}`}
+                  onClick={() => onHandClick?.(hand)}
+                  style={{
+                    aspectRatio: '1',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: styles.background,
+                    border: isSelected(hand) ? '3px solid #facc15' : styles.border,
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    fontFamily: 'monospace',
+                    fontSize: '13px',
+                    fontWeight: '700',
+                    transform: isSelected(hand) ? 'scale(1.08)' : 'scale(1)',
+                    boxShadow: isSelected(hand) ? '0 0 0 4px rgba(250, 204, 21, 0.3), ' + styles.boxShadow : styles.boxShadow,
+                  }}
+                  title={hand}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = isSelected(hand) ? 'scale(1.12)' : 'scale(1.05)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = isSelected(hand) ? 'scale(1.08)' : 'scale(1)';
+                  }}
+                >
+                  <span style={{ color: 'white', userSelect: 'none', textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>{hand}</span>
+                </div>
+              );
+            })}
           </React.Fragment>
         ))}
       </div>
@@ -97,25 +126,49 @@ export default function HandMatrix({ hands, onHandClick, selectedHands = [] }: H
       <div style={{ 
         display: 'flex', 
         justifyContent: 'center', 
-        gap: '16px', 
-        marginTop: '24px', 
+        gap: '20px', 
+        marginTop: '28px', 
         flexWrap: 'wrap' 
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{ width: '16px', height: '16px', backgroundColor: '#dc2626', borderRadius: '4px' }}></div>
-          <span style={{ fontSize: '12px', color: '#d1d5db' }}>All-in</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ 
+            width: '20px', 
+            height: '20px', 
+            background: 'linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)',
+            borderRadius: '6px',
+            boxShadow: '0 2px 8px rgba(239, 68, 68, 0.4)'
+          }}></div>
+          <span style={{ fontSize: '13px', color: '#f3f4f6', fontWeight: '600' }}>All-in</span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{ width: '16px', height: '16px', backgroundColor: '#ea580c', borderRadius: '4px' }}></div>
-          <span style={{ fontSize: '12px', color: '#d1d5db' }}>Raise</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ 
+            width: '20px', 
+            height: '20px', 
+            background: 'linear-gradient(135deg, #f97316 0%, #c2410c 100%)',
+            borderRadius: '6px',
+            boxShadow: '0 2px 8px rgba(249, 115, 22, 0.4)'
+          }}></div>
+          <span style={{ fontSize: '13px', color: '#f3f4f6', fontWeight: '600' }}>Raise</span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{ width: '16px', height: '16px', backgroundColor: '#059669', borderRadius: '4px' }}></div>
-          <span style={{ fontSize: '12px', color: '#d1d5db' }}>Call</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ 
+            width: '20px', 
+            height: '20px', 
+            background: 'linear-gradient(135deg, #22c55e 0%, #15803d 100%)',
+            borderRadius: '6px',
+            boxShadow: '0 2px 8px rgba(34, 197, 94, 0.4)'
+          }}></div>
+          <span style={{ fontSize: '13px', color: '#f3f4f6', fontWeight: '600' }}>Call</span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{ width: '16px', height: '16px', backgroundColor: '#2563eb', borderRadius: '4px' }}></div>
-          <span style={{ fontSize: '12px', color: '#d1d5db' }}>Fold</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ 
+            width: '20px', 
+            height: '20px', 
+            background: 'linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)',
+            borderRadius: '6px',
+            boxShadow: '0 2px 8px rgba(59, 130, 246, 0.4)'
+          }}></div>
+          <span style={{ fontSize: '13px', color: '#f3f4f6', fontWeight: '600' }}>Fold</span>
         </div>
       </div>
     </div>
