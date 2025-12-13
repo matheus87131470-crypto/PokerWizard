@@ -213,8 +213,12 @@ export default function Premium() {
               <div style={{ padding: 16, background: 'white', borderRadius: 12 }}>
                 <img
                   alt="QR Code PIX"
-                  src={`https://chart.googleapis.com/chart?cht=qr&chs=250x250&chl=${encodeURIComponent(payment.brCode || '')}`}
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(payment.brCode || '')}`}
                   style={{ width: 250, height: 250, borderRadius: 8 }}
+                  onError={(e) => {
+                    console.error('QR Code failed to load');
+                    e.currentTarget.style.display = 'none';
+                  }}
                 />
               </div>
             </div>
