@@ -72,6 +72,11 @@ export function canCreateAccount(req: any, email: string, deviceInfo?: DeviceFin
   const fingerprint = generateFingerprint(req, deviceInfo);
   const now = Date.now();
 
+  // 0. EXCEÇÃO: Se não há nenhum usuário no sistema, permite o primeiro cadastro (bootstrap)
+  if (accountRegistry.length === 0) {
+    return { allowed: true };
+  }
+
   // 1. Verificar se já existe conta com este email
   const existingEmail = accountRegistry.find(acc => acc.email === email);
   if (existingEmail) {
