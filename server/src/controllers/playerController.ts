@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { deductCredit, getUserById } from '../services/userService';
 
 interface PlayerSummary {
@@ -74,7 +74,7 @@ function generateMockPlayers(): PlayerSummary[] {
   });
 }
 
-export function searchPlayers(req: Request, res: Response) {
+export function searchPlayers(req: any, res: Response) {
   const q = (req.query.q as string) || '';
   const room = (req.query.room as string) || '';
   
@@ -106,11 +106,11 @@ export function searchPlayers(req: Request, res: Response) {
   return res.json({ ok: true, results: [customPlayer] });
 }
 
-export function getNetworks(req: Request, res: Response) {
+export function getNetworks(req: any, res: Response) {
   res.json({ ok: true, networks: POKER_NETWORKS });
 }
 
-export function getPlayerStats(req: Request, res: Response) {
+export function getPlayerStats(req: any, res: Response) {
   const { id } = req.params;
   
   // Tenta extrair o nickname do ID ou cria um genérico
@@ -147,7 +147,7 @@ export function getPlayerStats(req: Request, res: Response) {
   res.json({ ok: true, stats });
 }
 
-export function getPlayerResults(req: Request, res: Response) {
+export function getPlayerResults(req: any, res: Response) {
   const { id } = req.params;
   const limit = Math.min(100, Number(req.query.limit || 20));
   const offset = Number(req.query.offset || 0);
@@ -196,7 +196,7 @@ export function getPlayerResults(req: Request, res: Response) {
   res.json({ ok: true, results: filtered, limit, offset });
 }
 
-export function getRankings(req: Request, res: Response) {
+export function getRankings(req: any, res: Response) {
   const by = (req.query.by as string) || 'profit';
   const room = (req.query.room as string) || '';
   const country = (req.query.country as string) || '';

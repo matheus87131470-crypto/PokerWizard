@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express';
+import express, { Response } from 'express';
 import { generateToken, authMiddleware, AuthRequest } from '../middleware/auth';
 import { createUser, getUserByEmail, getUserById, verifyPassword, updatePassword } from '../services/userService';
 import { canCreateAccount, registerAccount, getRealIP } from '../services/antiFraud';
@@ -13,7 +13,7 @@ const router = express.Router();
  * Register a new user with email and password
  * Includes anti-fraud protection
  */
-router.post('/register', async (req: Request, res: Response) => {
+router.post('/register', async (req: any, res: Response) => {
   try {
     const { email, name, password, price, deviceInfo } = req.body;
 
@@ -64,7 +64,7 @@ router.post('/register', async (req: Request, res: Response) => {
 /**
  * POST /auth/login
  */
-router.post('/login', async (req: Request, res: Response) => {
+router.post('/login', async (req: any, res: Response) => {
   try {
     const { email, password } = req.body;
 
@@ -178,7 +178,7 @@ router.get(
  * POST /auth/forgot-password
  * Solicita recuperação de senha - envia código por email
  */
-router.post('/forgot-password', async (req: Request, res: Response) => {
+router.post('/forgot-password', async (req: any, res: Response) => {
   try {
     const { email } = req.body;
 
@@ -221,7 +221,7 @@ router.post('/forgot-password', async (req: Request, res: Response) => {
  * POST /auth/verify-reset-code
  * Verifica se o código de recuperação está correto
  */
-router.post('/verify-reset-code', async (req: Request, res: Response) => {
+router.post('/verify-reset-code', async (req: any, res: Response) => {
   try {
     const { email, code } = req.body;
 
@@ -258,7 +258,7 @@ router.post('/verify-reset-code', async (req: Request, res: Response) => {
  * POST /auth/reset-password
  * Redefine a senha usando o código verificado
  */
-router.post('/reset-password', async (req: Request, res: Response) => {
+router.post('/reset-password', async (req: any, res: Response) => {
   try {
     const { email, code, newPassword } = req.body;
 

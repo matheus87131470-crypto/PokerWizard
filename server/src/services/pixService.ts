@@ -46,21 +46,77 @@ const PIX_AMOUNT = 590; // R$ 5,90 in cents
 
 /**
  * Generate BR Code (PIX payload) for the given amount
- * This is a simplified version; a real implementation would use proper BR Code library
- * For now, we'll return a static payload that can be used to generate QR codes
+ * This generates a valid EMV QR Code for PIX payments
  */
 export function generateBrCode(amountInCents: number = PIX_AMOUNT): string {
-  // Simplified BR Code generation
-  // In production, use a library like 'brcode' or similar
-  // Format: 00020126580014br.gov.bcb.pix...
+  // EMV format for PIX BR Code
+  const amount = (amountInCents / 100).toFixed(2);
   
-  // This is a placeholder; real implementation should:
-  // 1. Use proper BR Code encoding
-  // 2. Include merchant info, amount, transaction ID
+  // Build EMV payload
+  const pixKey = PIX_KEY;
+  const merchantName = PIX_NAME.toUpperCase().substring(0, 25);
+  const city = PIX_CITY.toUpperCase().substring(0, 15);
+  const txid = `POKERWIZARD${Date.now()}`.substring(0, 25);
   
-  const payload = `00020126580014br.gov.bcb.brcode01051.0.0${PIX_KEY}520400005303986540${String(amountInCents / 100).padStart(5, '0')}5802BR5913${PIX_NAME}6009${PIX_CITY}62360532${Date.now()}63041D3D`;
+  // Payload Format Indicator
+  const pfi = '000201';
   
-  return payload;
+  // Merchant Account Information
+  const gui = '0014br.gov.bcb.pix';
+  const key = `01${String(pixKey.length).padStart(2, '0')}${pixKey}`;
+  const merchantAccount = `26${String(gui.length + key.length).padStart(2, '0')}${gui}${key}`;
+  
+  // Merchant Category Code
+  const mcc = '52040000';
+  
+  // Transaction Currency (BRL = 986)
+  const currency = '5303986';
+  
+  // Transaction Amount
+  const amountField = `54${String(amount.length).padStart(2, '0')}${amount}`;
+  
+  // Country Code
+  const countryCode = '5802BR';
+  
+  // Merchant Name
+  const nameField = `59${String(merchantName.length).padStart(2, '0')}${merchantName}`;
+  
+  // Merchant City
+  const cityField = `60${String(city.length).padStart(2, '0')}${city}`;
+  
+  // Additional Data Field (txid)
+  const txidField = `05${String(txid.length).padStart(2, '0')}${txid}`;
+  const additionalData = `62${String(txidField.length).padStart(2, '0')}${txidField}`;
+  
+  // Build full payload without CRC
+  const payloadWithoutCrc = pfi + merchantAccount + mcc + currency + amountField + countryCode + nameField + cityField + additionalData + '6304';
+  
+  // Calculate CRC16-CCITT
+  const crc = calculateCRC16(payloadWithoutCrc);
+  
+  return payloadWithoutCrc + crc;
+}
+
+/**
+ * Calculate CRC16-CCITT for BR Code
+ */
+function calculateCRC16(payload: string): string {
+  let crc = 0xFFFF;
+  
+  for (let i = 0; i < payload.length; i++) {
+    crc ^= payload.charCodeAt(i) << 8;
+    
+    for (let j = 0; j < 8; j++) {
+      if ((crc & 0x8000) !== 0) {
+        crc = (crc << 1) ^ 0x1021;
+      } else {
+        crc = crc << 1;
+      }
+    }
+  }
+  
+  crc = crc & 0xFFFF;
+  return crc.toString(16).toUpperCase().padStart(4, '0');
 }
 
 /**

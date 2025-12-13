@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express';
+import express, { Response } from 'express';
 import { authMiddleware, AuthRequest } from '../middleware/auth';
 import { createPixPayment, confirmPixPayment, getPaymentStatus, getAllPayments } from '../services/pixService';
 import { getUserById, setPremium } from '../services/userService';
@@ -140,7 +140,7 @@ export default router;
  * Admin endpoints (protected by ADMIN_SECRET header)
  * Header: x-admin-secret: <value>
  */
-function checkAdminSecret(req: Request, res: Response) {
+function checkAdminSecret(req: any, res: Response) {
   const secret = process.env.ADMIN_SECRET;
   const provided = (req.headers['x-admin-secret'] || '') as string;
   if (!secret) return false;
@@ -148,7 +148,7 @@ function checkAdminSecret(req: Request, res: Response) {
 }
 
 // List all payments (admin)
-router.get('/admin/payments', async (req: Request, res: Response) => {
+router.get('/admin/payments', async (req: any, res: Response) => {
   try {
     if (!checkAdminSecret(req, res)) {
       return res.status(403).json({ error: 'forbidden', message: 'Admin secret required' });
@@ -162,7 +162,7 @@ router.get('/admin/payments', async (req: Request, res: Response) => {
 });
 
 // Force confirm payment (admin)
-router.post('/admin/confirm', async (req: Request, res: Response) => {
+router.post('/admin/confirm', async (req: any, res: Response) => {
   try {
     if (!checkAdminSecret(req, res)) {
       return res.status(403).json({ error: 'forbidden', message: 'Admin secret required' });
@@ -193,7 +193,7 @@ router.post('/admin/confirm', async (req: Request, res: Response) => {
  * Body: { paymentId: string, status?: 'completed' | 'pending' | 'expired' }
  * This endpoint is for testing and will mark the payment accordingly.
  */
-router.post('/webhook', async (req: Request, res: Response) => {
+router.post('/webhook', async (req: any, res: Response) => {
   try {
     const { paymentId, status } = req.body;
     if (!paymentId) return res.status(400).json({ error: 'invalid_request', message: 'paymentId required' });
@@ -229,7 +229,7 @@ router.post('/webhook', async (req: Request, res: Response) => {
  * Simulated webhook for testing: body { paymentId }
  * This endpoint does NOT require admin secret and is intended for local testing only.
  */
-router.post('/webhook', async (req: Request, res: Response) => {
+router.post('/webhook', async (req: any, res: Response) => {
   try {
     const { paymentId } = req.body;
     if (!paymentId) return res.status(400).json({ error: 'invalid_request', message: 'paymentId required' });

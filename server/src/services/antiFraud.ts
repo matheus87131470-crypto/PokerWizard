@@ -1,4 +1,4 @@
-import { Request } from 'express';
+// Removido import Request - usando any
 import * as crypto from 'crypto';
 
 interface DeviceFingerprint {
@@ -24,7 +24,7 @@ const MIN_TIME_BETWEEN_ACCOUNTS = 24 * 60 * 60 * 1000; // 24 horas em ms
 /**
  * Gera um fingerprint do dispositivo
  */
-export function generateFingerprint(req: Request, deviceInfo?: DeviceFingerprint): string {
+export function generateFingerprint(req: any, deviceInfo?: DeviceFingerprint): string {
   const data = {
     userAgent: deviceInfo?.userAgent || req.headers['user-agent'] || '',
     acceptLanguage: deviceInfo?.acceptLanguage || req.headers['accept-language'] || '',
@@ -43,7 +43,7 @@ export function generateFingerprint(req: Request, deviceInfo?: DeviceFingerprint
 /**
  * Obtém o IP real do usuário
  */
-export function getRealIP(req: Request): string {
+export function getRealIP(req: any): string {
   // Tenta obter IP de diferentes headers (útil quando atrás de proxy/CDN)
   const forwarded = req.headers['x-forwarded-for'];
   const realIP = req.headers['x-real-ip'];
@@ -63,7 +63,7 @@ export function getRealIP(req: Request): string {
 /**
  * Verifica se o usuário pode criar uma nova conta (anti-fraude)
  */
-export function canCreateAccount(req: Request, email: string, deviceInfo?: DeviceFingerprint): {
+export function canCreateAccount(req: any, email: string, deviceInfo?: DeviceFingerprint): {
   allowed: boolean;
   reason?: string;
   waitTime?: number;
@@ -112,7 +112,7 @@ export function canCreateAccount(req: Request, email: string, deviceInfo?: Devic
 /**
  * Registra uma nova conta criada
  */
-export function registerAccount(req: Request, email: string, deviceInfo?: DeviceFingerprint): void {
+export function registerAccount(req: any, email: string, deviceInfo?: DeviceFingerprint): void {
   const ip = getRealIP(req);
   const fingerprint = generateFingerprint(req, deviceInfo);
 
