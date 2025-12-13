@@ -152,67 +152,179 @@ export default function Trainer() {
     setUsage({ remaining: -1 });
   }
 
+  const [aiAnalysis, setAiAnalysis] = useState<string>('');
+  const [loadingAI, setLoadingAI] = useState(false);
+  const [aiMode, setAiMode] = useState(true);
+
+  async function handleAIAnalysis() {
+    if (!scenario) return;
+    
+    setLoadingAI(true);
+    setAiAnalysis('🤖 Analisando situação com IA...');
+
+    try {
+      const response = await fetch(`${API_BASE}/api/trainer/ai-analysis`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          scenario,
+          chosenAction: feedback?.chosenAction || null,
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (data.ok && data.analysis) {
+        setAiAnalysis(data.analysis);
+      } else {
+        setAiAnalysis('❌ Erro ao analisar. Tente novamente.');
+      }
+    } catch (error) {
+      console.error('AI Analysis error:', error);
+      setAiAnalysis('❌ Erro de conexão com IA.');
+    } finally {
+      setLoadingAI(false);
+    }
+  }
+
   return (
-    <div className="container">
-      <h1>🎓 Treinador de Poker (IA)</h1>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900/20 to-gray-900 p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 flex items-center gap-3">
+              <span className="text-4xl">🧪</span>
+              Training Lab AI
+            </h1>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => setAiMode(!aiMode)}
+                className={`px-4 py-2 rounded-lg font-semibold transition-all ${
+                  aiMode 
+                    ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg shadow-blue-500/50' 
+                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                }`}
+              >
+                {aiMode ? '🤖 IA Ativa' : '🤖 Ativar IA'}
+              </button>
+              {auth.user && (
+                <div className="text-sm text-gray-400">
+                  Olá, <span className="text-white font-semibold">{auth.user.name}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '360px 1fr', gap: 20 }}>
-        <div className="card">
-          <form onSubmit={handleGenerate} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <CustomSelect
-              label="Plataforma"
-              value={selectedNetwork}
-              onChange={setSelectedNetwork}
-              options={networks.map((n: any) => n.name)}
-            />
+      <div style={{ display: 'grid', gridTemplateColumns: '380px 1fr', gap: 20 }}>
+        <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl shadow-2xl p-6 border border-purple-500/20">
+          <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+            <span>⚙️</span>
+            Configurações
+          </h2>
+          <form onSubmit={handleGenerate} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div>
+              <label className="block text-sm font-bold text-gray-300 mb-2">🎰 Plataforma</label>
+              <select 
+                value={selectedNetwork}
+                onChange={(e) => setSelectedNetwork(e.target.value)}
+                className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-3 py-2 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50"
+              >
+                {networks.map((n: any) => (
+                  <option key={n.name} value={n.name}>{n.name}</option>
+                ))}
+              </select>
+            </div>
 
-            <CustomSelect
-              label="Posição"
-              value={position}
-              onChange={setPosition}
-              options={['UTG', 'HJ', 'CO', 'BTN', 'SB', 'BB']}
-            />
+            <div>
+              <label className="block text-sm font-bold text-gray-300 mb-2">📍 Posição</label>
+              <select 
+                value={position}
+                onChange={(e) => setPosition(e.target.value)}
+                className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-3 py-2 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50"
+              >
+                {['UTG', 'HJ', 'CO', 'BTN', 'SB', 'BB'].map(pos => (
+                  <option key={pos} value={pos}>{pos}</option>
+                ))}
+              </select>
+            </div>
 
-            <label style={{ fontSize: 13, fontWeight: 700 }}>Tipo de jogo</label>
-            <input value={gameType} onChange={(e) => setGameType(e.target.value)} className="search-input" />
+            <div>
+              <label className="block text-sm font-bold text-gray-300 mb-2">🎮 Tipo de jogo</label>
+              <input 
+                value={gameType} 
+                onChange={(e) => setGameType(e.target.value)} 
+                className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-3 py-2 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50"
+              />
+            </div>
 
-            <CustomSelect
-              label="Street inicial"
-              value={street}
-              onChange={setStreet}
-              options={['Pré-flop', 'Flop', 'Turn', 'River']}
-            />
+            <div>
+              <label className="block text-sm font-bold text-gray-300 mb-2">🃏 Street</label>
+              <select 
+                value={street}
+                onChange={(e) => setStreet(e.target.value)}
+                className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-3 py-2 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50"
+              >
+                {['Pré-flop', 'Flop', 'Turn', 'River'].map(s => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+            </div>
 
-            <CustomSelect
-              label="Ação pré-flop"
-              value={preflopAction}
-              onChange={setPreflopAction}
-              options={['Any', '3-bet', '4-bet', 'Squeeze', 'Limp', 'Iso']}
-            />
+            <div>
+              <label className="block text-sm font-bold text-gray-300 mb-2">⚡ Ação pré-flop</label>
+              <select 
+                value={preflopAction}
+                onChange={(e) => setPreflopAction(e.target.value)}
+                className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-3 py-2 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50"
+              >
+                {['Any', '3-bet', '4-bet', 'Squeeze', 'Limp', 'Iso'].map(a => (
+                  <option key={a} value={a}>{a}</option>
+                ))}
+              </select>
+            </div>
 
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button disabled={loading} type="submit" className="btn btn-primary">{loading ? 'Gerando...' : (isExampleScenario ? 'Gerar Situação (exemplo)' : 'Gerar Situação')}</button>
-              <button type="button" onClick={() => { setScenario(null); setFeedback(null); setIsExampleScenario(false); }} className="btn btn-ghost">Limpar</button>
+            <div className="flex gap-2 mt-2">
+              <button 
+                disabled={loading} 
+                type="submit" 
+                className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold py-3 rounded-lg hover:from-purple-600 hover:to-pink-600 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-purple-500/50 transition-all"
+              >
+                {loading ? '⏳ Gerando...' : '✨ Gerar Situação'}
+              </button>
+              <button 
+                type="button" 
+                onClick={() => { setScenario(null); setFeedback(null); setIsExampleScenario(false); setAiAnalysis(''); }} 
+                className="px-4 bg-gray-700 text-gray-300 font-semibold rounded-lg hover:bg-gray-600 transition-all"
+              >
+                🗑️
+              </button>
             </div>
           </form>
 
-          <div style={{ marginTop: 12 }}>
-            <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Treinos gratuitos restantes: {usage ? (usage.remaining === -1 ? 'Ilimitado (assinante)' : usage.remaining) : '—'}</div>
+          <div className="mt-6 p-4 bg-gray-900/50 rounded-lg border border-gray-700">
+            <div className="text-sm text-gray-400 mb-2">
+              💎 Treinos restantes: <span className="text-white font-bold">{usage ? (usage.remaining === -1 ? '∞ Ilimitado' : usage.remaining) : '—'}</span>
+            </div>
             {usage && usage.remaining === 0 && (
-              <div style={{ marginTop: 10 }}>
-                <div style={{ marginBottom: 8, color: 'var(--text-muted)' }}>Você atingiu o limite diário.</div>
-                <button onClick={handleSubscribe} className="btn btn-primary">Assinar Treino PRO — R$ 5,90/mês</button>
-              </div>
+              <button 
+                onClick={handleSubscribe} 
+                className="w-full mt-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold py-2 rounded-lg hover:from-green-600 hover:to-emerald-600 shadow-lg"
+              >
+                ⭐ Assinar PRO — R$ 5,90/mês
+              </button>
             )}
           </div>
         </div>
 
         <div>
-          <div className="card" style={{ padding: 20 }}>
+          <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl shadow-2xl p-6 border border-purple-500/20">
             {!scenario && (
-              <div style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
-                <div style={{ fontSize: 28 }}>🧠</div>
-                <div style={{ marginTop: 8 }}>Gere uma situação para treinar</div>
+              <div className="text-center py-20">
+                <div className="text-6xl mb-4">🧠</div>
+                <div className="text-xl text-gray-400">Gere uma situação para treinar</div>
+                <div className="text-sm text-gray-500 mt-2">Configure e clique em "Gerar Situação"</div>
               </div>
             )}
 
@@ -298,18 +410,62 @@ export default function Trainer() {
                   </div>
                 </div>
 
-                <div style={{ marginTop: 16, display: 'flex', gap: 12 }}>
-                  {['Fold', 'Call', 'Raise', 'All-in', 'Check'].map((a) => (
-                    <button key={a} onClick={() => handleChoose(a)} className="btn" style={{ flex: 1 }}>{a}</button>
+                <div className="mt-6 grid grid-cols-5 gap-3">
+                  {[
+                    { action: 'Fold', color: 'from-red-500 to-red-700', emoji: '❌' },
+                    { action: 'Call', color: 'from-green-500 to-green-700', emoji: '✅' },
+                    { action: 'Raise', color: 'from-orange-500 to-orange-700', emoji: '📈' },
+                    { action: 'All-in', color: 'from-purple-500 to-purple-700', emoji: '💥' },
+                    { action: 'Check', color: 'from-blue-500 to-blue-700', emoji: '✔️' },
+                  ].map(({ action, color, emoji }) => (
+                    <button 
+                      key={action} 
+                      onClick={() => { handleChoose(action); if (aiMode && !aiAnalysis) handleAIAnalysis(); }} 
+                      className={`bg-gradient-to-br ${color} text-white font-bold py-4 rounded-lg hover:scale-105 transition-all shadow-lg`}
+                    >
+                      <div className="text-2xl mb-1">{emoji}</div>
+                      <div className="text-sm">{action}</div>
+                    </button>
                   ))}
                 </div>
 
                 {feedback && (
-                  <div style={{ marginTop: 14, padding: 12, borderRadius: 8, background: 'rgba(255,255,255,0.02)' }}>
-                    <div style={{ fontSize: 13, fontWeight: 700 }}>Feedback</div>
-                    <div style={{ color: 'var(--text-muted)', marginTop: 8 }}>Jogada correta: <strong>{feedback.correctAction}</strong></div>
-                    <div style={{ color: 'var(--text-muted)', marginTop: 6 }}>EV esperado: <strong>{feedback.ev}</strong></div>
-                    <div style={{ color: 'var(--text-muted)', marginTop: 6 }}>Range vilão: <strong>{feedback.villainRange}</strong></div>
+                  <div className="mt-6 p-4 bg-gradient-to-r from-blue-900/50 to-purple-900/50 rounded-lg border border-blue-500/30">
+                    <div className="text-lg font-bold text-white mb-3 flex items-center gap-2">
+                      <span>📊</span>
+                      Feedback GTO
+                    </div>
+                    <div className="space-y-2 text-gray-300">
+                      <div>
+                        Sua jogada: <span className="text-yellow-400 font-bold">{feedback.chosenAction || 'N/A'}</span>
+                      </div>
+                      <div>
+                        Jogada ótima: <span className="text-green-400 font-bold">{feedback.correctAction || scenario.correctAction}</span>
+                      </div>
+                      <div>
+                        EV esperado: <span className="text-blue-400 font-bold">{feedback.ev || scenario.ev}</span>
+                      </div>
+                      <div>
+                        Range vilão: <span className="text-purple-400 font-bold">{feedback.villainRange || scenario.villainRange}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* AI Analysis Button */}
+                {aiMode && scenario && (
+                  <div className="mt-4">
+                    <button
+                      onClick={handleAIAnalysis}
+                      disabled={loadingAI}
+                      className={`w-full py-3 rounded-lg font-bold transition-all ${
+                        loadingAI
+                          ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                          : 'bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:from-blue-600 hover:to-purple-600 shadow-lg shadow-blue-500/50'
+                      }`}
+                    >
+                      {loadingAI ? '⏳ Analisando com IA...' : '🤖 Análise Completa com IA'}
+                    </button>
                   </div>
                 )}
 
@@ -318,11 +474,28 @@ export default function Trainer() {
             )}
           </div>
 
-          <div style={{ marginTop: 12 }} className="card">
-            <h3>Meu Progresso</h3>
+          {/* AI Analysis Section */}
+          {aiMode && aiAnalysis && (
+            <div className="mt-6 bg-gradient-to-r from-purple-900/50 to-pink-900/50 rounded-xl shadow-2xl p-6 border border-purple-500/30">
+              <h2 className="text-xl font-bold text-white flex items-center gap-2 mb-4">
+                <span>🤖</span>
+                Análise IA Completa
+              </h2>
+              <div className="bg-gray-900/50 rounded-lg p-4 border border-purple-500/20">
+                <p className="text-gray-200 whitespace-pre-wrap leading-relaxed">{aiAnalysis}</p>
+              </div>
+            </div>
+          )}
+
+          <div className="mt-6 bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl shadow-2xl p-6 border border-purple-500/20">
+            <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+              <span>📈</span>
+              Meu Progresso
+            </h3>
             <MyProgress />
           </div>
         </div>
+      </div>
       </div>
     </div>
   );
@@ -340,25 +513,25 @@ function MyProgress() {
     }catch(e){console.error(e)}
   } }, []);
 
-  if(!stats) return <div style={{ color: 'var(--text-muted)' }}>Nenhum treino registrado ainda.</div>;
+  if(!stats) return <div className="text-center text-gray-400 py-8">Nenhum treino registrado ainda. Comece agora!</div>;
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-      <div style={{ padding: 8 }}>
-        <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Treinos</div>
-        <div style={{ fontSize: 20, fontWeight: 700 }}>{stats.attempts}</div>
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="bg-gradient-to-br from-blue-900/30 to-blue-800/30 p-4 rounded-lg border border-blue-500/20">
+        <div className="text-xs text-gray-400 mb-1">📚 Treinos</div>
+        <div className="text-3xl font-bold text-white">{stats.attempts}</div>
       </div>
-      <div style={{ padding: 8 }}>
-        <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Acertos</div>
-        <div style={{ fontSize: 20, fontWeight: 700 }}>{stats.correct}</div>
+      <div className="bg-gradient-to-br from-green-900/30 to-green-800/30 p-4 rounded-lg border border-green-500/20">
+        <div className="text-xs text-gray-400 mb-1">✅ Acertos</div>
+        <div className="text-3xl font-bold text-green-400">{stats.correct}</div>
       </div>
-      <div style={{ padding: 8 }}>
-        <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>% Decisões corretas</div>
-        <div style={{ fontSize: 20, fontWeight: 700 }}>{stats.percent}%</div>
+      <div className="bg-gradient-to-br from-purple-900/30 to-purple-800/30 p-4 rounded-lg border border-purple-500/20">
+        <div className="text-xs text-gray-400 mb-1">🎯 Precisão</div>
+        <div className="text-3xl font-bold text-purple-400">{stats.percent}%</div>
       </div>
-      <div style={{ padding: 8 }}>
-        <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>WWSF (estim.)</div>
-        <div style={{ fontSize: 20, fontWeight: 700 }}>{stats.wwsf}</div>
+      <div className="bg-gradient-to-br from-orange-900/30 to-orange-800/30 p-4 rounded-lg border border-orange-500/20">
+        <div className="text-xs text-gray-400 mb-1">💎 WWSF</div>
+        <div className="text-3xl font-bold text-orange-400">{stats.wwsf}</div>
       </div>
     </div>
   );
