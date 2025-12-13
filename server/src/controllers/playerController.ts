@@ -351,7 +351,7 @@ export async function generateScenario(req: any, res: any) {
             }),
           });
 
-          const j = await resp.json();
+          const j: any = await resp.json();
           const content = j?.choices?.[0]?.message?.content || '';
           try {
             const parsed = JSON.parse(content.trim());

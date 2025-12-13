@@ -43,7 +43,7 @@ export async function fetchPlayerFromSharkScope(name: string): Promise<SharkPlay
     throw new Error(`SharkScope API error: ${res.status} ${txt}`);
   }
 
-  const json = await res.json();
+  const json: any = await res.json();
 
   // Map expected fields — adapt when using a real provider
   const mapped: SharkPlayerResult = {
