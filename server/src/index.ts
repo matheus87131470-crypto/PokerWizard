@@ -15,6 +15,7 @@ import dashboardRouter from './routes/dashboard';
 import { startAutoConfirmation } from './services/pixService';
 import sharkscopeRouter from './routes/sharkscope';
 import pokerRouter from './routes/poker';
+import gtoRouter from './routes/gto';
 
 const app = express();
 
@@ -54,6 +55,7 @@ app.use('/api/trainer', trainerRouter);
 app.use('/api/ai', aiRouter);
 app.use('/api/sharkscope', sharkscopeRouter);
 app.use('/api/poker', pokerRouter);
+app.use('/api/gto', gtoRouter);
 
 /* ------------ INICIAR SERVIDOR ------------ */
 

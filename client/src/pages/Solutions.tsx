@@ -82,12 +82,16 @@ function generateMockRangeData(position: Position): HandData[] {
   return handDataArray;
 }
 
+const API_BASE = (import.meta && (import.meta as any).env && (import.meta as any).env.VITE_API_BASE) || 'http://localhost:3000';
+
 export default function Solutions() {
   const { user } = useAuth();
   const [activePosition, setActivePosition] = useState<Position>('BTN');
   const [hands, setHands] = useState<HandData[]>([]);
   const [selectedHandsList, setSelectedHandsList] = useState<string[]>([]);
-  const [aiMode] = useState(false); // Could be toggled later
+  const [aiMode, setAiMode] = useState(false);
+  const [aiAnalysis, setAiAnalysis] = useState<string>('');
+  const [loadingAI, setLoadingAI] = useState(false);
 
   const positions: Position[] = ['UTG', 'HJ', 'CO', 'BTN', 'SB', 'BB'];
 
@@ -184,21 +188,68 @@ export default function Solutions() {
     setSelectedHandsList(prev => prev.filter(h => h !== hand));
   };
 
+  const handleAIAnalysis = async () => {
+    if (selectedHandsList.length === 0) {
+      setAiAnalysis('Selecione algumas mãos para analisar com IA!');
+      return;
+    }
+
+    setLoadingAI(true);
+    setAiAnalysis('🤖 Analisando com IA...');
+
+    try {
+      const response = await fetch(`${API_BASE}/api/gto/analyze`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          position: activePosition,
+          hands: selectedHandsList,
+          rangeData: hands.filter(h => selectedHandsList.includes(h.hand)),
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (data.ok && data.analysis) {
+        setAiAnalysis(data.analysis);
+      } else {
+        setAiAnalysis('❌ Erro ao analisar. Tente novamente.');
+      }
+    } catch (error) {
+      console.error('AI Analysis error:', error);
+      setAiAnalysis('❌ Erro de conexão com IA. Verifique sua internet.');
+    } finally {
+      setLoadingAI(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
-            <h1 className="text-3xl font-bold text-white flex items-center gap-3">
+            <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 flex items-center gap-3">
               <span className="text-4xl">🎯</span>
-              GTO Solutions
+              GTO Solutions AI
             </h1>
-            {user && (
-              <div className="text-sm text-gray-400">
-                Olá, <span className="text-white font-semibold">{user.name}</span>
-              </div>
-            )}
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => setAiMode(!aiMode)}
+                className={`px-4 py-2 rounded-lg font-semibold transition-all ${
+                  aiMode 
+                    ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/50' 
+                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                }`}
+              >
+                {aiMode ? '🤖 IA Ativa' : '🤖 Ativar IA'}
+              </button>
+              {user && (
+                <div className="text-sm text-gray-400">
+                  Olá, <span className="text-white font-semibold">{user.name}</span>
+                </div>
+              )}
+            </div>
           </div>
           
           {/* Position Tabs */}
@@ -245,10 +296,46 @@ export default function Solutions() {
           </div>
         </div>
 
+        {/* AI Analysis Section */}
+        {aiMode && (
+          <div className="mt-6 bg-gradient-to-r from-purple-900/50 to-pink-900/50 rounded-xl shadow-2xl p-6 border border-purple-500/30">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                <span>🤖</span>
+                Análise IA - {activePosition}
+              </h2>
+              <button
+                onClick={handleAIAnalysis}
+                disabled={loadingAI || selectedHandsList.length === 0}
+                className={`px-6 py-3 rounded-lg font-bold transition-all ${
+                  loadingAI || selectedHandsList.length === 0
+                    ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 shadow-lg shadow-purple-500/50'
+                }`}
+              >
+                {loadingAI ? '⏳ Analisando...' : `✨ Analisar ${selectedHandsList.length} mão${selectedHandsList.length !== 1 ? 's' : ''}`}
+              </button>
+            </div>
+            
+            {aiAnalysis && (
+              <div className="bg-gray-900/50 rounded-lg p-4 border border-purple-500/20">
+                <p className="text-gray-200 whitespace-pre-wrap leading-relaxed">{aiAnalysis}</p>
+              </div>
+            )}
+            
+            {!aiAnalysis && (
+              <div className="text-center text-gray-400 py-8">
+                <p className="text-lg">Selecione mãos no matrix e clique em "Analisar" para receber insights da IA!</p>
+                <p className="text-sm mt-2">A IA vai explicar as melhores jogadas para cada situação 🚀</p>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Footer Info */}
         <div className="mt-8 text-center text-sm text-gray-500">
-          <p>Ranges baseados em estratégia GTO (Game Theory Optimal)</p>
-          <p className="mt-1">Clique nas mãos para ver detalhes • Troque de posição para ver diferentes ranges</p>
+          <p>Ranges baseados em estratégia GTO (Game Theory Optimal) + Análise com IA</p>
+          <p className="mt-1">Clique nas mãos para ver detalhes • Ative a IA para análises profundas</p>
         </div>
       </div>
     </div>

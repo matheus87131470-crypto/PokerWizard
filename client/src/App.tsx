@@ -29,8 +29,8 @@ function Layout({ children }: { children: React.ReactNode }) {
           <Link to="/" className="nav-link">Home</Link>
           <Link to="/rankings" className="nav-link">Rankings</Link>
           <Link to="/analysis" className="nav-link">Análise</Link>
-          <Link to="/trainer" className="nav-link">Treinador</Link>
-          <Link to="/solutions" className="nav-link">GTO Solutions</Link>
+          <Link to="/trainer" className="nav-link">🧪 Training Lab</Link>
+          <Link to="/solutions" className="nav-link">🎯 GTO Solutions</Link>
           <Link to="/features" className="nav-link">Funcionalidades</Link>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             {auth.user ? (

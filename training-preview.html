@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Training Lab - Preview</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%);
+      color: #e0e0e0;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .header h1 {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      background: linear-gradient(90deg, #00d4ff, #7b2cbf);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .header p {
+      font-size: 14px;
+      color: #888;
+      font-weight: 500;
+    }
+
+    .main-layout {
+      display: grid;
+      grid-template-columns: 1fr 400px;
+      gap: 30px;
+      align-items: start;
+    }
+
+    .card {
+      background: rgba(26, 26, 46, 0.6);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 40px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    .poker-table {
+      position: relative;
+      width: 100%;
+      padding-bottom: 70%;
+    }
+
+    .felt {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 70%;
+      height: 85%;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #1a4d2e, #0f3d26);
+      border: 8px solid #8b6914;
+      box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.5), 0 0 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .felt-line {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 90%;
+      height: 90%;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 215, 0, 0.2);
+    }
+
+    .center-area {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 200px;
+      height: 120px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 12px;
+      border: 2px solid rgba(255, 215, 0, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 5;
+    }
+
+    .cards {
+      display: flex;
+      gap: 6px;
+    }
+
+    .card-item {
+      width: 32px;
+      height: 44px;
+      background: linear-gradient(135deg, #fff, #f0f0f0);
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    .pot {
+      font-size: 14px;
+      font-weight: 600;
+      color: #ffd700;
+      text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+    }
+
+    .position {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      cursor: pointer;
+      z-index: 10;
+      transition: all 0.3s ease;
+    }
+
+    .position-circle {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+    }
+
+    .position:hover .position-circle {
+      width: 80px;
+      height: 80px;
+      background: rgba(0, 212, 255, 0.3);
+      border-color: rgba(255, 255, 255, 0.4);
+      box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+    }
+
+    .position.selected .position-circle {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, #00d4ff, #7b2cbf);
+      border: 3px solid #00d4ff;
+      box-shadow: 0 0 30px rgba(0, 212, 255, 0.6);
+    }
+
+    .position-label {
+      font-size: 16px;
+      font-weight: 700;
+      color: #e0e0e0;
+    }
+
+    .position.selected .position-label {
+      color: #fff;
+      text-shadow: 0 0 10px rgba(0, 212, 255, 0.8);
+    }
+
+    .check-mark {
+      position: absolute;
+      top: -10px;
+      right: -10px;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #00d4ff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      box-shadow: 0 0 15px rgba(0, 212, 255, 0.8);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.2); opacity: 0.8; }
+    }
+
+    .config-panel {
+      background: rgba(26, 26, 46, 0.8);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 30px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      position: sticky;
+      top: 20px;
+    }
+
+    .config-title {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 24px;
+      color: #fff;
+      border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 12px;
+    }
+
+    .section {
+      margin-bottom: 24px;
+    }
+
+    .section-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: #00d4ff;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .btn {
+      padding: 10px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      border-radius: 8px;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.05);
+      color: #e0e0e0;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      backdrop-filter: blur(10px);
+      width: 100%;
+      text-align: left;
+      margin-bottom: 8px;
+    }
+
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.4);
+    }
+
+    .btn.selected {
+      border: 2px solid #00d4ff;
+      background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(123, 44, 191, 0.2));
+      color: #00d4ff;
+      box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+    }
+
+    .btn-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    .summary-box {
+      margin-top: 24px;
+      padding: 16px;
+      background: rgba(0, 212, 255, 0.1);
+      border: 1px solid rgba(0, 212, 255, 0.3);
+      border-radius: 12px;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .summary-box .label {
+      color: #888;
+      margin-bottom: 8px;
+    }
+
+    .summary-box .value {
+      color: #00d4ff;
+    }
+
+    .start-btn {
+      width: 100%;
+      margin-top: 24px;
+      padding: 16px;
+      font-size: 16px;
+      font-weight: 700;
+      border-radius: 12px;
+      border: none;
+      background: linear-gradient(135deg, #00d4ff, #7b2cbf);
+      color: #fff;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 20px rgba(0, 212, 255, 0.4);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .start-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 30px rgba(0, 212, 255, 0.6);
+    }
+
+    .info-footer {
+      margin-top: 30px;
+      padding: 20px;
+      background: rgba(0, 212, 255, 0.1);
+      border: 1px solid rgba(0, 212, 255, 0.3);
+      border-radius: 12px;
+      text-align: center;
+      font-size: 13px;
+      color: #00d4ff;
+    }
+
+    .tips-box {
+      margin-top: 20px;
+      padding: 12px;
+      background: rgba(123, 44, 191, 0.1);
+      border: 1px solid rgba(123, 44, 191, 0.3);
+      border-radius: 8px;
+      font-size: 11px;
+      color: #b19cd9;
+    }
+
+    .tips-box ul {
+      margin-top: 8px;
+      padding-left: 20px;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <h1>Poker Training Lab</h1>
+      <p>Master GTO Strategy with Interactive Training</p>
+    </div>
+
+    <!-- Main Layout -->
+    <div class="main-layout">
+      <!-- Left Side - Poker Table -->
+      <div class="card">
+        <div class="poker-table">
+          <!-- Feltro -->
+          <div class="felt">
+            <div class="felt-line"></div>
+          </div>
+
+          <!-- Área Central -->
+          <div class="center-area">
+            <div class="cards">
+              <div class="card-item">🂠</div>
+              <div class="card-item">🂠</div>
+              <div class="card-item">🂠</div>
+              <div class="card-item" style="opacity: 0.3;"></div>
+              <div class="card-item" style="opacity: 0.3;"></div>
+            </div>
+            <div class="pot">Pot: $0</div>
+          </div>
+
+          <!-- Posições -->
+          <div class="position" style="left: 50%; top: 70%;" onclick="selectPosition(this, 'UTG')">
+            <div class="position-circle">
+              <div class="position-label">UTG</div>
+            </div>
+          </div>
+
+          <div class="position" style="left: 20%; top: 50%;" onclick="selectPosition(this, 'HJ')">
+            <div class="position-circle">
+              <div class="position-label">HJ</div>
+            </div>
+          </div>
+
+          <div class="position" style="left: 20%; top: 20%;" onclick="selectPosition(this, 'CO')">
+            <div class="position-circle">
+              <div class="position-label">CO</div>
+            </div>
+          </div>
+
+          <div class="position selected" style="left: 50%; top: 5%;" onclick="selectPosition(this, 'BTN')">
+            <div class="position-circle">
+              <div class="position-label">BTN</div>
+            </div>
+            <div class="check-mark">✓</div>
+          </div>
+
+          <div class="position" style="left: 80%; top: 20%;" onclick="selectPosition(this, 'SB')">
+            <div class="position-circle">
+              <div class="position-label">SB</div>
+            </div>
+          </div>
+
+          <div class="position" style="left: 80%; top: 50%;" onclick="selectPosition(this, 'BB')">
+            <div class="position-circle">
+              <div class="position-label">BB</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top: 30px; text-align: center; font-size: 13px; color: #888;">
+          <p>Clique em uma posição para selecioná-la</p>
+          <p id="selected-position" style="color: #00d4ff; font-weight: 600; margin-top: 8px;">
+            Posição selecionada: <strong>BTN</strong>
+          </p>
+        </div>
+      </div>
+
+      <!-- Right Side - Configuration -->
+      <div class="config-panel">
+        <h2 class="config-title">Training Configuration</h2>
+
+        <!-- Solutions -->
+        <div class="section">
+          <h3 class="section-title">Solution</h3>
+          <button class="btn selected" onclick="selectSolution(this)">Cash / 6max / NL500</button>
+          <button class="btn" onclick="selectSolution(this)">Cash / 6max / NL200</button>
+          <button class="btn" onclick="selectSolution(this)">Cash / 6max / NL100</button>
+          <button class="btn" onclick="selectSolution(this)">Cash / 9max / NL500</button>
+          <button class="btn" onclick="selectSolution(this)">Tournament / Early</button>
+          <button class="btn" onclick="selectSolution(this)">Tournament / Middle</button>
+          <button class="btn" onclick="selectSolution(this)">Tournament / Bubble</button>
+        </div>
+
+        <!-- Starting Spot -->
+        <div class="section">
+          <h3 class="section-title">Starting Spot</h3>
+          <div class="btn-grid">
+            <button class="btn selected" onclick="selectSpot(this)">Preflop</button>
+            <button class="btn" onclick="selectSpot(this)">Flop</button>
+            <button class="btn" onclick="selectSpot(this)">Turn</button>
+            <button class="btn" onclick="selectSpot(this)">River</button>
+            <button class="btn" onclick="selectSpot(this)">Custom</button>
+          </div>
+        </div>
+
+        <!-- Preflop Actions -->
+        <div class="section" id="preflop-section">
+          <h3 class="section-title">Preflop Action</h3>
+          <button class="btn selected" onclick="selectAction(this)">Any</button>
+          <button class="btn" onclick="selectAction(this)">SRP (Single Raised Pot)</button>
+          <button class="btn" onclick="selectAction(this)">3-bet</button>
+          <button class="btn" onclick="selectAction(this)">4-bet</button>
+          <button class="btn" onclick="selectAction(this)">5-bet+</button>
+          <button class="btn" onclick="selectAction(this)">Limp</button>
+          <button class="btn" onclick="selectAction(this)">vs Limp</button>
+        </div>
+
+        <!-- Summary -->
+        <div class="summary-box">
+          <div class="label">Selected Configuration:</div>
+          <div class="value">
+            <strong>Solution:</strong> <span id="summary-solution">Cash / 6max / NL500</span>
+          </div>
+          <div class="value">
+            <strong>Spot:</strong> <span id="summary-spot">Preflop</span>
+          </div>
+          <div class="value">
+            <strong>Action:</strong> <span id="summary-action">Any</span>
+          </div>
+        </div>
+
+        <!-- Start Button -->
+        <button class="start-btn" onclick="startTraining()">🎯 Start Training</button>
+
+        <!-- Tips -->
+        <div class="tips-box">
+          <strong>💡 Quick Tips:</strong>
+          <ul>
+            <li>Select a position on the table first</li>
+            <li>Choose your preferred game format</li>
+            <li>Pick a starting spot to begin training</li>
+            <li>Click "Start Training" when ready</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Info Footer -->
+    <div class="info-footer">
+      <strong>💡 Dica:</strong> Selecione uma posição na mesa e configure as opções de treino para começar
+    </div>
+  </div>
+
+  <script>
+    let selectedPos = 'BTN';
+    let selectedSol = 'Cash / 6max / NL500';
+    let selectedSpt = 'Preflop';
+    let selectedAct = 'Any';
+
+    function selectPosition(element, position) {
+      // Remove seleção anterior
+      document.querySelectorAll('.position').forEach(p => {
+        p.classList.remove('selected');
+        const checkMark = p.querySelector('.check-mark');
+        if (checkMark) checkMark.remove();
+      });
+
+      // Adiciona seleção
+      element.classList.add('selected');
+      const checkMark = document.createElement('div');
+      checkMark.className = 'check-mark';
+      checkMark.textContent = '✓';
+      element.appendChild(checkMark);
+
+      selectedPos = position;
+      document.getElementById('selected-position').innerHTML = 
+        `Posição selecionada: <strong>${position}</strong>`;
+    }
+
+    function selectSolution(element) {
+      element.parentElement.querySelectorAll('.btn').forEach(b => b.classList.remove('selected'));
+      element.classList.add('selected');
+      selectedSol = element.textContent;
+      document.getElementById('summary-solution').textContent = selectedSol;
+    }
+
+    function selectSpot(element) {
+      element.parentElement.querySelectorAll('.btn').forEach(b => b.classList.remove('selected'));
+      element.classList.add('selected');
+      selectedSpt = element.textContent;
+      document.getElementById('summary-spot').textContent = selectedSpt;
+
+      // Mostrar/ocultar seção de preflop
+      const preflopSection = document.getElementById('preflop-section');
+      if (selectedSpt === 'Preflop') {
+        preflopSection.style.display = 'block';
+      } else {
+        preflopSection.style.display = 'none';
+      }
+    }
+
+    function selectAction(element) {
+      element.parentElement.querySelectorAll('.btn').forEach(b => b.classList.remove('selected'));
+      element.classList.add('selected');
+      selectedAct = element.textContent;
+      document.getElementById('summary-action').textContent = selectedAct;
+    }
+
+    function startTraining() {
+      const config = {
+        position: selectedPos,
+        solution: selectedSol,
+        spot: selectedSpt,
+        action: selectedSpt === 'Preflop' ? selectedAct : 'N/A'
+      };
+      
+      console.log('Starting training with:', config);
+      alert(`🎯 Iniciando treino!\n\nPosição: ${config.position}\nSolution: ${config.solution}\nSpot: ${config.spot}\nAction: ${config.action}\n\n(Verifique o console para mais detalhes)`);
+    }
+  </script>
+</body>
+</html>

@@ -31,10 +31,10 @@ const HAND_MATRIX_LAYOUT = [
 ];
 
 const ACTION_COLORS: Record<HandAction, string> = {
-  allin: 'bg-red-600 border-red-500 hover:bg-red-500',
-  raise: 'bg-orange-600 border-orange-500 hover:bg-orange-500',
-  call: 'bg-green-600 border-green-500 hover:bg-green-500',
-  fold: 'bg-blue-600 border-blue-500 hover:bg-blue-500',
+  allin: 'bg-gradient-to-br from-red-500 to-red-700 border-red-400 hover:from-red-400 hover:to-red-600 shadow-lg shadow-red-500/50',
+  raise: 'bg-gradient-to-br from-orange-500 to-orange-700 border-orange-400 hover:from-orange-400 hover:to-orange-600 shadow-lg shadow-orange-500/50',
+  call: 'bg-gradient-to-br from-green-500 to-green-700 border-green-400 hover:from-green-400 hover:to-green-600 shadow-lg shadow-green-500/50',
+  fold: 'bg-gradient-to-br from-blue-500 to-blue-700 border-blue-400 hover:from-blue-400 hover:to-blue-600 shadow-lg shadow-blue-500/50',
   none: 'bg-gray-800 border-gray-700 hover:bg-gray-700',
 };
 
