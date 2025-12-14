@@ -9,7 +9,8 @@ export default function Trainer() {
   const [position, setPosition] = useState('CO');
   const [gameType, setGameType] = useState('MTT');
   const [street, setStreet] = useState('Flop');
-  const [preflopAction, setPreflopAction] = useState('Any');
+  const [streetAction, setStreetAction] = useState('Bet'); // Ação para Flop/Turn/River
+  const [preflopAction, setPreflopAction] = useState('Raise'); // Ação para Pré-flop
   const [networks, setNetworks] = useState<any[]>([]);
   const [selectedNetwork, setSelectedNetwork] = useState('partypoker');
   const [scenario, setScenario] = useState<any>(null);
@@ -44,6 +45,17 @@ export default function Trainer() {
       ],
     };
   }
+
+  // 🔄 Lógica de dependência: Resetar ação quando Street mudar
+  useEffect(() => {
+    if (street === 'Pré-flop') {
+      // Resetar para ação pré-flop padrão
+      setPreflopAction('Raise');
+    } else {
+      // Resetar para ação de street padrão
+      setStreetAction('Bet');
+    }
+  }, [street]);
 
   useEffect(() => {
     async function loadNetworks() {
@@ -85,10 +97,19 @@ export default function Trainer() {
         return;
       }
 
+      // Enviar a ação correta baseado na street
+      const actionToSend = street === 'Pré-flop' ? preflopAction : streetAction;
+      
       const res = await fetch(`${API_BASE}/api/trainer/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${auth.token}` },
-        body: JSON.stringify({ position, gameType, street, preflopAction, network: selectedNetwork }),
+        body: JSON.stringify({ 
+          position, 
+          gameType, 
+          street, 
+          preflopAction: actionToSend, // Backend ainda usa este nome, mas agora é contextual
+          network: selectedNetwork 
+        }),
       });
       const j = await res.json();
       if (!j.ok) {
@@ -189,6 +210,12 @@ export default function Trainer() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900/20 to-gray-900 p-6">
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(-10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -284,17 +311,66 @@ export default function Trainer() {
               </select>
             </div>
 
-            <div>
-              <label className="block text-sm font-bold text-gray-300 mb-2">⚡ Ação pré-flop</label>
-              <select 
-                value={preflopAction}
-                onChange={(e) => setPreflopAction(e.target.value)}
-                className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-3 py-2 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50"
-              >
-                {['Any', '3-bet', '4-bet', 'Squeeze', 'Limp', 'Iso'].map(a => (
-                  <option key={a} value={a}>{a}</option>
-                ))}
-              </select>
+            {/* 🎯 Campo dependente da Street com animação */}
+            <div style={{ position: 'relative' }}>
+              {street === 'Pré-flop' ? (
+                // Pré-flop: Mostrar ações pré-flop
+                <div style={{ animation: 'fadeIn 0.3s ease-in' }}>
+                  <label className="block text-sm font-bold text-gray-300 mb-2 flex items-center gap-2">
+                    ⚡ Ação pré-flop
+                    <span style={{
+                      fontSize: '10px',
+                      background: 'linear-gradient(90deg, #f97316 0%, #ea580c 100%)',
+                      color: 'white',
+                      padding: '2px 6px',
+                      borderRadius: '4px',
+                      fontWeight: 'bold'
+                    }}>
+                      PRÉ-FLOP
+                    </span>
+                  </label>
+                  <select 
+                    value={preflopAction}
+                    onChange={(e) => setPreflopAction(e.target.value)}
+                    className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-3 py-2 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50"
+                  >
+                    <option value="Raise">Raise</option>
+                    <option value="Call">Call</option>
+                    <option value="Fold">Fold</option>
+                    <option value="3-bet">3-bet</option>
+                    <option value="4-bet">4-bet</option>
+                    <option value="All-in">All-in</option>
+                  </select>
+                </div>
+              ) : (
+                // Flop/Turn/River: Mostrar ações de street
+                <div style={{ animation: 'fadeIn 0.3s ease-in' }}>
+                  <label className="block text-sm font-bold text-gray-300 mb-2 flex items-center gap-2">
+                    🎲 Ação da Street
+                    <span style={{
+                      fontSize: '10px',
+                      background: 'linear-gradient(90deg, #3b82f6 0%, #2563eb 100%)',
+                      color: 'white',
+                      padding: '2px 6px',
+                      borderRadius: '4px',
+                      fontWeight: 'bold'
+                    }}>
+                      {street.toUpperCase()}
+                    </span>
+                  </label>
+                  <select 
+                    value={streetAction}
+                    onChange={(e) => setStreetAction(e.target.value)}
+                    className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-3 py-2 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50"
+                  >
+                    <option value="Bet">Bet</option>
+                    <option value="Check">Check</option>
+                    <option value="Call">Call</option>
+                    <option value="Raise">Raise</option>
+                    <option value="Fold">Fold</option>
+                  </select>
+                </div>
+              )}
             </div>
 
             <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
