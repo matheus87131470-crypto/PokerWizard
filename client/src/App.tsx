@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Link, useNavigate } from 'react-router-dom';
+import { Analytics } from '@vercel/analytics/react';
 import Rankings from './pages/Rankings';
 import Features from './pages/Features';
 import Analysis from './pages/Analysis';
@@ -666,6 +667,7 @@ export default function App() {
           
           </Routes>
         </Layout>
+        <Analytics />
       </BrowserRouter>
     </AuthProvider>
   );
