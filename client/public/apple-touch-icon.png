@@ -1,0 +1,20 @@
+<svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background com gradiente -->
+  <defs>
+    <linearGradient id="appleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8b5cf6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ec4899;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background com bordas arredondadas (Apple style) -->
+  <rect width="180" height="180" rx="40" fill="url(#appleGrad)"/>
+  
+  <!-- Spade + AI Symbol (aumentado proporcionalmente) -->
+  <path d="M90 35L100 60L125 60L105 80L115 105L90 90L65 105L75 80L55 60L80 60L90 35Z" fill="white" fill-opacity="0.95"/>
+  <circle cx="90" cy="90" r="14" fill="#8b5cf6"/>
+  
+  <!-- Detalhes de brilho -->
+  <circle cx="70" cy="55" r="8" fill="white" fill-opacity="0.4"/>
+  <circle cx="110" cy="125" r="6" fill="white" fill-opacity="0.3"/>
+</svg>
