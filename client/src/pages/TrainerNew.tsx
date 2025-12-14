@@ -67,6 +67,15 @@ export default function TrainingLab() {
     !isLoading &&
     !!auth.user;
 
+  // 🔒 MENSAGEM DE BLOQUEIO CLARA
+  const getMensagemBloqueio = (): string | null => {
+    if (!auth.user) return '🔒 Faça login para começar';
+    if (!iaAtiva) return '🤖 Ative a IA no botão acima';
+    if (treinosRestantes !== null && treinosRestantes <= 0) return '💎 Sem créditos - Faça upgrade';
+    if (isLoading) return '⏳ Gerando situação...';
+    return null;
+  };
+
   // 🟦 FUNÇÃO GERAR SITUAÇÃO
   async function gerarSituacao(e: React.FormEvent) {
     e.preventDefault();
@@ -376,9 +385,9 @@ export default function TrainingLab() {
                 type="submit"
                 disabled={!podeGerar}
                 style={{
-                  marginTop: 12,
-                  padding: '16px 24px',
-                  borderRadius: 12,
+                  marginTop: 16,
+                  padding: '18px 28px',
+                  borderRadius: 14,
                   border: 'none',
                   background: podeGerar
                     ? 'linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%)'
@@ -387,33 +396,69 @@ export default function TrainingLab() {
                   fontSize: 16,
                   fontWeight: 700,
                   cursor: podeGerar ? 'pointer' : 'not-allowed',
-                  transition: 'all 0.3s',
-                  opacity: podeGerar ? 1 : 0.4,
-                  boxShadow: podeGerar ? '0 8px 24px rgba(139, 92, 246, 0.4)' : 'none',
-                  transform: podeGerar ? 'scale(1)' : 'scale(0.98)',
-                  letterSpacing: '0.5px'
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  opacity: podeGerar ? 1 : 0.5,
+                  boxShadow: podeGerar ? '0 8px 30px rgba(139, 92, 246, 0.4)' : 'none',
+                  transform: 'scale(1)',
+                  letterSpacing: '0.5px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 10,
+                  width: '100%'
                 }}
                 onMouseEnter={(e) => {
                   if (podeGerar) {
-                    e.currentTarget.style.transform = 'scale(1.02)';
-                    e.currentTarget.style.boxShadow = '0 12px 32px rgba(139, 92, 246, 0.5)';
+                    e.currentTarget.style.transform = 'translateY(-3px) scale(1.02)';
+                    e.currentTarget.style.boxShadow = '0 16px 40px rgba(139, 92, 246, 0.5)';
                   }
                 }}
                 onMouseLeave={(e) => {
-                  if (podeGerar) {
-                    e.currentTarget.style.transform = 'scale(1)';
-                    e.currentTarget.style.boxShadow = '0 8px 24px rgba(139, 92, 246, 0.4)';
-                  }
+                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.boxShadow = podeGerar ? '0 8px 30px rgba(139, 92, 246, 0.4)' : 'none';
                 }}
               >
-                {isLoading ? '⏳ Gerando situação...' : '✨ Gerar Situação'}
+                {isLoading ? (
+                  <>
+                    <span className="spinner"></span>
+                    Gerando...
+                  </>
+                ) : (
+                  '✨ Gerar Situação'
+                )}
               </button>
+              
+              {/* MENSAGEM DE BLOQUEIO */}
+              {!podeGerar && getMensagemBloqueio() && (
+                <div style={{
+                  marginTop: 12,
+                  padding: 14,
+                  borderRadius: 10,
+                  background: 'rgba(251, 191, 36, 0.1)',
+                  border: '1px solid rgba(251, 191, 36, 0.3)',
+                  color: '#fbbf24',
+                  fontSize: 14,
+                  fontWeight: 500,
+                  textAlign: 'center'
+                }}>
+                  {getMensagemBloqueio()}
+                </div>
+              )}
 
               {/* TREINOS RESTANTES */}
-              <div style={{ fontSize: 13, color: 'var(--text-secondary)', textAlign: 'center' }}>
-                💎 Treinos restantes:{' '}
-                <strong style={{ color: 'var(--text-primary)' }}>
-                  {treinosRestantes === null ? 'Ilimitado' : treinosRestantes}
+              <div style={{ 
+                marginTop: 12,
+                fontSize: 14, 
+                color: treinosRestantes !== null && treinosRestantes <= 3 ? '#fbbf24' : 'var(--text-secondary)', 
+                textAlign: 'center',
+                fontWeight: 500
+              }}>
+                💎 Treinos:{' '}
+                <strong style={{ 
+                  color: treinosRestantes !== null && treinosRestantes <= 3 ? '#fbbf24' : '#a78bfa',
+                  fontSize: 16
+                }}>
+                  {treinosRestantes === null ? '∞ Ilimitado' : treinosRestantes}
                 </strong>
               </div>
 
@@ -421,15 +466,20 @@ export default function TrainingLab() {
               {erro && (
                 <div
                   style={{
-                    padding: 12,
-                    borderRadius: 8,
-                    background: '#fef2f2',
-                    border: '1px solid #fecaca',
-                    color: '#991b1b',
-                    fontSize: 13,
+                    marginTop: 12,
+                    padding: 14,
+                    borderRadius: 10,
+                    background: 'rgba(239, 68, 68, 0.1)',
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    color: '#ef4444',
+                    fontSize: 14,
+                    fontWeight: 500,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8
                   }}
                 >
-                  ❌ {erro}
+                  <span>❌</span> {erro}
                 </div>
               )}
             </form>
@@ -576,17 +626,38 @@ export default function TrainingLab() {
             ) : (
               <div
                 style={{
-                  background: 'var(--card-background)',
-                  borderRadius: 12,
+                  background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+                  borderRadius: 16,
                   padding: 60,
-                  border: '1px solid var(--border-color)',
+                  border: '1px solid rgba(139, 92, 246, 0.2)',
                   textAlign: 'center',
+                  position: 'relative',
+                  overflow: 'hidden'
                 }}
               >
-                <div style={{ fontSize: 48, marginBottom: 16 }}>🎯</div>
-                <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Gere uma situação para treinar</h3>
-                <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>
-                  Configure e clique em "Gerar Situação"
+                {/* Efeito de glow */}
+                <div style={{
+                  position: 'absolute',
+                  top: -50,
+                  right: -50,
+                  width: 200,
+                  height: 200,
+                  background: 'radial-gradient(circle, rgba(139, 92, 246, 0.15), transparent)',
+                  pointerEvents: 'none'
+                }}></div>
+                
+                <div style={{ fontSize: 64, marginBottom: 24 }}>🎯</div>
+                <h3 style={{ fontSize: 22, fontWeight: 700, marginBottom: 12, color: 'white' }}>
+                  Pronto para treinar?
+                </h3>
+                <p style={{ color: '#94a3b8', fontSize: 15, lineHeight: 1.6, maxWidth: 350, margin: '0 auto' }}>
+                  {!auth.user ? (
+                    <>Faça <strong style={{color: '#a78bfa'}}>login</strong> para começar</>
+                  ) : !iaAtiva ? (
+                    <>Clique em <strong style={{color: '#10b981'}}>IA Ativa</strong> acima para gerar situações</>
+                  ) : (
+                    <>Configure à esquerda e clique em <strong style={{color: '#a78bfa'}}>Gerar Situação</strong></>
+                  )}
                 </p>
               </div>
             )}
