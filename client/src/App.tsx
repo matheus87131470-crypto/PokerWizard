@@ -371,7 +371,7 @@ function Home() {
         </div>
         
         <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>
-          ✓ 3 análises grátis • ✓ Sem cartão de crédito • ✓ Resultado imediato
+          ✓ 5 análises grátis • ✓ Sem cartão de crédito • ✓ Resultado imediato
         </p>
       </div>
 

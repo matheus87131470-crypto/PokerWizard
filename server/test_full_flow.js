@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /**
  * Complete test flow:
- * 1. Register user with 3 free uses
- * 2. Perform 3 analyses (consume all uses)
- * 3. Try 4th analysis (should block with 403)
+ * 1. Register user with 5 free uses
+ * 2. Perform 5 analyses (consume all uses)
+ * 3. Try 6th analysis (should block with 403)
  * 4. Create PIX payment
  * 5. Confirm PIX (activate premium)
  * 6. Verify premium status (usosRestantes = -1)
@@ -34,11 +34,11 @@ async function test() {
     console.log(`   ✓ Usuário criado: ${email}`);
     console.log(`   ✓ Usos iniciais: ${regData.user.usosRestantes}`);
     console.log(`   ✓ Status do plano: ${regData.user.statusPlano}`);
-    if (regData.user.usosRestantes !== 3) throw new Error('Expected 3 uses but got ' + regData.user.usosRestantes);
+    if (regData.user.usosRestantes !== 5) throw new Error('Expected 5 uses but got ' + regData.user.usosRestantes);
 
-    // 2. Perform 3 analyses
-    console.log('\n2️⃣  Consumindo 3 usos com análises...');
-    for (let i = 1; i <= 3; i++) {
+    // 2. Perform 5 analyses
+    console.log('\n2️⃣  Consumindo 5 usos com análises...');
+    for (let i = 1; i <= 5; i++) {
       const analyzeRes = await fetch(`${API_BASE}/api/ai/analyze`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
@@ -49,12 +49,12 @@ async function test() {
       console.log(`   ✓ Análise ${i} consumida. Usos restantes: ${analyzeData.remaining}`);
     }
 
-    // 3. Try 4th analysis (should fail)
-    console.log('\n3️⃣  Tentando 4ª análise (deve bloquear)...');
+    // 3. Try 6th analysis (should fail)
+    console.log('\n3️⃣  Tentando 6ª análise (deve bloquear)...');
     const blockRes = await fetch(`${API_BASE}/api/ai/analyze`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ history: 'Hand 4: ...' }),
+      body: JSON.stringify({ history: 'Hand 6: ...' }),
     });
     if (blockRes.status !== 403) throw new Error(`Expected 403, got ${blockRes.status}`);
     const blockData = await blockRes.json();
@@ -113,9 +113,9 @@ async function test() {
 
     console.log('\n✅ TODOS OS TESTES PASSARAM!\n');
     console.log('Resumo:');
-    console.log('  - Usuário criado com 3 usos gratuitos');
-    console.log('  - 3 análises consumiram os 3 usos');
-    console.log('  - 4ª tentativa foi bloqueada (403)');
+    console.log('  - Usuário criado com 5 usos gratuitos');
+    console.log('  - 5 análises consumiram os 5 usos');
+    console.log('  - 6ª tentativa foi bloqueada (403)');
     console.log('  - PIX criado e confirmado');
     console.log('  - Premium ativado com usos ilimitados');
     console.log('  - Análises ilimitadas funcionando\n');
