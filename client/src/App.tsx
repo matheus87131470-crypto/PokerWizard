@@ -142,12 +142,41 @@ function Layout({ children }: { children: React.ReactNode }) {
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             {auth.user ? (
               <>
+                {/* User badge premium */}
                 <Link to="/profile" style={{ textDecoration: 'none' }}>
-                  <span style={{ fontSize: 13, color: '#a78bfa', fontWeight: 500 }}>👤 {auth.user.name}</span>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 10,
+                    padding: '8px 12px',
+                    borderRadius: 12,
+                    background: 'linear-gradient(135deg, rgba(139,92,246,0.15), rgba(16,185,129,0.12))',
+                    border: '1px solid rgba(139, 92, 246, 0.35)',
+                    boxShadow: '0 6px 20px rgba(139, 92, 246, 0.18)',
+                    transition: 'all 0.2s',
+                  }}>
+                    <span style={{ fontSize: 14, color: '#e9d5ff', fontWeight: 700 }}>👤 {auth.user.name}</span>
+                    <span style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      padding: '6px 10px',
+                      borderRadius: 10,
+                      background: (auth.user as any)?.usosRestantes === -1 || (auth.user as any)?.usosRestantes === null
+                        ? 'linear-gradient(135deg, #10b981, #34d399)'
+                        : 'linear-gradient(135deg, #0ea5e9, #60a5fa)',
+                      color: 'white',
+                      fontSize: 12,
+                      fontWeight: 800,
+                      letterSpacing: '0.3px',
+                      boxShadow: '0 4px 16px rgba(16, 185, 129, 0.3)',
+                    }}>
+                      <span>💎</span>
+                      {(auth.user as any)?.usosRestantes === -1 || (auth.user as any)?.usosRestantes === null ? 'Ilimitado' : ((auth.user as any)?.usosRestantes ?? auth.user.credits)}
+                      <span style={{ opacity: 0.9 }}>usos</span>
+                    </span>
+                  </div>
                 </Link>
-                <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
-                  💎 {(auth.user as any)?.usosRestantes === -1 || (auth.user as any)?.usosRestantes === null ? 'Ilimitado' : ((auth.user as any)?.usosRestantes ?? auth.user.credits)} usos
-                </div>
                 {!auth.user.premium && (((auth.user as any).usosRestantes === undefined) ? (typeof auth.user.credits === 'number' && auth.user.credits <= 0) : ((auth.user as any).usosRestantes <= 0 && (auth.user as any).usosRestantes !== -1)) && (
                   <button onClick={() => navigate('/premium')} className="btn btn-primary" style={{ padding: '8px 16px', fontSize: 13, background: 'linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%)', border: 'none' }}>
                     ⚡ Upgrade
