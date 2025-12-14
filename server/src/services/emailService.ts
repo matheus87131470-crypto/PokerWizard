@@ -12,6 +12,7 @@ const createTransporter = () => {
   // Para criar senha de app: https://myaccount.google.com/apppasswords
   
   if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+    console.log('📧 Usando Gmail para envio de emails');
     return nodemailer.createTransport({
       service: 'gmail',
       auth: {
@@ -22,22 +23,25 @@ const createTransporter = () => {
   }
 
   // Opção 2: Ethereal (apenas para testes - emails não são realmente enviados)
-  console.warn('⚠️  Usando Ethereal (modo de teste). Configure EMAIL_USER e EMAIL_PASS para produção.');
+  console.warn('⚠️  EMAIL_USER e EMAIL_PASS não configurados. Emails serão simulados.');
   
-  // Para testes locais, usaremos Ethereal (emails ficam em https://ethereal.email)
-  return nodemailer.createTransport({
-    host: 'smtp.ethereal.email',
-    port: 587,
-    secure: false,
-    auth: {
-      user: 'your-ethereal-user@ethereal.email',
-      pass: 'your-ethereal-password',
-    },
-  });
+  return null; // Retorna null para indicar modo simulado
 };
 
 export async function sendPasswordResetEmail(email: string, code: string, name: string) {
   const transporter = createTransporter();
+
+  // Se não tem transporter configurado, simula o envio mas loga o código
+  if (!transporter) {
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('📧 EMAIL SIMULADO (configure EMAIL_USER e EMAIL_PASS para envio real)');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log(`   Para: ${email}`);
+    console.log(`   Nome: ${name}`);
+    console.log(`   🔑 CÓDIGO: ${code}`);
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    return { success: true, messageId: 'simulated-' + Date.now(), simulated: true };
+  }
 
   const mailOptions: EmailOptions = {
     to: email,

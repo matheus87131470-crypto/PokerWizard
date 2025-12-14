@@ -13,6 +13,7 @@ export default function ForgotPassword() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [devCode, setDevCode] = useState('');
   const navigate = useNavigate();
 
   // ETAPA 1: Solicitar código de recuperação
@@ -21,6 +22,7 @@ export default function ForgotPassword() {
     setLoading(true);
     setError('');
     setSuccess('');
+    setDevCode('');
 
     try {
       const response = await fetch(`${API_BASE}/api/auth/forgot-password`, {
@@ -35,11 +37,21 @@ export default function ForgotPassword() {
         throw new Error(data.message || 'Erro ao solicitar recuperação de senha');
       }
 
-      setSuccess('Código de recuperação enviado para seu email! Verifique sua caixa de entrada.');
-      setTimeout(() => {
-        setStep('code');
-        setSuccess('');
-      }, 2000);
+      // Se recebeu código diretamente (modo desenvolvimento)
+      if (data.devCode) {
+        setDevCode(data.devCode);
+        setCode(data.devCode); // Auto-preenche
+        setSuccess('⚠️ Modo de desenvolvimento: Código gerado diretamente (email não configurado)');
+        setTimeout(() => {
+          setStep('code');
+        }, 1500);
+      } else {
+        setSuccess('Código de recuperação enviado para seu email! Verifique sua caixa de entrada.');
+        setTimeout(() => {
+          setStep('code');
+          setSuccess('');
+        }, 2000);
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {

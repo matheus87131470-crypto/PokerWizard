@@ -202,7 +202,18 @@ router.post('/forgot-password', async (req: any, res: Response) => {
     const code = createResetToken(email);
 
     // Envia email com o código
-    await sendPasswordResetEmail(email, code, user.name);
+    const emailResult = await sendPasswordResetEmail(email, code, user.name);
+
+    // Se email foi simulado (não configurado), retorna o código diretamente
+    if ((emailResult as any).simulated) {
+      return res.json({
+        ok: true,
+        message: 'Código de recuperação gerado.',
+        // ⚠️ Em produção, configure EMAIL_USER e EMAIL_PASS para enviar por email
+        devCode: code, // Retorna código diretamente (modo desenvolvimento)
+        devWarning: 'Email não configurado. Configure EMAIL_USER e EMAIL_PASS no Render.'
+      });
+    }
 
     return res.json({
       ok: true,
