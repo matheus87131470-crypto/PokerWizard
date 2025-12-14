@@ -102,6 +102,7 @@ export default function Solutions() {
   const [aiMode, setAiMode] = useState(false);
   const [aiAnalysis, setAiAnalysis] = useState<string>('');
   const [loadingAI, setLoadingAI] = useState(false);
+  const [handHistory, setHandHistory] = useState<string>('');
 
   const positions: Position[] = ['UTG', 'HJ', 'CO', 'BTN', 'SB', 'BB'];
 
@@ -199,8 +200,8 @@ export default function Solutions() {
   };
 
   const handleAIAnalysis = async () => {
-    if (selectedHandsList.length === 0) {
-      setAiAnalysis('Selecione algumas mãos para analisar com IA!');
+    if (!handHistory.trim()) {
+      setAiAnalysis('⚠️ Digite ou cole o histórico da mão para analisar!');
       return;
     }
 
@@ -212,9 +213,8 @@ export default function Solutions() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          handHistory: handHistory,
           position: activePosition,
-          hands: selectedHandsList,
-          rangeData: hands.filter(h => selectedHandsList.includes(h.hand)),
         }),
       });
 
@@ -255,64 +255,75 @@ export default function Solutions() {
             )}
           </div>
 
-          {/* Action Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            {/* Card 1 - Cole sua mão */}
-            <div className="bg-gradient-to-br from-purple-900/30 to-purple-800/20 border border-purple-500/30 rounded-xl p-6">
-              <div className="flex items-center gap-3 mb-3">
-                <span className="text-2xl">✍️</span>
-                <h3 className="text-lg font-semibold text-white">Analisar Mão Específica</h3>
+          {/* Action Card - Analisar Mão Específica */}
+          <div className="bg-gradient-to-br from-purple-900/30 to-purple-800/20 border border-purple-500/30 rounded-xl p-6 mb-6">
+            <div className="flex items-center gap-3 mb-4">
+              <span className="text-3xl">✍️</span>
+              <div>
+                <h3 className="text-xl font-bold text-white">Analisar Mão Específica</h3>
+                <p className="text-gray-400 text-xs">Cole o histórico ou descreva a situação</p>
               </div>
-              <p className="text-gray-300 text-sm mb-4">
-                Cole o histórico da mão ou descreva a situação para receber análise detalhada da IA
-              </p>
-              <textarea
-                placeholder="Ex: UTG raises 2.5bb, você está no BTN com AKs..."
-                className="w-full bg-gray-800/50 border border-gray-700 rounded-lg p-3 text-white text-sm resize-none"
-                rows={3}
-              />
+            </div>
+            <textarea
+              value={handHistory}
+              onChange={(e) => setHandHistory(e.target.value)}
+              placeholder="Exemplo: UTG raises 2.5bb, Hero no BTN com AKs decide 3bet para 7.5bb..."
+              className="w-full bg-gray-800/50 border border-gray-700 rounded-lg p-4 text-white text-sm resize-none focus:border-purple-500 focus:outline-none transition-colors"
+              rows={4}
+            />
+            <div className="flex items-center gap-3 mt-4">
               <button
                 onClick={handleAIAnalysis}
-                disabled={loadingAI}
-                className="mt-3 w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold py-3 rounded-lg hover:shadow-lg hover:shadow-purple-500/50 transition-all disabled:opacity-50"
+                disabled={loadingAI || !handHistory.trim()}
+                className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold py-3 rounded-lg hover:shadow-lg hover:shadow-purple-500/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loadingAI ? '🤖 Analisando...' : '🚀 Analisar com IA'}
               </button>
+              {handHistory && (
+                <button
+                  onClick={() => setHandHistory('')}
+                  className="px-4 py-3 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors"
+                >
+                  Limpar
+                </button>
+              )}
             </div>
-
-            {/* Card 2 - Explorar Ranges */}
-            <div className="bg-gradient-to-br from-blue-900/30 to-blue-800/20 border border-blue-500/30 rounded-xl p-6">
-              <div className="flex items-center gap-3 mb-3">
-                <span className="text-2xl">🎯</span>
-                <h3 className="text-lg font-semibold text-white">Explorar Ranges por Posição</h3>
+            {aiAnalysis && (
+              <div className="mt-4 bg-gray-800/50 border border-purple-500/30 rounded-lg p-4">
+                <div className="text-sm text-gray-300 whitespace-pre-wrap">{aiAnalysis}</div>
               </div>
-              <p className="text-gray-300 text-sm mb-4">
-                Visualize ranges recomendados para cada posição e clique nas mãos para detalhes
-              </p>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400 text-xs">Posição selecionada:</span>
-                <span className="text-white font-bold text-lg">{activePosition}</span>
+            )}
+          </div>
+
+          {/* Seção de Ranges */}
+          <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6 mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                  🎯 Ranges por Posição
+                </h3>
+                <p className="text-gray-400 text-xs mt-1">Clique nas mãos da matriz abaixo para ver detalhes</p>
               </div>
               <button
                 onClick={() => setAiMode(!aiMode)}
-                className={`mt-3 w-full font-semibold py-3 rounded-lg transition-all ${
+                className={`px-6 py-2 font-semibold rounded-lg transition-all ${
                   aiMode 
                     ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/50' 
                     : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                 }`}
               >
-                {aiMode ? '✅ IA Ativa' : '🤖 Ativar Análise IA'}
+                {aiMode ? '✅ IA Ativa' : '🤖 Ativar IA'}
               </button>
             </div>
-          </div>
           
-          {/* Position Tabs */}
-          <PositionTabs
-            positions={positions}
-            activePosition={activePosition}
-            onPositionChange={setActivePosition}
-            aiMode={aiMode}
-          />
+            {/* Position Tabs */}
+            <PositionTabs
+              positions={positions}
+              activePosition={activePosition}
+              onPositionChange={setActivePosition}
+              aiMode={aiMode}
+            />
+          </div>
         </div>
 
         {/* Main Content Grid */}
