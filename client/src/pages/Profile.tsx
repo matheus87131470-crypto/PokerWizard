@@ -142,13 +142,21 @@ export default function Profile() {
             }}>
               📊 STATUS DO PLANO
             </div>
-            <div style={{
-              fontSize: 24,
-              fontWeight: 700,
-              color: isPremium ? '#fbbf24' : 'white',
-              display: 'flex',
+            <div style={{ 
+              display: 'inline-flex',
               alignItems: 'center',
-              gap: 8
+              gap: 10,
+              padding: '8px 12px',
+              borderRadius: 12,
+              background: 'linear-gradient(135deg, rgba(15,23,42,0.6), rgba(30,41,59,0.6))',
+              border: '1px solid rgba(148,163,184,0.25)',
+              color: '#e2e8f0',
+              fontSize: 14,
+              fontWeight: 600,
+              marginTop: 8
+            }}>
+              ✉️ {user.email}
+            </div>
             }}>
               {isPremium ? '⭐ Premium' : '🆓 Free'}
             </div>
@@ -171,12 +179,25 @@ export default function Profile() {
             }}>
               💎 USOS RESTANTES
             </div>
-            <div style={{
-              fontSize: 24,
-              fontWeight: 700,
-              color: usosRestantes === 'Ilimitado' ? '#10b981' : 'white'
-            }}>
-              {usosRestantes}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <span style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '10px 14px',
+                borderRadius: 12,
+                background: usosRestantes === 'Ilimitado' ? 'linear-gradient(135deg, #10b981, #34d399)' : 'linear-gradient(135deg, #0ea5e9, #60a5fa)',
+                color: 'white',
+                fontSize: 16,
+                fontWeight: 800,
+                letterSpacing: '0.3px',
+                boxShadow: '0 6px 18px rgba(16, 185, 129, 0.35)'
+              }}>
+                💎 {usosRestantes} {usosRestantes !== 'Ilimitado' ? 'usos' : 'ilimitado'}
+              </span>
+              {usosRestantes !== 'Ilimitado' && (
+                <span style={{ fontSize: 13, color: '#94a3b8' }}>Faça upgrade para ilimitado</span>
+              )}
             </div>
           </div>
         </div>
