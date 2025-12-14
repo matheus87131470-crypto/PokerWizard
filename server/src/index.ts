@@ -16,6 +16,7 @@ import { startAutoConfirmation } from './services/pixService';
 import sharkscopeRouter from './routes/sharkscope';
 import pokerRouter from './routes/poker';
 import gtoRouter from './routes/gto';
+import { initUserService } from './services/userService';
 
 const app = express();
 
@@ -61,26 +62,41 @@ app.use('/api/gto', gtoRouter);
 
 const port = process.env.PORT ? Number(process.env.PORT) : 3000;
 
-app.listen(port, () => {
-  console.log(`API rodando em http://localhost:${port}`);
-
+// Initialize database before starting server
+async function startServer() {
   try {
-    const intervalMs = process.env.PIX_AUTO_CONFIRM_INTERVAL_MS ? Number(process.env.PIX_AUTO_CONFIRM_INTERVAL_MS) : undefined;
-    const thresholdMs = process.env.PIX_AUTO_CONFIRM_THRESHOLD_MS ? Number(process.env.PIX_AUTO_CONFIRM_THRESHOLD_MS) : undefined;
+    // Initialize PostgreSQL connection
+    console.log('[server] Initializing database...');
+    await initUserService();
+    
+    app.listen(port, () => {
+      console.log(`\n🚀 PokerWizard API running on http://localhost:${port}`);
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
-    if (intervalMs && thresholdMs) {
-      console.log(`[index] Starting PIX auto-confirmation (interval=${intervalMs}ms, threshold=${thresholdMs}ms)`);
-      startAutoConfirmation(intervalMs, thresholdMs);
-    } else if (intervalMs) {
-      console.log(`[index] Starting PIX auto-confirmation (interval=${intervalMs}ms, threshold=default)`);
-      startAutoConfirmation(intervalMs);
-    } else if (thresholdMs) {
-      console.log(`[index] Starting PIX auto-confirmation (interval=default, threshold=${thresholdMs}ms)`);
-      startAutoConfirmation(undefined, thresholdMs);
-    } else {
-      startAutoConfirmation();
-    }
+      try {
+        const intervalMs = process.env.PIX_AUTO_CONFIRM_INTERVAL_MS ? Number(process.env.PIX_AUTO_CONFIRM_INTERVAL_MS) : undefined;
+        const thresholdMs = process.env.PIX_AUTO_CONFIRM_THRESHOLD_MS ? Number(process.env.PIX_AUTO_CONFIRM_THRESHOLD_MS) : undefined;
+
+        if (intervalMs && thresholdMs) {
+          console.log(`[index] Starting PIX auto-confirmation (interval=${intervalMs}ms, threshold=${thresholdMs}ms)`);
+          startAutoConfirmation(intervalMs, thresholdMs);
+        } else if (intervalMs) {
+          console.log(`[index] Starting PIX auto-confirmation (interval=${intervalMs}ms, threshold=default)`);
+          startAutoConfirmation(intervalMs);
+        } else if (thresholdMs) {
+          console.log(`[index] Starting PIX auto-confirmation (interval=default, threshold=${thresholdMs}ms)`);
+          startAutoConfirmation(undefined, thresholdMs);
+        } else {
+          startAutoConfirmation();
+        }
+      } catch (err) {
+        console.error('Failed to start PIX auto-confirmation', err);
+      }
+    });
   } catch (err) {
-    console.error('Failed to start PIX auto-confirmation', err);
+    console.error('[server] Failed to start:', err);
+    process.exit(1);
   }
-});
+}
+
+startServer();

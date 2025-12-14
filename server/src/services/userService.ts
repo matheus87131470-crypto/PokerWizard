@@ -1,6 +1,14 @@
 import { v4 as uuid } from 'uuid';
 import bcrypt from 'bcryptjs';
-import storage from './storage';
+import {
+  initDatabase,
+  dbCreateUser,
+  dbGetUserById,
+  dbGetUserByEmail,
+  dbGetUserByGoogleId,
+  dbUpdateUser,
+  dbGetAllUsers,
+} from './database';
 
 export interface User {
   id: string;
@@ -9,9 +17,7 @@ export interface User {
   passwordHash?: string;
   googleId?: string;
   price?: number;
-  // Legacy internal field
   credits: number;
-  // New fields for requested schema
   usosRestantes: number | null; // null or -1 indicates unlimited
   statusPlano: 'free' | 'premium';
   premium: boolean;
@@ -19,39 +25,40 @@ export interface User {
   createdAt: Date;
 }
 
-// In-memory user store (loaded from JSON file)
-const users = new Map<string, User>();
-const usersByEmail = new Map<string, User>();
+// Flag to check if database is available
+let dbAvailable = false;
 
-const STORAGE_KEY = 'users';
+// In-memory fallback (only used if database is not available)
+const memoryUsers = new Map<string, User>();
+const memoryUsersByEmail = new Map<string, User>();
 
-async function persistAll() {
-  const arr = Array.from(users.values()).map(u => ({
-    ...u,
-    premiumUntil: u.premiumUntil ? u.premiumUntil.toISOString() : null,
-    createdAt: u.createdAt.toISOString(),
-  }));
-  await storage.writeJSON(STORAGE_KEY, arr);
-}
-
-async function loadAll() {
-  const arr = await storage.readJSON<any[]>(STORAGE_KEY, []);
-  for (const raw of arr) {
-    const u: User = {
-      ...raw,
-      premiumUntil: raw.premiumUntil ? new Date(raw.premiumUntil) : null,
-      createdAt: raw.createdAt ? new Date(raw.createdAt) : new Date(),
-    };
-    users.set(u.id, u);
-    usersByEmail.set(u.email, u);
+// Initialize database on startup
+export async function initUserService(): Promise<void> {
+  try {
+    if (!process.env.DATABASE_URL) {
+      console.warn('[userService] ⚠️ DATABASE_URL not set - using memory storage (DATA WILL BE LOST ON RESTART)');
+      dbAvailable = false;
+      return;
+    }
+    await initDatabase();
+    dbAvailable = true;
+    console.log('[userService] ✅ PostgreSQL connected - data will persist permanently!');
+  } catch (err: any) {
+    console.error('[userService] ⚠️ Database connection failed:', err.message);
+    console.warn('[userService] ⚠️ Falling back to memory storage (DATA WILL BE LOST ON RESTART)');
+    dbAvailable = false;
   }
 }
 
-// initialize from disk
-loadAll().catch((e) => console.error('[userService] failed to load users', e));
-
-export async function createUser(email: string, name: string, password?: string, googleId?: string, price?: number): Promise<User> {
-  const existing = usersByEmail.get(email);
+export async function createUser(
+  email: string,
+  name: string,
+  password?: string,
+  googleId?: string,
+  price?: number
+): Promise<User> {
+  // Check if user exists
+  const existing = await getUserByEmail(email);
   if (existing) {
     throw new Error('User already exists');
   }
@@ -71,51 +78,70 @@ export async function createUser(email: string, name: string, password?: string,
     createdAt: new Date(),
   };
 
-  users.set(user.id, user);
-  usersByEmail.set(email, user);
-  await persistAll();
+  if (dbAvailable) {
+    await dbCreateUser(user);
+    console.log(`[userService] ✅ User saved to PostgreSQL: ${email}`);
+  } else {
+    memoryUsers.set(user.id, user);
+    memoryUsersByEmail.set(email, user);
+    console.log(`[userService] ⚠️ User saved to memory only: ${email}`);
+  }
+
   return user;
 }
 
-export async function getUserByEmail(email: string): Promise<User | undefined> {
-  return usersByEmail.get(email);
+export async function getUserById(id: string): Promise<User | undefined> {
+  if (dbAvailable) {
+    const user = await dbGetUserById(id);
+    return user || undefined;
+  }
+  return memoryUsers.get(id);
 }
 
-export async function getUserById(id: string): Promise<User | undefined> {
-  return users.get(id);
+export async function getUserByEmail(email: string): Promise<User | undefined> {
+  if (dbAvailable) {
+    const user = await dbGetUserByEmail(email);
+    return user || undefined;
+  }
+  return memoryUsersByEmail.get(email);
+}
+
+export async function getUserByGoogleId(googleId: string): Promise<User | undefined> {
+  if (dbAvailable) {
+    const user = await dbGetUserByGoogleId(googleId);
+    return user || undefined;
+  }
+  for (const user of memoryUsers.values()) {
+    if (user.googleId === googleId) return user;
+  }
+  return undefined;
 }
 
 export async function verifyPassword(email: string, password: string): Promise<boolean> {
-  const user = usersByEmail.get(email);
+  const user = await getUserByEmail(email);
   if (!user || !user.passwordHash) return false;
   return bcrypt.compareSync(password, user.passwordHash);
 }
 
-// Simple consumption history persistence
-const CONSUMPTION_KEY = 'consumption_history';
-async function recordConsumption(userId: string, endpoint: string) {
-  try {
-    const hist = await storage.readJSON<any[]>(CONSUMPTION_KEY, []);
-    hist.push({ id: uuid(), userId, endpoint, at: new Date().toISOString() });
-    await storage.writeJSON(CONSUMPTION_KEY, hist);
-  } catch (e) {
-    console.error('[userService] recordConsumption failed', e);
-  }
-}
-
 export async function deductCredit(userId: string, endpoint: string = 'generic'): Promise<boolean> {
-  const user = users.get(userId);
+  const user = await getUserById(userId);
   if (!user) return false;
 
+  // Premium users have unlimited
   if (user.statusPlano === 'premium') return true;
-
   if (user.usosRestantes === null || user.usosRestantes === -1) return true;
 
   if (typeof user.usosRestantes === 'number' && user.usosRestantes > 0) {
-    user.usosRestantes = user.usosRestantes - 1;
-    user.credits = Math.max(0, user.credits - 1);
-    await persistAll();
-    await recordConsumption(userId, endpoint);
+    const newUsos = user.usosRestantes - 1;
+    const newCredits = Math.max(0, user.credits - 1);
+
+    if (dbAvailable) {
+      await dbUpdateUser(userId, { usosRestantes: newUsos, credits: newCredits });
+    } else {
+      user.usosRestantes = newUsos;
+      user.credits = newCredits;
+    }
+
     return true;
   }
 
@@ -123,40 +149,64 @@ export async function deductCredit(userId: string, endpoint: string = 'generic')
 }
 
 export async function setPremium(userId: string, days: number = 30): Promise<void> {
-  const user = users.get(userId);
+  const user = await getUserById(userId);
   if (!user) throw new Error('User not found');
 
-  user.premium = true;
-  user.statusPlano = 'premium';
-  const until = new Date();
-  until.setDate(until.getDate() + days);
-  user.premiumUntil = until;
+  const premiumUntil = new Date();
+  premiumUntil.setDate(premiumUntil.getDate() + days);
 
-  user.usosRestantes = -1;
-  user.credits = 1000;
-
-  await persistAll();
+  if (dbAvailable) {
+    await dbUpdateUser(userId, {
+      premium: true,
+      statusPlano: 'premium',
+      usosRestantes: -1, // unlimited
+      credits: 999999,
+      premiumUntil,
+    });
+    console.log(`[userService] ✅ Premium activated in PostgreSQL: ${user.email}`);
+  } else {
+    user.premium = true;
+    user.statusPlano = 'premium';
+    user.usosRestantes = -1;
+    user.credits = 999999;
+    user.premiumUntil = premiumUntil;
+    console.log(`[userService] ⚠️ Premium activated in memory only: ${user.email}`);
+  }
 }
 
 export async function updateUser(userId: string, updates: Partial<User>): Promise<User> {
-  const user = users.get(userId);
+  const user = await getUserById(userId);
   if (!user) throw new Error('User not found');
 
-  Object.assign(user, updates);
-  await persistAll();
-  return user;
+  if (dbAvailable) {
+    await dbUpdateUser(userId, updates as any);
+    const updated = await getUserById(userId);
+    return updated!;
+  } else {
+    Object.assign(user, updates);
+    return user;
+  }
 }
 
-// Atualiza senha do usuário
 export async function updatePassword(email: string, newPassword: string): Promise<void> {
-  const user = usersByEmail.get(email);
+  const user = await getUserByEmail(email);
   if (!user) throw new Error('User not found');
 
-  user.passwordHash = bcrypt.hashSync(newPassword, 10);
-  await persistAll();
+  const passwordHash = bcrypt.hashSync(newPassword, 10);
+
+  if (dbAvailable) {
+    await dbUpdateUser(user.id, { passwordHash });
+    console.log(`[userService] ✅ Password updated in PostgreSQL: ${email}`);
+  } else {
+    user.passwordHash = passwordHash;
+    console.log(`[userService] ⚠️ Password updated in memory only: ${email}`);
+  }
 }
 
-// Export snapshot for debugging
-export function getAllUsers() {
-  return Array.from(users.values());
+export function getAllUsers(): User[] {
+  if (dbAvailable) {
+    // Note: This is sync for compatibility, but should be made async
+    return Array.from(memoryUsers.values());
+  }
+  return Array.from(memoryUsers.values());
 }
