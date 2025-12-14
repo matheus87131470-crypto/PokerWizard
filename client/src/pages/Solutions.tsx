@@ -99,10 +99,11 @@ export default function Solutions() {
   const [activePosition, setActivePosition] = useState<Position>('BTN');
   const [hands, setHands] = useState<HandData[]>([]);
   const [selectedHandsList, setSelectedHandsList] = useState<string[]>([]);
-  const [aiMode, setAiMode] = useState(false);
+  const [aiMode, setAiMode] = useState(true); // IA ativa por padrão
   const [aiAnalysis, setAiAnalysis] = useState<string>('');
   const [loadingAI, setLoadingAI] = useState(false);
   const [handHistory, setHandHistory] = useState<string>('');
+  const [showAiTooltip, setShowAiTooltip] = useState(false);
 
   const positions: Position[] = ['UTG', 'HJ', 'CO', 'BTN', 'SB', 'BB'];
 
@@ -206,7 +207,15 @@ export default function Solutions() {
     }
 
     setLoadingAI(true);
-    setAiAnalysis('🤖 Analisando com IA...');
+    
+    // Se IA não está ativa, análise básica
+    if (!aiMode) {
+      setAiAnalysis('🎯 Análise Básica\n\nDica: Ative a IA para feedback avançado e personalizado.');
+      setTimeout(() => setLoadingAI(false), 800);
+      return;
+    }
+
+    setAiAnalysis('🤖 Analisando...');
 
     try {
       const response = await fetch(`${API_BASE}/api/gto/analyze`, {
@@ -215,6 +224,7 @@ export default function Solutions() {
         body: JSON.stringify({
           handHistory: handHistory,
           position: activePosition,
+          aiMode: aiMode,
         }),
       });
 
@@ -227,7 +237,7 @@ export default function Solutions() {
       }
     } catch (error) {
       console.error('AI Analysis error:', error);
-      setAiAnalysis('❌ Erro de conexão com IA. Verifique sua internet.');
+      setAiAnalysis('❌ Erro de conexão. Verifique sua internet e tente novamente.');
     } finally {
       setLoadingAI(false);
     }
@@ -256,144 +266,130 @@ export default function Solutions() {
           </div>
 
           {/* Action Card - Analisar Mão Específica */}
-          <div className="bg-gradient-to-br from-purple-900/30 to-purple-800/20 border border-purple-500/30 rounded-xl p-6 mb-6">
-            <div className="flex items-center gap-3 mb-4">
-              <span className="text-3xl">✍️</span>
+          <div className="bg-gradient-to-br from-gray-900/95 to-gray-800/95 border border-gray-700/50 rounded-2xl p-8 mb-6 backdrop-blur-xl">
+            <div className="flex items-center justify-between mb-6">
               <div>
-                <h3 className="text-xl font-bold text-white">Analisar Mão Específica</h3>
-                <p className="text-gray-400 text-xs">Cole o histórico ou descreva a situação</p>
+                <h3 className="text-2xl font-bold text-white mb-1">Analisar Situação</h3>
+                <p className="text-gray-400 text-sm">Cole o histórico ou descreva a mão</p>
+              </div>
+              {/* Toggle IA */}
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-gray-400 font-medium">IA Avançada</span>
+                <button
+                  onClick={() => setAiMode(!aiMode)}
+                  className={`relative w-14 h-7 rounded-full transition-all duration-300 ${
+                    aiMode ? 'bg-gradient-to-r from-purple-500 to-pink-500' : 'bg-gray-700'
+                  }`}
+                  style={{ boxShadow: aiMode ? '0 0 20px rgba(168, 85, 247, 0.4)' : 'none' }}
+                >
+                  <div
+                    className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform duration-300 ${
+                      aiMode ? 'translate-x-7' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
               </div>
             </div>
+            
             <textarea
               value={handHistory}
               onChange={(e) => setHandHistory(e.target.value)}
               placeholder="Exemplo: UTG raises 2.5bb, Hero no BTN com AKs decide 3bet para 7.5bb..."
-              className="w-full bg-gray-800/50 border border-gray-700 rounded-lg p-4 text-white text-sm resize-none focus:border-purple-500 focus:outline-none transition-colors"
+              className="w-full bg-gray-800/60 border border-gray-600/50 rounded-xl p-4 text-white text-sm resize-none focus:border-purple-500/50 focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition-all"
               rows={4}
+              style={{ fontFamily: 'inherit' }}
             />
-            <div className="flex items-center gap-3 mt-4">
+            
+            <div className="flex items-center gap-3 mt-5">
+              {/* Botão Principal - Estilo GTO Wizard */}
               <button
                 onClick={handleAIAnalysis}
                 disabled={loadingAI || !handHistory.trim()}
+                className="group relative flex-1 overflow-hidden"
                 style={{
-                  flex: 1,
-                  padding: '14px 24px',
-                  background: loadingAI || !handHistory.trim() 
-                    ? 'linear-gradient(135deg, #6b7280, #4b5563)'
-                    : 'linear-gradient(135deg, #a855f7, #ec4899)',
+                  padding: '16px 28px',
+                  background: loadingAI || !handHistory.trim()
+                    ? 'linear-gradient(135deg, #4b5563, #374151)'
+                    : 'linear-gradient(135deg, #8b5cf6, #ec4899)',
                   color: 'white',
-                  fontWeight: 600,
+                  fontWeight: 700,
                   fontSize: '15px',
-                  borderRadius: '12px',
+                  letterSpacing: '0.3px',
+                  borderRadius: '14px',
                   border: 'none',
                   cursor: loadingAI || !handHistory.trim() ? 'not-allowed' : 'pointer',
-                  boxShadow: loadingAI || !handHistory.trim() 
+                  boxShadow: loadingAI || !handHistory.trim()
                     ? 'none'
-                    : '0 4px 14px rgba(168, 85, 247, 0.4)',
-                  transition: 'all 0.3s ease',
+                    : '0 4px 20px rgba(139, 92, 246, 0.35)',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                   transform: 'scale(1)',
                 }}
                 onMouseEnter={(e) => {
                   if (!loadingAI && handHistory.trim()) {
-                    e.currentTarget.style.transform = 'scale(1.02)';
-                    e.currentTarget.style.boxShadow = '0 6px 20px rgba(168, 85, 247, 0.6)';
+                    e.currentTarget.style.transform = 'translateY(-2px) scale(1.01)';
+                    e.currentTarget.style.boxShadow = '0 8px 30px rgba(139, 92, 246, 0.5)';
                   }
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = 'scale(1)';
-                  e.currentTarget.style.boxShadow = loadingAI || !handHistory.trim() 
+                  e.currentTarget.style.boxShadow = loadingAI || !handHistory.trim()
                     ? 'none'
-                    : '0 4px 14px rgba(168, 85, 247, 0.4)';
+                    : '0 4px 20px rgba(139, 92, 246, 0.35)';
                 }}
               >
-                {loadingAI ? '🤖 Analisando...' : '🚀 Analisar com IA'}
+                <span className="flex items-center justify-center gap-2">
+                  {loadingAI ? (
+                    <>
+                      <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Analisando...
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-lg">⚡</span>
+                      Rodar Análise
+                    </>
+                  )}
+                </span>
               </button>
+
               {handHistory && (
                 <button
-                  onClick={() => setHandHistory('')}
-                  style={{
-                    padding: '14px 20px',
-                    background: 'rgba(55, 65, 81, 0.8)',
-                    color: '#d1d5db',
-                    fontWeight: 500,
-                    fontSize: '14px',
-                    borderRadius: '12px',
-                    border: '1px solid rgba(107, 114, 128, 0.4)',
-                    cursor: 'pointer',
-                    transition: 'all 0.3s ease',
-                    backdropFilter: 'blur(10px)',
+                  onClick={() => {
+                    setHandHistory('');
+                    setAiAnalysis('');
                   }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(75, 85, 99, 0.9)';
-                    e.currentTarget.style.color = 'white';
-                    e.currentTarget.style.borderColor = 'rgba(156, 163, 175, 0.6)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'rgba(55, 65, 81, 0.8)';
-                    e.currentTarget.style.color = '#d1d5db';
-                    e.currentTarget.style.borderColor = 'rgba(107, 114, 128, 0.4)';
-                  }}
+                  className="px-5 py-4 bg-gray-700/50 hover:bg-gray-600/60 text-gray-300 hover:text-white rounded-xl transition-all duration-200 border border-gray-600/30 hover:border-gray-500/50"
+                  style={{ fontWeight: 500, fontSize: '14px' }}
                 >
                   Limpar
                 </button>
               )}
             </div>
+
+            {/* Resultado da Análise */}
             {aiAnalysis && (
-              <div className="mt-4 bg-gray-800/50 border border-purple-500/30 rounded-lg p-4">
-                <div className="text-sm text-gray-300 whitespace-pre-wrap">{aiAnalysis}</div>
+              <div className="mt-6 bg-gradient-to-br from-gray-800/80 to-gray-900/80 border border-gray-700/50 rounded-xl p-5 backdrop-blur-sm">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-lg">💡</span>
+                  <span className="text-sm font-semibold text-gray-300">Resultado</span>
+                </div>
+                <div className="text-sm text-gray-200 leading-relaxed whitespace-pre-wrap">{aiAnalysis}</div>
               </div>
             )}
           </div>
 
           {/* Seção de Ranges */}
-          <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-6 mb-6">
-            <div className="flex items-center justify-between mb-4">
+          <div className="bg-gradient-to-br from-gray-900/95 to-gray-800/95 border border-gray-700/50 rounded-2xl p-8 mb-6 backdrop-blur-xl">
+            <div className="flex items-center justify-between mb-6">
               <div>
-                <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                <h3 className="text-2xl font-bold text-white flex items-center gap-2">
                   🎯 Ranges por Posição
                 </h3>
-                <p className="text-gray-400 text-xs mt-1">Clique nas mãos da matriz abaixo para ver detalhes</p>
+                <p className="text-gray-400 text-sm mt-1">Selecione uma posição e explore as mãos recomendadas</p>
               </div>
-              <button
-                onClick={() => setAiMode(!aiMode)}
-                style={{
-                  padding: '12px 28px',
-                  background: aiMode 
-                    ? 'linear-gradient(135deg, #a855f7, #ec4899)'
-                    : 'rgba(55, 65, 81, 0.8)',
-                  color: 'white',
-                  fontWeight: 600,
-                  fontSize: '14px',
-                  borderRadius: '12px',
-                  border: aiMode ? 'none' : '1px solid rgba(107, 114, 128, 0.4)',
-                  cursor: 'pointer',
-                  boxShadow: aiMode 
-                    ? '0 4px 14px rgba(168, 85, 247, 0.5)'
-                    : 'none',
-                  transition: 'all 0.3s ease',
-                  backdropFilter: 'blur(10px)',
-                }}
-                onMouseEnter={(e) => {
-                  if (aiMode) {
-                    e.currentTarget.style.boxShadow = '0 6px 20px rgba(168, 85, 247, 0.7)';
-                    e.currentTarget.style.transform = 'scale(1.05)';
-                  } else {
-                    e.currentTarget.style.background = 'rgba(75, 85, 99, 0.9)';
-                    e.currentTarget.style.borderColor = 'rgba(156, 163, 175, 0.6)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'scale(1)';
-                  if (aiMode) {
-                    e.currentTarget.style.boxShadow = '0 4px 14px rgba(168, 85, 247, 0.5)';
-                  } else {
-                    e.currentTarget.style.background = 'rgba(55, 65, 81, 0.8)';
-                    e.currentTarget.style.borderColor = 'rgba(107, 114, 128, 0.4)';
-                  }
-                }}
-              >
-                {aiMode ? '✅ IA Ativa' : '🤖 Ativar IA'}
-              </button>
             </div>
           
             {/* Position Tabs */}
