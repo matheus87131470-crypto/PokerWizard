@@ -35,7 +35,7 @@ export default function Trainer() {
       position,
       gameType,
       street,
-      preflopAction,
+      action, // ✅ CAMPO ÚNICO
       heroCards: ['K♠', '9♥'],
       board: street !== 'Pré-flop' ? ['A♣', '7♦', '2♥'] : [],
       villainRange: 'JJ+, AKs, AKo',
