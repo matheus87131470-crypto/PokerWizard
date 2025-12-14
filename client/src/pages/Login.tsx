@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { isValidEmail, isDisposableEmail } from '../utils/deviceFingerprint';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -9,8 +10,23 @@ export default function Login() {
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [emailError, setEmailError] = useState('');
   const navigate = useNavigate();
   const auth = useAuth();
+
+  // Validação de e-mail em tempo real
+  const handleEmailChange = (value: string) => {
+    setEmail(value);
+    setEmailError('');
+    
+    if (!isLogin && value) {
+      if (!isValidEmail(value)) {
+        setEmailError('E-mail inválido');
+      } else if (isDisposableEmail(value)) {
+        setEmailError('E-mails temporários não são permitidos');
+      }
+    }
+  };
 
   // LOGIN / REGISTRO
   const handleSubmit = async (e: React.FormEvent) => {
@@ -23,6 +39,12 @@ export default function Login() {
         await auth.login(email, password);
       } else {
         // Validações básicas
+        if (!isValidEmail(email)) {
+          throw new Error('Por favor, use um e-mail válido');
+        }
+        if (isDisposableEmail(email)) {
+          throw new Error('E-mails temporários não são permitidos. Use um e-mail permanente.');
+        }
         if (password.length < 6) {
           throw new Error('A senha deve ter pelo menos 6 caracteres');
         }
@@ -110,12 +132,20 @@ export default function Login() {
             <input
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => handleEmailChange(e.target.value)}
               placeholder="seu@email.com"
               className="search-input"
-              style={{ padding: '12px 14px' }}
+              style={{ 
+                padding: '12px 14px',
+                borderColor: emailError ? '#ef4444' : undefined
+              }}
               required
             />
+            {emailError && (
+              <div style={{ color: '#ef4444', fontSize: 12, marginTop: 4 }}>
+                {emailError}
+              </div>
+            )}
           </div>
 
           <div>

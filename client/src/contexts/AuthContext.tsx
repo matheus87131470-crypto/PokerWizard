@@ -96,10 +96,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLoading(true);
     setError(null);
     try {
+      // Coletar fingerprint do dispositivo
+      const { getDeviceFingerprint } = await import('../utils/deviceFingerprint');
+      const deviceInfo = getDeviceFingerprint();
+
       const res = await fetch(`${API_BASE}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, name, password, price: PRICE }),
+        body: JSON.stringify({ 
+          email, 
+          name, 
+          password, 
+          price: PRICE,
+          deviceInfo // Envia fingerprint do dispositivo
+        }),
       });
 
       if (!res.ok) {

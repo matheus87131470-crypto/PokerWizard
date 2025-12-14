@@ -6,14 +6,27 @@ interface DeviceFingerprint {
   acceptLanguage: string;
   screenResolution?: string;
   timezone?: string;
+  canvas?: string;
+  webgl?: string;
 }
 
 interface AccountCheck {
   ip: string;
   fingerprint: string;
   email: string;
+  deviceId: string;
   createdAt: Date;
 }
+
+// Lista de domínios de e-mail descartáveis/temporários (expandir conforme necessário)
+const DISPOSABLE_EMAIL_DOMAINS = [
+  'tempmail.com', 'guerrillamail.com', '10minutemail.com', 'throwaway.email',
+  'mailinator.com', 'trashmail.com', 'fakeinbox.com', 'yopmail.com',
+  'getnada.com', 'temp-mail.org', 'maildrop.cc', 'sharklasers.com',
+  'guerrillamail.info', 'guerrillamail.biz', 'guerrillamail.de', 'spam4.me',
+  'grr.la', 'guerrillamail.net', 'guerrillamail.org', 'mailnesia.com',
+  'mintemail.com', 'mytemp.email', 'mohmal.com', 'emailondeck.com'
+];
 
 // Armazena registros de contas criadas
 const accountRegistry: AccountCheck[] = [];
@@ -22,7 +35,7 @@ const accountRegistry: AccountCheck[] = [];
 const MIN_TIME_BETWEEN_ACCOUNTS = 24 * 60 * 60 * 1000; // 24 horas em ms
 
 /**
- * Gera um fingerprint do dispositivo
+ * Gera um fingerprint avançado do dispositivo
  */
 export function generateFingerprint(req: any, deviceInfo?: DeviceFingerprint): string {
   const data = {
@@ -30,6 +43,8 @@ export function generateFingerprint(req: any, deviceInfo?: DeviceFingerprint): s
     acceptLanguage: deviceInfo?.acceptLanguage || req.headers['accept-language'] || '',
     screenResolution: deviceInfo?.screenResolution || '',
     timezone: deviceInfo?.timezone || '',
+    canvas: deviceInfo?.canvas || '',
+    webgl: deviceInfo?.webgl || '',
   };
   
   const hash = crypto
@@ -38,6 +53,38 @@ export function generateFingerprint(req: any, deviceInfo?: DeviceFingerprint): s
     .digest('hex');
   
   return hash;
+}
+
+/**
+ * Gera um Device ID único combinando múltiplos fatores
+ */
+export function generateDeviceId(ip: string, fingerprint: string): string {
+  const combined = `${ip}-${fingerprint}`;
+  return crypto
+    .createHash('sha256')
+    .update(combined)
+    .digest('hex')
+    .substring(0, 16);
+}
+
+/**
+ * Verifica se o e-mail é de um provedor descartável/temporário
+ */
+export function isDisposableEmail(email: string): boolean {
+  const domain = email.split('@')[1]?.toLowerCase();
+  if (!domain) return false;
+  
+  return DISPOSABLE_EMAIL_DOMAINS.some(disposable => 
+    domain === disposable || domain.endsWith('.' + disposable)
+  );
+}
+
+/**
+ * Valida formato de e-mail
+ */
+export function isValidEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
 }
 
 /**
@@ -62,6 +109,7 @@ export function getRealIP(req: any): string {
 
 /**
  * Verifica se o usuário pode criar uma nova conta (anti-fraude)
+ * Implementa todas as recomendações de segurança
  */
 export function canCreateAccount(req: any, email: string, deviceInfo?: DeviceFingerprint): {
   allowed: boolean;
@@ -70,6 +118,7 @@ export function canCreateAccount(req: any, email: string, deviceInfo?: DeviceFin
 } {
   const ip = getRealIP(req);
   const fingerprint = generateFingerprint(req, deviceInfo);
+  const deviceId = generateDeviceId(ip, fingerprint);
   const now = Date.now();
 
   // 0. EXCEÇÃO: Se não há nenhum usuário no sistema, permite o primeiro cadastro (bootstrap)
@@ -77,54 +126,80 @@ export function canCreateAccount(req: any, email: string, deviceInfo?: DeviceFin
     return { allowed: true };
   }
 
-  // 1. Verificar se já existe conta com este email
+  // 🟢 ESSENCIAL 1: Validar formato de e-mail
+  if (!isValidEmail(email)) {
+    return {
+      allowed: false,
+      reason: 'E-mail inválido. Por favor, use um e-mail válido.'
+    };
+  }
+
+  // 🟢 ESSENCIAL 2: Bloquear e-mails descartáveis/temporários
+  if (isDisposableEmail(email)) {
+    return {
+      allowed: false,
+      reason: 'E-mails temporários não são permitidos. Use um e-mail permanente.'
+    };
+  }
+
+  // 🟢 ESSENCIAL 3: Verificar se já existe conta com este email
   const existingEmail = accountRegistry.find(acc => acc.email === email);
   if (existingEmail) {
     return {
       allowed: false,
-      reason: 'Este e-mail já está registrado'
+      reason: 'Este e-mail já está registrado. Faça login ou recupere sua senha.'
     };
   }
 
-  // 2. Verificar contas criadas do mesmo IP
-  const accountsFromIP = accountRegistry.filter(acc => acc.ip === ip);
-  if (accountsFromIP.length > 0) {
-    const lastAccount = accountsFromIP[accountsFromIP.length - 1];
+  // 🟡 FORTE 1: Verificar combinação e-mail + dispositivo + IP (24h)
+  const accountsFromDeviceAndIP = accountRegistry.filter(
+    acc => acc.deviceId === deviceId || acc.ip === ip || acc.fingerprint === fingerprint
+  );
+
+  if (accountsFromDeviceAndIP.length > 0) {
+    const lastAccount = accountsFromDeviceAndIP[accountsFromDeviceAndIP.length - 1];
     const timeSinceLastAccount = now - lastAccount.createdAt.getTime();
     
+    // 🟢 ESSENCIAL 4: Limite de 24h entre contas do mesmo dispositivo/IP
     if (timeSinceLastAccount < MIN_TIME_BETWEEN_ACCOUNTS) {
       const waitTime = Math.ceil((MIN_TIME_BETWEEN_ACCOUNTS - timeSinceLastAccount) / 1000 / 60 / 60); // horas
       return {
         allowed: false,
-        reason: `Você já criou uma conta recentemente. Aguarde ${waitTime}h para criar outra.`,
+        reason: `Você já criou uma conta recentemente. Aguarde ${waitTime}h para tentar novamente.`,
         waitTime
       };
     }
   }
 
-  // 3. Verificar fingerprint do dispositivo (mesmo dispositivo)
-  const accountsFromDevice = accountRegistry.filter(acc => acc.fingerprint === fingerprint);
-  if (accountsFromDevice.length >= 2) {
+  // 🟡 FORTE 2: Limite de contas por dispositivo (máximo 3 contas permanentes)
+  const permanentAccountsFromDevice = accountRegistry.filter(
+    acc => acc.deviceId === deviceId
+  );
+  
+  if (permanentAccountsFromDevice.length >= 3) {
     return {
       allowed: false,
-      reason: 'Limite de contas atingido neste dispositivo. Entre em contato com o suporte.'
+      reason: 'Limite máximo de contas atingido neste dispositivo. Entre em contato com o suporte se precisar de ajuda.'
     };
   }
 
+  // ✅ Todas as verificações passaram
   return { allowed: true };
 }
 
 /**
- * Registra uma nova conta criada
+ * Registra uma nova conta criada com Device ID
  */
 export function registerAccount(req: any, email: string, deviceInfo?: DeviceFingerprint): void {
   const ip = getRealIP(req);
   const fingerprint = generateFingerprint(req, deviceInfo);
+  const deviceId = generateDeviceId(ip, fingerprint);
 
   accountRegistry.push({
     ip,
     fingerprint,
     email,
+    deviceId,
     createdAt: new Date()
   });
 
