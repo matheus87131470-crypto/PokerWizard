@@ -84,7 +84,13 @@ export default function Premium() {
         throw new Error(text || 'Erro ao gerar QR Code');
       }
       
-      if (!j.ok) throw new Error(j.error || 'Falha ao criar PIX');
+      if (!j.ok) {
+        // Traduzir erros técnicos para mensagens amigáveis
+        if (j.error === 'user_not_found') {
+          throw new Error('Sessão expirada. Por favor, faça logout e login novamente.');
+        }
+        throw new Error(j.error || 'Falha ao criar PIX');
+      }
       setPayment(j.payment);
       setTimeLeft(30 * 60);
     } catch (err: any) {
@@ -187,12 +193,35 @@ export default function Premium() {
                 marginBottom: 16, 
                 fontSize: 13,
                 display: 'flex',
-                alignItems: 'center',
-                gap: 10,
+                flexDirection: 'column',
+                gap: 12,
                 fontWeight: 500
               }}>
-                <span style={{ fontSize: 18 }}>⚠️</span>
-                <span>{error}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ fontSize: 18 }}>⚠️</span>
+                  <span>{error}</span>
+                </div>
+                {error.includes('Sessão expirada') && (
+                  <button
+                    onClick={() => {
+                      auth.logout();
+                      navigate('/login');
+                    }}
+                    style={{
+                      padding: '10px 16px',
+                      background: 'rgba(239, 68, 68, 0.2)',
+                      border: '1px solid rgba(239, 68, 68, 0.4)',
+                      borderRadius: 8,
+                      color: 'white',
+                      fontSize: 13,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    🔄 Fazer Login Novamente
+                  </button>
+                )}
               </div>
             )}
 
