@@ -15,21 +15,17 @@ const positionsByTable: Record<TableType, Position[]> = {
   '9-max': ['UTG', 'UTG+1', 'MP', 'HJ', 'CO', 'BTN', 'SB', 'BB'],
 };
 
-// 🎯 FONTE ÚNICA DE AÇÃO - Regra de Negócio
-const ACTION_OPTIONS_BY_STREET: Record<string, string[]> = {
-  'Pré-flop': ['Fold', 'Call', 'Raise', '3-bet', '4-bet', 'All-in'],
-  'Flop': ['Check', 'Bet', 'Call', 'Raise', 'Fold'],
-  'Turn': ['Check', 'Bet', 'Call', 'Raise', 'Fold'],
-  'River': ['Check', 'Bet', 'Call', 'Raise', 'Fold'],
-};
-
 export default function Trainer() {
   const auth = useAuth();
   const [table, setTable] = useState<TableType>('6-max');
   const [position, setPosition] = useState<Position>('CO');
   const [gameType, setGameType] = useState('MTT');
-  const [street, setStreet] = useState('Flop');
-  const [action, setAction] = useState('Bet'); // ✅ FONTE ÚNICA
+  const [street, setStreet] = useState<'Pré-flop' | 'Flop' | 'Turn' | 'River'>('Pré-flop');
+  
+  // ✅ DOIS STATES SEPARADOS (igual GTO Wizard)
+  const [preflopAction, setPreflopAction] = useState('Raise');
+  const [postflopAction, setPostflopAction] = useState('Bet');
+  
   const [networks, setNetworks] = useState<any[]>([]);
   const [selectedNetwork, setSelectedNetwork] = useState('partypoker');
   const [scenario, setScenario] = useState<any>(null);
@@ -44,11 +40,11 @@ export default function Trainer() {
     const sid = `s-example-${Date.now()}`;
     return {
       id: sid,
-      table,      // 📦 NOVO
+      table,
       position,
       gameType,
       street,
-      action, // ✅ CAMPO ÚNICO
+      action: street === 'Pré-flop' ? preflopAction : postflopAction,
       heroCards: ['K♠', '9♥'],
       board: street !== 'Pré-flop' ? ['A♣', '7♦', '2♥'] : [],
       villainRange: 'JJ+, AKs, AKo',
@@ -75,12 +71,12 @@ export default function Trainer() {
     }
   }, [table]);
 
-  // 🔄 RESET OBRIGATÓRIO ao mudar Street
+  // 🔄 RESET AUTOMÁTICO - Action ao trocar Street (igual GTO Wizard)
   useEffect(() => {
-    const validActions = ACTION_OPTIONS_BY_STREET[street];
-    if (validActions && validActions.length > 0) {
-      // Sempre reseta para primeira opção válida
-      setAction(validActions[0]);
+    if (street === 'Pré-flop') {
+      setPreflopAction('Raise');
+    } else {
+      setPostflopAction('Bet');
     }
   }, [street]);
 
@@ -124,27 +120,18 @@ export default function Trainer() {
         return;
       }
 
-      // 🛡️ VALIDAÇÃO FRONTEND (regra de negócio)
-      const validActions = ACTION_OPTIONS_BY_STREET[street];
-      if (!validActions.includes(action)) {
-        setFeedback({ 
-          error: 'validation', 
-          message: `Ação "${action}" inválida para ${street}. Opções válidas: ${validActions.join(', ')}` 
-        });
-        setLoading(false);
-        return;
-      }
+      // ✅ PAYLOAD CORRETO (sem gambiarra)
+      const action = street === 'Pré-flop' ? preflopAction : postflopAction;
       
-      // ✅ PAYLOAD LIMPO (sem preflopAction)
       const res = await fetch(`${API_BASE}/api/trainer/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${auth.token}` },
         body: JSON.stringify({ 
-          table,      // 📦 NOVO
+          table,
           position, 
           gameType, 
           street, 
-          action, // ✅ Fonte única
+          action,
           network: selectedNetwork 
         }),
       });
@@ -354,42 +341,73 @@ export default function Trainer() {
               <label className="block text-sm font-bold text-gray-300 mb-2">🃏 Street</label>
               <select 
                 value={street}
-                onChange={(e) => setStreet(e.target.value)}
+                onChange={(e) => setStreet(e.target.value as 'Pré-flop' | 'Flop' | 'Turn' | 'River')}
                 className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-3 py-2 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50"
               >
-                {['Pré-flop', 'Flop', 'Turn', 'River'].map(s => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
+                <option value="Pré-flop">Pré-flop</option>
+                <option value="Flop">Flop</option>
+                <option value="Turn">Turn</option>
+                <option value="River">River</option>
               </select>
             </div>
 
-            {/* 🎯 FONTE ÚNICA DE AÇÃO - Opções baseadas na Street */}
-            <div style={{ position: 'relative', animation: 'fadeIn 0.3s ease-in' }} key={street}>
-              <label className="block text-sm font-bold text-gray-300 mb-2 flex items-center gap-2">
-                {street === 'Pré-flop' ? '⚡ Ação' : '🎲 Ação'}
-                <span style={{
-                  fontSize: '10px',
-                  background: street === 'Pré-flop' 
-                    ? 'linear-gradient(90deg, #f97316 0%, #ea580c 100%)'
-                    : 'linear-gradient(90deg, #3b82f6 0%, #2563eb 100%)',
-                  color: 'white',
-                  padding: '2px 6px',
-                  borderRadius: '4px',
-                  fontWeight: 'bold'
-                }}>
-                  {street.toUpperCase()}
-                </span>
-              </label>
-              <select 
-                value={action}
-                onChange={(e) => setAction(e.target.value)}
-                className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-3 py-2 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50"
-              >
-                {ACTION_OPTIONS_BY_STREET[street].map(opt => (
-                  <option key={opt} value={opt}>{opt}</option>
-                ))}
-              </select>
-            </div>
+            {/* ✅ JSX CONDICIONAL - Dois componentes diferentes (igual GTO Wizard) */}
+            {street === 'Pré-flop' ? (
+              <div style={{ animation: 'fadeIn 0.3s ease-in' }}>
+                <label className="block text-sm font-bold text-gray-300 mb-2 flex items-center gap-2">
+                  ⚡ Ação pré-flop
+                  <span style={{
+                    fontSize: '10px',
+                    background: 'linear-gradient(90deg, #f97316 0%, #ea580c 100%)',
+                    color: 'white',
+                    padding: '2px 6px',
+                    borderRadius: '4px',
+                    fontWeight: 'bold'
+                  }}>
+                    PRÉ-FLOP
+                  </span>
+                </label>
+                <select 
+                  value={preflopAction}
+                  onChange={(e) => setPreflopAction(e.target.value)}
+                  className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-3 py-2 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50"
+                >
+                  <option value="Raise">Raise</option>
+                  <option value="Call">Call</option>
+                  <option value="Fold">Fold</option>
+                  <option value="3-bet">3-bet</option>
+                  <option value="4-bet">4-bet</option>
+                  <option value="All-in">All-in</option>
+                </select>
+              </div>
+            ) : (
+              <div style={{ animation: 'fadeIn 0.3s ease-in' }}>
+                <label className="block text-sm font-bold text-gray-300 mb-2 flex items-center gap-2">
+                  🎲 Ação da Street
+                  <span style={{
+                    fontSize: '10px',
+                    background: 'linear-gradient(90deg, #3b82f6 0%, #2563eb 100%)',
+                    color: 'white',
+                    padding: '2px 6px',
+                    borderRadius: '4px',
+                    fontWeight: 'bold'
+                  }}>
+                    {street.toUpperCase()}
+                  </span>
+                </label>
+                <select 
+                  value={postflopAction}
+                  onChange={(e) => setPostflopAction(e.target.value)}
+                  className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-3 py-2 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50"
+                >
+                  <option value="Bet">Bet</option>
+                  <option value="Check">Check</option>
+                  <option value="Call">Call</option>
+                  <option value="Raise">Raise</option>
+                  <option value="Fold">Fold</option>
+                </select>
+              </div>
+            )}
 
             <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
               <button 
