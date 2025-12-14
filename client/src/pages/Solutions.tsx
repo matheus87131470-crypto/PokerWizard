@@ -238,27 +238,71 @@ export default function Solutions() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 flex items-center gap-3">
-              <span className="text-4xl">🎯</span>
-              Análise de Mãos
-            </h1>
-            <div className="flex items-center gap-4">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h1 className="text-3xl font-bold text-white flex items-center gap-3 mb-2">
+                📊 Análise de Mãos
+              </h1>
+              <p className="text-gray-400 text-sm">
+                Analise ranges por posição ou cole uma mão para análise completa
+              </p>
+            </div>
+            {user && (
+              <div className="text-right">
+                <div className="text-sm text-gray-400">Olá,</div>
+                <div className="text-white font-semibold">{user.name}</div>
+              </div>
+            )}
+          </div>
+
+          {/* Action Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            {/* Card 1 - Cole sua mão */}
+            <div className="bg-gradient-to-br from-purple-900/30 to-purple-800/20 border border-purple-500/30 rounded-xl p-6">
+              <div className="flex items-center gap-3 mb-3">
+                <span className="text-2xl">✍️</span>
+                <h3 className="text-lg font-semibold text-white">Analisar Mão Específica</h3>
+              </div>
+              <p className="text-gray-300 text-sm mb-4">
+                Cole o histórico da mão ou descreva a situação para receber análise detalhada da IA
+              </p>
+              <textarea
+                placeholder="Ex: UTG raises 2.5bb, você está no BTN com AKs..."
+                className="w-full bg-gray-800/50 border border-gray-700 rounded-lg p-3 text-white text-sm resize-none"
+                rows={3}
+              />
+              <button
+                onClick={handleAIAnalysis}
+                disabled={loadingAI}
+                className="mt-3 w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold py-3 rounded-lg hover:shadow-lg hover:shadow-purple-500/50 transition-all disabled:opacity-50"
+              >
+                {loadingAI ? '🤖 Analisando...' : '🚀 Analisar com IA'}
+              </button>
+            </div>
+
+            {/* Card 2 - Explorar Ranges */}
+            <div className="bg-gradient-to-br from-blue-900/30 to-blue-800/20 border border-blue-500/30 rounded-xl p-6">
+              <div className="flex items-center gap-3 mb-3">
+                <span className="text-2xl">🎯</span>
+                <h3 className="text-lg font-semibold text-white">Explorar Ranges por Posição</h3>
+              </div>
+              <p className="text-gray-300 text-sm mb-4">
+                Visualize ranges recomendados para cada posição e clique nas mãos para detalhes
+              </p>
+              <div className="flex items-center justify-between">
+                <span className="text-gray-400 text-xs">Posição selecionada:</span>
+                <span className="text-white font-bold text-lg">{activePosition}</span>
+              </div>
               <button
                 onClick={() => setAiMode(!aiMode)}
-                className={`px-4 py-2 rounded-lg font-semibold transition-all ${
+                className={`mt-3 w-full font-semibold py-3 rounded-lg transition-all ${
                   aiMode 
                     ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/50' 
                     : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                 }`}
               >
-                {aiMode ? '🤖 IA Ativa' : '🤖 Ativar IA'}
+                {aiMode ? '✅ IA Ativa' : '🤖 Ativar Análise IA'}
               </button>
-              {user && (
-                <div className="text-sm text-gray-400">
-                  Olá, <span className="text-white font-semibold">{user.name}</span>
-                </div>
-              )}
             </div>
           </div>
           
