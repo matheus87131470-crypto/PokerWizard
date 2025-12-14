@@ -142,21 +142,13 @@ export default function Profile() {
             }}>
               📊 STATUS DO PLANO
             </div>
-            <div style={{ 
-              display: 'inline-flex',
+            <div style={{
+              fontSize: 24,
+              fontWeight: 700,
+              color: isPremium ? '#fbbf24' : 'white',
+              display: 'flex',
               alignItems: 'center',
-              gap: 10,
-              padding: '8px 12px',
-              borderRadius: 12,
-              background: 'linear-gradient(135deg, rgba(15,23,42,0.6), rgba(30,41,59,0.6))',
-              border: '1px solid rgba(148,163,184,0.25)',
-              color: '#e2e8f0',
-              fontSize: 14,
-              fontWeight: 600,
-              marginTop: 8
-            }}>
-              ✉️ {user.email}
-            </div>
+              gap: 8
             }}>
               {isPremium ? '⭐ Premium' : '🆓 Free'}
             </div>

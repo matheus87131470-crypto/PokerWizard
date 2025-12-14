@@ -187,27 +187,27 @@ export default function Premium() {
               </ul>
             </div>
 
-            {error && (
-              {paidBanner && (
-                <div style={{ 
-                  padding: 14,
-                  background: 'rgba(16, 185, 129, 0.12)',
-                  border: '1px solid rgba(16, 185, 129, 0.35)',
-                  color: '#10b981',
-                  borderRadius: 10,
-                  marginBottom: 16,
-                  fontSize: 13,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 10,
-                  fontWeight: 600
-                }}>
-                  <span style={{ fontSize: 18 }}>🎉</span>
-                  <span>{paidBanner}</span>
-                </div>
-              )}
+            {paidBanner && (
+              <div style={{ 
+                padding: 14,
+                background: 'rgba(16, 185, 129, 0.12)',
+                border: '1px solid rgba(16, 185, 129, 0.35)',
+                color: '#10b981',
+                borderRadius: 10,
+                marginBottom: 16,
+                fontSize: 13,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                fontWeight: 600
+              }}>
+                <span style={{ fontSize: 18 }}>🎉</span>
+                <span>{paidBanner}</span>
+              </div>
+            )}
 
-              {error && (
+            {error && (
+              <div style={{ 
                 padding: 14, 
                 background: 'rgba(239, 68, 68, 0.1)', 
                 border: '1px solid rgba(239, 68, 68, 0.3)',
@@ -217,14 +217,12 @@ export default function Premium() {
                 fontSize: 13,
                 display: 'flex',
                 flexDirection: 'column',
-                  flexDirection: 'column',
-                  gap: 12,
+                gap: 12,
+                fontWeight: 500
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span style={{ fontSize: 18 }}>⚠️</span>
-                    <span>{error}</span>
-                  </div>
+                  <span style={{ fontSize: 18 }}>⚠️</span>
+                  <span>{error}</span>
                 </div>
                 {error.includes('Sessão expirada') && (
                   <button
