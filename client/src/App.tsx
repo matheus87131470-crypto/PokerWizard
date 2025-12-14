@@ -32,27 +32,33 @@ function Layout({ children }: { children: React.ReactNode }) {
           <Link to="/trainer" className="nav-link">🧪 Training Lab</Link>
           <Link to="/solutions" className="nav-link">🎯 GTO Solutions</Link>
           <Link to="/features" className="nav-link">Funcionalidades</Link>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             {auth.user ? (
               <>
                 <Link to="/profile" style={{ textDecoration: 'none' }}>
-                  <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>👤 {auth.user.name}</span>
+                  <span style={{ fontSize: 13, color: '#a78bfa', fontWeight: 500 }}>👤 {auth.user.name}</span>
                 </Link>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <button onClick={() => navigate('/premium')} className="btn btn-primary" style={{ padding: '6px 10px', fontSize: 12 }}>Preço: R$ 5,90</button>
-                  <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Usos restantes: {(auth.user as any)?.usosRestantes === -1 || (auth.user as any)?.usosRestantes === null ? 'Ilimitado' : ((auth.user as any)?.usosRestantes ?? auth.user.credits)}</div>
+                <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
+                  💎 {(auth.user as any)?.usosRestantes === -1 || (auth.user as any)?.usosRestantes === null ? 'Ilimitado' : ((auth.user as any)?.usosRestantes ?? auth.user.credits)} usos
                 </div>
                 {!auth.user.premium && (((auth.user as any).usosRestantes === undefined) ? (typeof auth.user.credits === 'number' && auth.user.credits <= 0) : ((auth.user as any).usosRestantes <= 0 && (auth.user as any).usosRestantes !== -1)) && (
-                  <button onClick={() => navigate('/premium')} className="btn btn-primary" style={{ padding: '6px 10px', fontSize: 12, background: 'crimson', borderColor: 'crimson' }}>Assinar</button>
+                  <button onClick={() => navigate('/premium')} className="btn btn-primary" style={{ padding: '8px 16px', fontSize: 13, background: 'linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%)', border: 'none' }}>
+                    ⚡ Upgrade
+                  </button>
                 )}
-                <button onClick={handleLogout} className="btn btn-ghost" style={{ padding: '6px 12px', fontSize: 12 }}>
+                <button onClick={() => navigate('/premium')} className="btn btn-ghost" style={{ padding: '8px 16px', fontSize: 13 }}>
+                  💳 Planos
+                </button>
+                <button onClick={handleLogout} className="btn btn-ghost" style={{ padding: '8px 16px', fontSize: 13 }}>
                   Sair
                 </button>
               </>
             ) : (
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                <button onClick={() => navigate('/premium')} className="btn btn-primary" style={{ padding: '6px 10px', fontSize: 12 }}>Preço: R$ 5,90</button>
-                <button onClick={() => navigate('/login')} className="btn btn-primary" style={{ padding: '6px 12px', fontSize: 12 }}>
+              <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                <button onClick={() => navigate('/premium')} className="btn btn-ghost" style={{ padding: '8px 16px', fontSize: 13 }}>
+                  💳 Planos
+                </button>
+                <button onClick={() => navigate('/login')} className="btn btn-primary" style={{ padding: '8px 20px', fontSize: 13, background: 'linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%)', border: 'none' }}>
                   Entrar
                 </button>
               </div>

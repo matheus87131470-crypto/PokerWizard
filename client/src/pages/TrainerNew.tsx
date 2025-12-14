@@ -143,24 +143,42 @@ export default function TrainingLab() {
     <div style={{ minHeight: '100vh', background: 'var(--background)', padding: '40px 20px' }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         {/* HEADER */}
-        <div style={{ marginBottom: 40 }}>
-          <h1 style={{ fontSize: 36, fontWeight: 700, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 12 }}>
-            ✏️ Training Lab AI
-          </h1>
+        <div style={{ 
+          marginBottom: 32,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          padding: '20px 24px',
+          background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(124, 58, 237, 0.05) 100%)',
+          borderRadius: 16,
+          border: '1px solid rgba(139, 92, 246, 0.2)'
+        }}>
+          <div>
+            <h1 style={{ fontSize: 32, fontWeight: 700, marginBottom: 4, color: 'white', display: 'flex', alignItems: 'center', gap: 10 }}>
+              🎯 Training Lab
+            </h1>
+            <p style={{ fontSize: 14, color: '#a78bfa', margin: 0 }}>Treine situações reais de poker com análise profissional</p>
+          </div>
           <button
             onClick={() => setIaAtiva(v => !v)}
             style={{
-              padding: '8px 16px',
-              borderRadius: 8,
-              border: 'none',
-              background: iaAtiva ? 'linear-gradient(90deg, #10b981 0%, #059669 100%)' : '#374151',
+              padding: '10px 20px',
+              borderRadius: 10,
+              border: iaAtiva ? '2px solid #10b981' : '2px solid #6b7280',
+              background: iaAtiva ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : 'transparent',
               color: 'white',
               fontWeight: 600,
               cursor: 'pointer',
-              transition: 'all 0.2s',
+              transition: 'all 0.3s',
+              fontSize: 14,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              boxShadow: iaAtiva ? '0 4px 20px rgba(16, 185, 129, 0.4)' : 'none'
             }}
           >
-            {iaAtiva ? '🤖 IA Ativa' : '🤖 Ativar IA'}
+            <span style={{ fontSize: 18 }}>🤖</span>
+            {iaAtiva ? 'IA Ativa' : 'Ativar IA'}
           </button>
         </div>
 
@@ -168,34 +186,47 @@ export default function TrainingLab() {
           {/* COLUNA ESQUERDA - CONFIGURAÇÕES */}
           <div
             style={{
-              background: 'var(--card-background)',
-              borderRadius: 12,
-              padding: 24,
-              border: '1px solid var(--border-color)',
+              background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+              borderRadius: 16,
+              padding: 28,
+              border: '1px solid rgba(139, 92, 246, 0.2)',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)'
             }}
           >
-            <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
-              ⚙️ Configurações
+            <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 24, display: 'flex', alignItems: 'center', gap: 10, color: 'white' }}>
+              <span style={{ 
+                background: 'linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%)',
+                padding: '6px 10px',
+                borderRadius: 8,
+                fontSize: 16
+              }}>⚙️</span>
+              Configurações
             </h2>
 
             <form onSubmit={gerarSituacao} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {/* MESA */}
               <div>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 6 }}>
-                  🪑 Mesa
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#a78bfa', marginBottom: 8, letterSpacing: '0.5px' }}>
+                  🪑 MESA
                 </label>
                 <select
                   value={mesa}
                   onChange={e => setMesa(e.target.value as any)}
                   style={{
                     width: '100%',
-                    padding: '10px 12px',
-                    borderRadius: 8,
-                    border: '1px solid var(--border-color)',
-                    background: 'var(--input-background)',
-                    color: 'var(--text-primary)',
+                    padding: '12px 14px',
+                    borderRadius: 10,
+                    border: '2px solid #334155',
+                    background: '#0f172a',
+                    color: 'white',
                     fontSize: 14,
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    outline: 'none'
                   }}
+                  onFocus={(e) => e.target.style.borderColor = '#8b5cf6'}
+                  onBlur={(e) => e.target.style.borderColor = '#334155'}
                 >
                   <option value="heads-up">Heads-up</option>
                   <option value="6-max">6-max</option>
@@ -205,21 +236,27 @@ export default function TrainingLab() {
 
               {/* POSIÇÃO */}
               <div>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 6 }}>
-                  📍 Posição
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#a78bfa', marginBottom: 8, letterSpacing: '0.5px' }}>
+                  📍 POSIÇÃO
                 </label>
                 <select
                   value={posicao}
                   onChange={e => setPosicao(e.target.value)}
                   style={{
                     width: '100%',
-                    padding: '10px 12px',
-                    borderRadius: 8,
-                    border: '1px solid var(--border-color)',
-                    background: 'var(--input-background)',
-                    color: 'var(--text-primary)',
+                    padding: '12px 14px',
+                    borderRadius: 10,
+                    border: '2px solid #334155',
+                    background: '#0f172a',
+                    color: 'white',
                     fontSize: 14,
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    outline: 'none'
                   }}
+                  onFocus={(e) => e.target.style.borderColor = '#8b5cf6'}
+                  onBlur={(e) => e.target.style.borderColor = '#334155'}
                 >
                   {posicoesPorMesa[mesa].map(p => (
                     <option key={p} value={p}>
@@ -231,21 +268,27 @@ export default function TrainingLab() {
 
               {/* TIPO DE JOGO */}
               <div>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 6 }}>
-                  🎮 Tipo de jogo
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#a78bfa', marginBottom: 8, letterSpacing: '0.5px' }}>
+                  🎮 TIPO DE JOGO
                 </label>
                 <input
                   value={tipoJogo}
                   onChange={e => setTipoJogo(e.target.value)}
+                  placeholder="MTT, Cash Game, Sit&Go..."
                   style={{
                     width: '100%',
-                    padding: '10px 12px',
-                    borderRadius: 8,
-                    border: '1px solid var(--border-color)',
-                    background: 'var(--input-background)',
-                    color: 'var(--text-primary)',
+                    padding: '12px 14px',
+                    borderRadius: 10,
+                    border: '2px solid #334155',
+                    background: '#0f172a',
+                    color: 'white',
                     fontSize: 14,
+                    fontWeight: 500,
+                    transition: 'all 0.2s',
+                    outline: 'none'
                   }}
+                  onFocus={(e) => e.target.style.borderColor = '#8b5cf6'}
+                  onBlur={(e) => e.target.style.borderColor = '#334155'}
                 />
               </div>
 
@@ -333,19 +376,34 @@ export default function TrainingLab() {
                 type="submit"
                 disabled={!podeGerar}
                 style={{
-                  marginTop: 8,
-                  padding: '14px 24px',
-                  borderRadius: 8,
+                  marginTop: 12,
+                  padding: '16px 24px',
+                  borderRadius: 12,
                   border: 'none',
                   background: podeGerar
-                    ? 'linear-gradient(90deg, #8b5cf6 0%, #7c3aed 100%)'
-                    : '#374151',
+                    ? 'linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%)'
+                    : 'linear-gradient(135deg, #374151 0%, #1f2937 100%)',
                   color: 'white',
-                  fontSize: 15,
-                  fontWeight: 600,
+                  fontSize: 16,
+                  fontWeight: 700,
                   cursor: podeGerar ? 'pointer' : 'not-allowed',
-                  transition: 'all 0.2s',
-                  opacity: podeGerar ? 1 : 0.5,
+                  transition: 'all 0.3s',
+                  opacity: podeGerar ? 1 : 0.4,
+                  boxShadow: podeGerar ? '0 8px 24px rgba(139, 92, 246, 0.4)' : 'none',
+                  transform: podeGerar ? 'scale(1)' : 'scale(0.98)',
+                  letterSpacing: '0.5px'
+                }}
+                onMouseEnter={(e) => {
+                  if (podeGerar) {
+                    e.currentTarget.style.transform = 'scale(1.02)';
+                    e.currentTarget.style.boxShadow = '0 12px 32px rgba(139, 92, 246, 0.5)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (podeGerar) {
+                    e.currentTarget.style.transform = 'scale(1)';
+                    e.currentTarget.style.boxShadow = '0 8px 24px rgba(139, 92, 246, 0.4)';
+                  }
                 }}
               >
                 {isLoading ? '⏳ Gerando situação...' : '✨ Gerar Situação'}
