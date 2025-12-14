@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Link, useNavigate } from 'react-router-dom';
 import Rankings from './pages/Rankings';
 import Features from './pages/Features';
-import Trainer from './pages/TrainerNew';
 import Analysis from './pages/Analysis';
 import Login from './pages/Login';
 import Premium from './pages/Premium';
@@ -137,7 +136,6 @@ function Layout({ children }: { children: React.ReactNode }) {
           <Link to="/" className="nav-link">Home</Link>
           <Link to="/rankings" className="nav-link">Rankings</Link>
           <Link to="/analysis" className="nav-link">Análise</Link>
-          <Link to="/trainer" className="nav-link">Laboratório de Treino</Link>
           <Link to="/solutions" className="nav-link">Análise de Mãos</Link>
           <Link to="/features" className="nav-link">Funcionalidades</Link>
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
@@ -283,7 +281,7 @@ function Home() {
                 🚀 Começar Grátis
               </button>
               <button 
-                onClick={() => navigate('/trainer')}
+                onClick={() => navigate('/solutions')}
                 style={{
                   padding: '14px 32px',
                   background: 'rgba(255, 255, 255, 0.2)',
@@ -305,7 +303,7 @@ function Home() {
                   e.currentTarget.style.transform = 'translateY(0)';
                 }}
               >
-                Ver Demo
+                📊 Analisar Mão
               </button>
             </div>
           </div>
@@ -351,22 +349,22 @@ function Home() {
             🎯 COMECE POR AQUI
           </p>
           <p style={{ fontSize: 15, color: 'var(--text-secondary)', marginBottom: 16 }}>
-            Gere um treino ou analise uma mão em menos de 1 minuto.
+            Analise suas mãos de poker com IA em menos de 1 minuto.
           </p>
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
             <button 
-              onClick={() => navigate('/trainer')}
+              onClick={() => navigate('/solutions')}
               className="btn btn-success" 
               style={{ padding: '14px 24px', fontSize: 15, fontWeight: 700 }}
             >
-              Iniciar Treino
+              📊 Analisar Mão Agora
             </button>
             <button 
-              onClick={() => navigate('/solutions')}
+              onClick={() => navigate('/rankings')}
               className="btn btn-ghost" 
               style={{ padding: '14px 24px', fontSize: 15 }}
             >
-              📊 Analisar Mão
+              🏆 Ver Rankings
             </button>
           </div>
         </div>
@@ -404,26 +402,26 @@ function Home() {
           
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32, alignItems: 'center' }}>
             <div>
-              <div style={{ fontSize: 48, marginBottom: 16 }}>🧠</div>
+              <div style={{ fontSize: 48, marginBottom: 16 }}>📊</div>
               <h2 style={{ fontSize: 28, fontWeight: 800, marginBottom: 12, color: 'white' }}>
-                Laboratório de Treino com IA
+                Análise de Mãos com IA
               </h2>
               <p style={{ fontSize: 16, color: '#94a3b8', lineHeight: 1.7, marginBottom: 20 }}>
-                <strong style={{ color: '#10b981' }}>Receba feedback imediato</strong> e descubra exatamente onde você está perdendo dinheiro. A IA analisa suas decisões e sugere melhorias específicas.
+                <strong style={{ color: '#10b981' }}>Análise completa e profissional</strong> das suas mãos. A IA avalia ranges, equity e sugere as melhores jogadas baseadas em GTO.
               </p>
               <ul style={{ listStyle: 'none', padding: 0, marginBottom: 24 }}>
-                {['Situações reais de torneio e cash', 'Análise de range e equity', 'Feedback personalizado da IA'].map((item, i) => (
+                {['Análise GTO completa', 'Cálculo de equity e ranges', 'Feedback detalhado e acionável'].map((item, i) => (
                   <li key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10, color: '#cbd5e1', fontSize: 14 }}>
                     <span style={{ color: '#10b981' }}>✓</span> {item}
                   </li>
                 ))}
               </ul>
               <button 
-                onClick={() => navigate('/trainer')}
+                onClick={() => navigate('/solutions')}
                 className="btn btn-primary" 
                 style={{ padding: '16px 32px', fontSize: 16, fontWeight: 700 }}
               >
-                Começar Treino Agora →
+                Analisar Mão Agora →
               </button>
             </div>
             <div style={{ 
@@ -434,7 +432,7 @@ function Home() {
               textAlign: 'center'
             }}>
               <div style={{ fontSize: 64, marginBottom: 12 }}>🎯</div>
-              <p style={{ color: '#a78bfa', fontSize: 14, fontWeight: 600 }}>Mesa de treino interativa</p>
+              <p style={{ color: '#a78bfa', fontSize: 14, fontWeight: 600 }}>Análise GTO profissional</p>
             </div>
           </div>
         </div>
@@ -616,22 +614,22 @@ function Home() {
           🔥 Pronto para evoluir seu jogo?
         </h2>
         <p style={{ fontSize: 16, color: 'var(--text-secondary)', marginBottom: 28, maxWidth: 450, margin: '0 auto 28px' }}>
-          Gere seu primeiro treino ou analise uma mão agora. É grátis.
+          Analise suas mãos com IA e receba feedback profissional. É grátis.
         </p>
         <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
           <button 
-            onClick={() => navigate('/trainer')}
+            onClick={() => navigate('/solutions')}
             className="btn btn-success" 
             style={{ padding: '16px 32px', fontSize: 16, fontWeight: 700 }}
           >
-            Iniciar Treino
+            📊 Analisar Mão Agora
           </button>
           <button 
-            onClick={() => navigate('/solutions')}
+            onClick={() => navigate('/rankings')}
             className="btn btn-primary" 
             style={{ padding: '16px 32px', fontSize: 16 }}
           >
-            Analisar Mão
+            🏆 Ver Rankings
           </button>
         </div>
       </div>
@@ -659,7 +657,6 @@ export default function App() {
             <Route path="/" element={<Home />} />
             <Route path="/rankings" element={<Rankings />} />
             <Route path="/analysis" element={<Analysis />} />
-            <Route path="/trainer" element={<Trainer />} />
             <Route path="/features" element={<Features />} />
             <Route path="/solutions" element={<Solutions />} />
             <Route path="/login" element={<Login />} />
