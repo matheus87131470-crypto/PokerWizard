@@ -1,6 +1,8 @@
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
+  "buildCommand": "cd client && npm install && npm run build",
+  "outputDirectory": "client/dist",
+  "installCommand": "echo 'Skipping root install'",
+  "framework": null,
   "env": {
     "VITE_API_URL": "@vite_api_url"
   }
