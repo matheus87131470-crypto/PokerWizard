@@ -24,7 +24,10 @@ function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div>
       <header className="app-header">
-        <div className="brand"><span className="dot" />PokerWizard</div>
+        <div className="brand">
+          <span className="dot" />PokerWizard
+          <span style={{ fontSize: 11, color: 'var(--text-muted)', marginLeft: 8, fontWeight: 400 }}>by Pokio</span>
+        </div>
         <nav className="app-nav">
           <Link to="/" className="nav-link">Home</Link>
           <Link to="/rankings" className="nav-link">Rankings</Link>
@@ -130,15 +133,16 @@ function Home() {
         border: '1px solid rgba(139, 92, 246, 0.2)'
       }}>
         <div style={{ fontSize: 56, marginBottom: 20 }}>🎯</div>
-        <h1 style={{ fontSize: 42, marginBottom: 16, fontWeight: 900, lineHeight: 1.2 }}>
-          Domine o Poker com
+        <h1 style={{ fontSize: 42, marginBottom: 12, fontWeight: 900, lineHeight: 1.2 }}>
+          PokerWizard
           <span style={{ 
-            background: 'linear-gradient(135deg, #a78bfa, #10b981)', 
-            WebkitBackgroundClip: 'text', 
-            WebkitTextFillColor: 'transparent',
-            display: 'block'
+            display: 'block',
+            fontSize: 24,
+            fontWeight: 600,
+            color: 'var(--text-secondary)',
+            marginTop: 8
           }}>
-            Inteligência Artificial
+            AI Poker Trainer by Pokio
           </span>
         </h1>
         <p style={{ fontSize: 18, color: 'var(--text-secondary)', maxWidth: 550, margin: '0 auto 32px', lineHeight: 1.6 }}>
@@ -444,9 +448,14 @@ function Home() {
       </div>
 
       {/* Footer */}
-      <div style={{ textAlign: 'center', borderTop: '1px solid var(--border-color)', paddingTop: 32, color: 'var(--text-muted)', fontSize: 13 }}>
-        <p style={{ marginBottom: 8 }}>PokerWizard © 2025 - Todos os direitos reservados</p>
-        <p>Construído para jogadores que querem resultados reais.</p>
+      <div style={{ textAlign: 'center', borderTop: '1px solid var(--border-color)', paddingTop: 32, paddingBottom: 24, color: 'var(--text-muted)', fontSize: 13 }}>
+        <p style={{ marginBottom: 8, fontWeight: 600, color: 'var(--text-secondary)' }}>PokerWizard — AI Poker Trainer</p>
+        <p style={{ marginBottom: 12 }}>Construído para jogadores que querem resultados reais.</p>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, fontSize: 12 }}>
+          <span>© 2025</span>
+          <span style={{ color: 'var(--border-color)' }}>•</span>
+          <span style={{ color: 'var(--accent-primary)', fontWeight: 500 }}>Powered by Pokio</span>
+        </div>
       </div>
     </div>
   );

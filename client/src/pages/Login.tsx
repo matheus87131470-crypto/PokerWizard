@@ -78,7 +78,8 @@ export default function Login() {
         {/* Título */}
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <div style={{ fontSize: 48, marginBottom: 16 }}>♠️♣️♦️♥️</div>
-          <h1 style={{ fontSize: 28, fontWeight: 800, marginBottom: 8 }}>PokerWizard</h1>
+          <h1 style={{ fontSize: 28, fontWeight: 800, marginBottom: 4 }}>PokerWizard</h1>
+          <p style={{ color: 'var(--text-muted)', fontSize: 12, marginBottom: 12 }}>AI Poker Trainer by Pokio</p>
           <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>
             {isLogin ? 'Acesse sua conta' : 'Crie uma nova conta'}
           </p>

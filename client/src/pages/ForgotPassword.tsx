@@ -173,11 +173,14 @@ export default function ForgotPassword() {
               background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
-              marginBottom: '10px',
+              marginBottom: '6px',
             }}
           >
             🔐 Recuperar Senha
           </h1>
+          <p style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.4)', marginBottom: '10px' }}>
+            PokerWizard by Pokio
+          </p>
           <p style={{ fontSize: '14px', color: 'rgba(255, 255, 255, 0.6)' }}>
             {step === 'email' && 'Digite seu email para receber o código de recuperação'}
             {step === 'code' && 'Digite o código de 6 dígitos enviado para seu email'}

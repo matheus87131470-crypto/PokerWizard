@@ -162,7 +162,8 @@ export default function Premium() {
         {!payment ? (
           // Estado: Antes de gerar QR Code
           <div style={{ textAlign: 'center' }}>
-            <h1 style={{ fontSize: 32, marginBottom: 12 }}>🚀 Ative Premium</h1>
+            <h1 style={{ fontSize: 32, marginBottom: 8 }}>🚀 Ative Premium</h1>
+            <p style={{ color: 'var(--text-muted)', fontSize: 12, marginBottom: 12 }}>PokerWizard by Pokio</p>
             <p style={{ color: 'var(--text-secondary)', marginBottom: 8 }}>Análises ilimitadas, histórico completo e prioridade na IA</p>
             <p style={{ fontSize: 28, fontWeight: 800, color: 'var(--accent-primary)', marginBottom: 24 }}>R$ 5,90/mês</p>
             
