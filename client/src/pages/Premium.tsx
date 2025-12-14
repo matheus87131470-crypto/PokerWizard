@@ -167,8 +167,21 @@ export default function Premium() {
             </div>
 
             {error && (
-              <div style={{ padding: 12, background: 'rgba(239, 68, 68, 0.1)', color: 'var(--accent-red)', borderRadius: 8, marginBottom: 16, fontSize: 13 }}>
-                ⚠️ {error}
+              <div style={{ 
+                padding: 14, 
+                background: 'rgba(239, 68, 68, 0.1)', 
+                border: '1px solid rgba(239, 68, 68, 0.3)',
+                color: 'var(--accent-red)', 
+                borderRadius: 10, 
+                marginBottom: 16, 
+                fontSize: 13,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                fontWeight: 500
+              }}>
+                <span style={{ fontSize: 18 }}>⚠️</span>
+                <span>{error}</span>
               </div>
             )}
 
@@ -176,9 +189,25 @@ export default function Premium() {
               onClick={createPix}
               disabled={loading}
               className="btn btn-primary"
-              style={{ width: '100%', padding: 16, fontSize: 16, fontWeight: 700 }}
+              style={{ 
+                width: '100%', 
+                padding: 16, 
+                fontSize: 16, 
+                fontWeight: 700,
+                position: 'relative',
+                transition: 'all 0.3s'
+              }}
+              onMouseEnter={(e) => !loading && (e.currentTarget.style.transform = 'translateY(-2px)')}
+              onMouseLeave={(e) => (e.currentTarget.style.transform = 'translateY(0)')}
             >
-              {loading ? '⏳ Gerando QR Code...' : '💳 Pagar com PIX'}
+              {loading ? (
+                <span style={{ display: 'flex', alignItems: 'center', gap: 10, justifyContent: 'center' }}>
+                  <span className="spinner" style={{ width: 16, height: 16, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: 'white' }}></span>
+                  Gerando QR Code...
+                </span>
+              ) : (
+                '💳 Pagar com PIX'
+              )}
             </button>
 
             <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 16 }}>
@@ -275,10 +304,24 @@ export default function Premium() {
               <button
                 onClick={confirmManually}
                 disabled={loading}
-                className="btn btn-primary"
-                style={{ padding: 12, fontSize: 14, fontWeight: 600 }}
+                className="btn btn-success"
+                style={{ 
+                  padding: 12, 
+                  fontSize: 14, 
+                  fontWeight: 600,
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={(e) => !loading && (e.currentTarget.style.transform = 'translateY(-2px)')}
+                onMouseLeave={(e) => (e.currentTarget.style.transform = 'translateY(0)')}
               >
-                {loading ? '⏳...' : '✅ Já Paguei'}
+                {loading ? (
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
+                    <span className="spinner" style={{ width: 14, height: 14, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: 'white' }}></span>
+                    Verificando...
+                  </span>
+                ) : (
+                  '✅ Já Paguei'
+                )}
               </button>
               <button
                 onClick={() => { setPayment(null); setError(null); }}
