@@ -115,136 +115,338 @@ function LoginForm({ onSuccess }: { onSuccess: (user: any) => void }) {
 }
 
 function Home() {
+  const navigate = useNavigate();
+  const auth = useAuth();
+  
   return (
     <div style={{ paddingTop: 20 }}>
-      {/* Hero Section */}
-      <div style={{ marginBottom: 60, textAlign: 'center' }}>
-        <div style={{ fontSize: 64, marginBottom: 24 }}>♠️♣️♦️♥️</div>
-        <h1 style={{ fontSize: 48, marginBottom: 16, fontWeight: 900 }}>
-          PokerWizard PRO
+      {/* Hero Section - Orientado a Ação */}
+      <div style={{ 
+        marginBottom: 60, 
+        textAlign: 'center',
+        background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%)',
+        borderRadius: 24,
+        padding: '60px 24px',
+        border: '1px solid rgba(139, 92, 246, 0.2)'
+      }}>
+        <div style={{ fontSize: 56, marginBottom: 20 }}>🎯</div>
+        <h1 style={{ fontSize: 42, marginBottom: 16, fontWeight: 900, lineHeight: 1.2 }}>
+          Domine o Poker com
+          <span style={{ 
+            background: 'linear-gradient(135deg, #a78bfa, #10b981)', 
+            WebkitBackgroundClip: 'text', 
+            WebkitTextFillColor: 'transparent',
+            display: 'block'
+          }}>
+            Inteligência Artificial
+          </span>
         </h1>
-        <p style={{ fontSize: 18, color: 'var(--text-secondary)', marginBottom: 8, maxWidth: 600, margin: '0 auto 24px' }}>
-          A plataforma analítica mais poderosa para jogadores de poker. Rastreie resultados, analise estatísticas e domine o jogo.
+        <p style={{ fontSize: 18, color: 'var(--text-secondary)', maxWidth: 550, margin: '0 auto 32px', lineHeight: 1.6 }}>
+          Receba feedback GTO imediato, descubra leaks ocultos e evolua seu jogo em minutos — não em meses.
         </p>
-        <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 40 }}>
-          <Link to="/search" style={{ textDecoration: 'none' }}>
-            <button className="btn btn-primary" style={{ padding: '14px 28px', fontSize: 16 }}>
-              🔍 Buscar Jogadores
+        
+        {/* CTA Principal */}
+        <div style={{ 
+          background: 'rgba(16, 185, 129, 0.1)', 
+          border: '1px solid rgba(16, 185, 129, 0.3)',
+          borderRadius: 16,
+          padding: '20px 24px',
+          maxWidth: 500,
+          margin: '0 auto 24px'
+        }}>
+          <p style={{ fontSize: 14, color: '#10b981', fontWeight: 600, marginBottom: 12 }}>
+            🎯 COMECE POR AQUI
+          </p>
+          <p style={{ fontSize: 15, color: 'var(--text-secondary)', marginBottom: 16 }}>
+            Gere um treino GTO ou analise uma mão em menos de 1 minuto.
+          </p>
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+            <button 
+              onClick={() => navigate('/trainer')}
+              className="btn btn-success" 
+              style={{ padding: '14px 24px', fontSize: 15, fontWeight: 700 }}
+            >
+              ⚡ Gerar Treino GTO
             </button>
-          </Link>
-          <Link to="/rankings" style={{ textDecoration: 'none' }}>
-            <button className="btn btn-ghost" style={{ padding: '14px 28px', fontSize: 16 }}>
-              🏆 Ver Rankings
+            <button 
+              onClick={() => navigate('/solutions')}
+              className="btn btn-ghost" 
+              style={{ padding: '14px 24px', fontSize: 15 }}
+            >
+              📊 Analisar Mão
             </button>
-          </Link>
+          </div>
+        </div>
+        
+        <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+          ✓ 3 análises grátis • ✓ Sem cartão de crédito • ✓ Resultado imediato
+        </p>
+      </div>
+
+      {/* Feature Principal Destacada */}
+      <div style={{ marginBottom: 40 }}>
+        <div style={{
+          background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+          borderRadius: 20,
+          padding: 32,
+          border: '2px solid rgba(139, 92, 246, 0.3)',
+          boxShadow: '0 20px 60px rgba(139, 92, 246, 0.15)',
+          position: 'relative',
+          overflow: 'hidden'
+        }}>
+          {/* Badge Destaque */}
+          <div style={{
+            position: 'absolute',
+            top: 16,
+            right: 16,
+            background: 'linear-gradient(135deg, #a78bfa, #8b5cf6)',
+            padding: '6px 14px',
+            borderRadius: 20,
+            fontSize: 12,
+            fontWeight: 700,
+            color: 'white'
+          }}>
+            ⭐ MAIS USADO
+          </div>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32, alignItems: 'center' }}>
+            <div>
+              <div style={{ fontSize: 48, marginBottom: 16 }}>🧠</div>
+              <h2 style={{ fontSize: 28, fontWeight: 800, marginBottom: 12, color: 'white' }}>
+                Training Lab com IA
+              </h2>
+              <p style={{ fontSize: 16, color: '#94a3b8', lineHeight: 1.7, marginBottom: 20 }}>
+                <strong style={{ color: '#10b981' }}>Receba feedback GTO imediato</strong> e descubra exatamente onde você está perdendo dinheiro. A IA analisa suas decisões e sugere melhorias específicas.
+              </p>
+              <ul style={{ listStyle: 'none', padding: 0, marginBottom: 24 }}>
+                {['Situações reais de torneio e cash', 'Análise de range e equity', 'Feedback personalizado da IA'].map((item, i) => (
+                  <li key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10, color: '#cbd5e1', fontSize: 14 }}>
+                    <span style={{ color: '#10b981' }}>✓</span> {item}
+                  </li>
+                ))}
+              </ul>
+              <button 
+                onClick={() => navigate('/trainer')}
+                className="btn btn-primary" 
+                style={{ padding: '16px 32px', fontSize: 16, fontWeight: 700 }}
+              >
+                Começar Treino Agora →
+              </button>
+            </div>
+            <div style={{ 
+              background: 'rgba(139, 92, 246, 0.1)', 
+              borderRadius: 16, 
+              padding: 24,
+              border: '1px solid rgba(139, 92, 246, 0.2)',
+              textAlign: 'center'
+            }}>
+              <div style={{ fontSize: 64, marginBottom: 12 }}>🎯</div>
+              <p style={{ color: '#a78bfa', fontSize: 14, fontWeight: 600 }}>Mesa de treino interativa</p>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Features Grid */}
+      {/* Features Secundárias */}
       <div style={{ marginBottom: 60 }}>
-        <h2 style={{ textAlign: 'center', marginBottom: 40, fontSize: 32, fontWeight: 700 }}>
-          Por que escolher PokerWizard?
+        <h2 style={{ textAlign: 'center', marginBottom: 12, fontSize: 28, fontWeight: 700 }}>
+          Ferramentas para evoluir seu jogo
         </h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24 }}>
-          {/* Feature 1 */}
-          <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 16, position: 'relative', overflow: 'hidden' }}>
-            <div style={{ fontSize: 40, marginBottom: 8 }}>📊</div>
-            <h3 style={{ fontSize: 18, fontWeight: 700 }}>Análise Profunda</h3>
-            <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-              Estatísticas detalhadas de ROI, Win Rate, VPIP, PFR e muito mais. Entenda seu desempenho com precisão.
-            </p>
-          </div>
-
-          {/* Feature 2 */}
-          <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div style={{ fontSize: 40, marginBottom: 8 }}>🎯</div>
-            <h3 style={{ fontSize: 18, fontWeight: 700 }}>Rastreamento de Resultados</h3>
-            <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-              Registre todos os seus torneios e cash games. Acompanhe tendências de lucro ao longo do tempo.
-            </p>
-          </div>
-
-          {/* Feature 3 */}
-          <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div style={{ fontSize: 40, marginBottom: 8 }}>🏅</div>
-            <h3 style={{ fontSize: 18, fontWeight: 700 }}>Rankings Globais</h3>
-            <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-              Veja como você se compara com outros jogadores. Suba na classificação e ganhe reconhecimento.
-            </p>
-          </div>
-
-          {/* Feature 4 */}
-          <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div style={{ fontSize: 40, marginBottom: 8 }}>💳</div>
-            <h3 style={{ fontSize: 18, fontWeight: 700 }}>3 Testes Gratuitos</h3>
-            <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-              Teste a plataforma sem custo. Depois, apenas R$1 por teste com acesso completo ao banco de dados.
-            </p>
-          </div>
-
-          {/* Feature 5 */}
-          <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div style={{ fontSize: 40, marginBottom: 8 }}>🔒</div>
-            <h3 style={{ fontSize: 18, fontWeight: 700 }}>Seguro e Privado</h3>
-            <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-              Seus dados estão protegidos. Controle total sobre quem vê seu perfil e estatísticas.
-            </p>
-          </div>
-
-          {/* Feature 6 */}
-          <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div style={{ fontSize: 40, marginBottom: 8 }}>⚡</div>
-            <h3 style={{ fontSize: 18, fontWeight: 700 }}>Rápido & Confiável</h3>
-            <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-              Busca de jogadores instantânea. Interface responsiva otimizada para todos os dispositivos.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Stats Section */}
-      <div className="card" style={{ marginBottom: 60, background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.1), rgba(6, 182, 212, 0.1))' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 40, padding: '40px 0' }}>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 36, fontWeight: 800, color: 'var(--accent-primary)', marginBottom: 8, fontFamily: 'Space Mono' }}>
-              8+
-            </div>
-            <div style={{ color: 'var(--text-secondary)', fontSize: 14 }}>Jogadores Ativos</div>
-          </div>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 36, fontWeight: 800, color: 'var(--accent-secondary)', marginBottom: 8, fontFamily: 'Space Mono' }}>
-              2K+
-            </div>
-            <div style={{ color: 'var(--text-secondary)', fontSize: 14 }}>Resultados Registrados</div>
-          </div>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 36, fontWeight: 800, color: 'var(--accent-green)', marginBottom: 8, fontFamily: 'Space Mono' }}>
-              R$50K+
-            </div>
-            <div style={{ color: 'var(--text-secondary)', fontSize: 14 }}>Lucro Rastreado</div>
-          </div>
-        </div>
-      </div>
-
-      {/* CTA Section */}
-      <div style={{ textAlign: 'center', marginBottom: 60 }}>
-        <h2 style={{ fontSize: 32, fontWeight: 700, marginBottom: 16 }}>
-          Pronto para começar?
-        </h2>
-        <p style={{ fontSize: 16, color: 'var(--text-secondary)', marginBottom: 24, maxWidth: 500, margin: '0 auto 24px' }}>
-          Explore agora e descubra como você pode melhorar seu jogo com análises poderosas.
+        <p style={{ textAlign: 'center', marginBottom: 32, color: 'var(--text-secondary)', fontSize: 15 }}>
+          Cada ferramenta foi projetada para resolver um problema específico do seu jogo.
         </p>
-        <Link to="/search" style={{ textDecoration: 'none' }}>
-          <button className="btn btn-primary" style={{ padding: '14px 32px', fontSize: 16 }}>
-            🚀 Explorar Agora
-          </button>
-        </Link>
+        
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
+          {/* Card 1 - GTO Solutions */}
+          <div className="card" style={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            padding: 24,
+            minHeight: 280,
+            justifyContent: 'space-between'
+          }}>
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+                <div style={{ fontSize: 36 }}>📊</div>
+                <span style={{ 
+                  background: 'rgba(16, 185, 129, 0.15)', 
+                  color: '#10b981', 
+                  padding: '4px 10px', 
+                  borderRadius: 6, 
+                  fontSize: 11, 
+                  fontWeight: 600 
+                }}>
+                  GRATUITO
+                </span>
+              </div>
+              <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>GTO Solutions</h3>
+              <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 16 }}>
+                Cole sua mão e receba análise GTO instantânea. Descubra se você jogou certo ou errado.
+              </p>
+            </div>
+            <button 
+              onClick={() => navigate('/solutions')}
+              className="btn btn-ghost" 
+              style={{ width: '100%', padding: '12px' }}
+            >
+              Testar Agora →
+            </button>
+          </div>
+
+          {/* Card 2 - Rankings */}
+          <div className="card" style={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            padding: 24,
+            minHeight: 280,
+            justifyContent: 'space-between'
+          }}>
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+                <div style={{ fontSize: 36 }}>🏆</div>
+                <span style={{ 
+                  background: 'rgba(16, 185, 129, 0.15)', 
+                  color: '#10b981', 
+                  padding: '4px 10px', 
+                  borderRadius: 6, 
+                  fontSize: 11, 
+                  fontWeight: 600 
+                }}>
+                  GRATUITO
+                </span>
+              </div>
+              <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Rankings Globais</h3>
+              <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 16 }}>
+                Veja como você se compara aos melhores. Acompanhe sua evolução no ranking.
+              </p>
+            </div>
+            <button 
+              onClick={() => navigate('/rankings')}
+              className="btn btn-ghost" 
+              style={{ width: '100%', padding: '12px' }}
+            >
+              Ver Rankings →
+            </button>
+          </div>
+
+          {/* Card 3 - Premium */}
+          <div className="card" style={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            padding: 24,
+            minHeight: 280,
+            justifyContent: 'space-between',
+            background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.1), rgba(245, 158, 11, 0.05))',
+            border: '1px solid rgba(251, 191, 36, 0.3)'
+          }}>
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+                <div style={{ fontSize: 36 }}>👑</div>
+                <span style={{ 
+                  background: 'linear-gradient(135deg, #fbbf24, #f59e0b)', 
+                  color: '#000', 
+                  padding: '4px 10px', 
+                  borderRadius: 6, 
+                  fontSize: 11, 
+                  fontWeight: 700 
+                }}>
+                  PREMIUM
+                </span>
+              </div>
+              <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Acesso Ilimitado</h3>
+              <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 12 }}>
+                Treinos ilimitados, análise avançada da IA e relatórios completos de evolução.
+              </p>
+              <p style={{ fontSize: 13, color: '#fbbf24', fontWeight: 600 }}>
+                R$ 5,90/mês • Cancele quando quiser
+              </p>
+            </div>
+            <button 
+              onClick={() => navigate('/premium')}
+              className="btn" 
+              style={{ 
+                width: '100%', 
+                padding: '12px',
+                background: 'linear-gradient(135deg, #fbbf24, #f59e0b)',
+                color: '#000',
+                fontWeight: 700
+              }}
+            >
+              Assinar Premium →
+            </button>
+          </div>
+        </div>
       </div>
 
-      {/* Footer Info */}
-      <div style={{ textAlign: 'center', borderTop: '1px solid var(--border-color)', paddingTop: 40, color: 'var(--text-muted)', fontSize: 13 }}>
+      {/* Social Proof */}
+      <div className="card" style={{ 
+        marginBottom: 60, 
+        background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.08), rgba(6, 182, 212, 0.08))',
+        textAlign: 'center',
+        padding: '48px 24px'
+      }}>
+        <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 32 }}>
+          Jogadores que já evoluíram com PokerWizard
+        </h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 32 }}>
+          <div>
+            <div style={{ fontSize: 32, fontWeight: 800, color: 'var(--accent-primary)', marginBottom: 4 }}>
+              500+
+            </div>
+            <div style={{ color: 'var(--text-secondary)', fontSize: 13 }}>Treinos Gerados</div>
+          </div>
+          <div>
+            <div style={{ fontSize: 32, fontWeight: 800, color: 'var(--accent-green)', marginBottom: 4 }}>
+              89%
+            </div>
+            <div style={{ color: 'var(--text-secondary)', fontSize: 13 }}>Satisfação</div>
+          </div>
+          <div>
+            <div style={{ fontSize: 32, fontWeight: 800, color: 'var(--accent-secondary)', marginBottom: 4 }}>
+              24/7
+            </div>
+            <div style={{ color: 'var(--text-secondary)', fontSize: 13 }}>Disponível</div>
+          </div>
+        </div>
+      </div>
+
+      {/* CTA Final - Conversão */}
+      <div style={{ 
+        textAlign: 'center', 
+        marginBottom: 60,
+        background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+        borderRadius: 20,
+        padding: '48px 24px',
+        border: '1px solid rgba(139, 92, 246, 0.2)'
+      }}>
+        <h2 style={{ fontSize: 28, fontWeight: 700, marginBottom: 12 }}>
+          🔥 Pronto para evoluir seu jogo?
+        </h2>
+        <p style={{ fontSize: 16, color: 'var(--text-secondary)', marginBottom: 28, maxWidth: 450, margin: '0 auto 28px' }}>
+          Gere seu primeiro treino GTO ou analise uma mão agora. É grátis.
+        </p>
+        <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
+          <button 
+            onClick={() => navigate('/trainer')}
+            className="btn btn-success" 
+            style={{ padding: '16px 32px', fontSize: 16, fontWeight: 700 }}
+          >
+            🎯 Gerar Treino GTO
+          </button>
+          <button 
+            onClick={() => navigate('/solutions')}
+            className="btn btn-primary" 
+            style={{ padding: '16px 32px', fontSize: 16 }}
+          >
+            📊 Analisar Mão
+          </button>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div style={{ textAlign: 'center', borderTop: '1px solid var(--border-color)', paddingTop: 32, color: 'var(--text-muted)', fontSize: 13 }}>
         <p style={{ marginBottom: 8 }}>PokerWizard © 2025 - Todos os direitos reservados</p>
-        <p>Construído para jogadores profissionais que querem dominar o jogo.</p>
+        <p>Construído para jogadores que querem resultados reais.</p>
       </div>
     </div>
   );
