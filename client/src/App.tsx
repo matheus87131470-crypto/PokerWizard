@@ -23,11 +23,61 @@ function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div>
-      <header className="app-header">
-        <div className="brand">
-          <span className="dot" />PokerWizard
-          <span style={{ fontSize: 11, color: 'var(--text-muted)', marginLeft: 8, fontWeight: 400 }}>by Pokio</span>
-        </div>
+      <header className="app-header" style={{
+        background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.95) 100%)',
+        borderBottom: '1px solid rgba(139, 92, 246, 0.2)',
+        backdropFilter: 'blur(20px)',
+        boxShadow: '0 4px 24px rgba(0, 0, 0, 0.4), 0 0 80px rgba(139, 92, 246, 0.1)',
+        padding: '18px 40px',
+      }}>
+        {/* Logo Premium - Variação 1: Gráfico + Carta */}
+        <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', transition: 'all 0.3s ease' }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-1px)';
+            e.currentTarget.style.filter = 'drop-shadow(0 0 12px rgba(139, 92, 246, 0.6))';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.filter = 'none';
+          }}
+        >
+          {/* Ícone: Cérebro + Carta Estilizado */}
+          <div style={{
+            width: 42,
+            height: 42,
+            background: 'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)',
+            borderRadius: '10px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 4px 16px rgba(139, 92, 246, 0.4)',
+            position: 'relative',
+          }}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              {/* Carta de poker minimalista */}
+              <rect x="4" y="4" width="16" height="16" rx="2" fill="white" fillOpacity="0.95"/>
+              <path d="M12 7L13.5 10.5L17 11L14.5 13.5L15 17L12 15L9 17L9.5 13.5L7 11L10.5 10.5L12 7Z" fill="#8b5cf6"/>
+            </svg>
+          </div>
+          
+          {/* Texto da Logo */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <div style={{
+              fontSize: 22,
+              fontWeight: 800,
+              background: 'linear-gradient(135deg, #a78bfa 0%, #ec4899 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              letterSpacing: '-0.5px',
+            }}>
+              PokerWizard
+            </div>
+            <div style={{ fontSize: 9, color: 'rgba(168, 123, 250, 0.7)', fontWeight: 500, letterSpacing: '0.5px' }}>
+              AI POKER TRAINER
+            </div>
+          </div>
+        </Link>
+
         <nav className="app-nav">
           <Link to="/" className="nav-link">Home</Link>
           <Link to="/rankings" className="nav-link">Rankings</Link>
@@ -123,6 +173,90 @@ function Home() {
   
   return (
     <div style={{ paddingTop: 20 }}>
+      {/* Welcome Banner para usuários não logados */}
+      {!auth.user && (
+        <div style={{
+          marginBottom: 40,
+          background: 'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)',
+          borderRadius: 20,
+          padding: '32px 40px',
+          boxShadow: '0 8px 32px rgba(139, 92, 246, 0.4)',
+          textAlign: 'center',
+          position: 'relative',
+          overflow: 'hidden',
+        }}>
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'url("data:image/svg+xml,%3Csvg width="60" height="60" xmlns="http://www.w3.org/2000/svg"%3E%3Cpath d="M0 0h60v60H0z" fill="none"/%3E%3Cpath d="M30 0v60M0 30h60" stroke="rgba(255,255,255,0.1)" stroke-width="1"/%3E%3C/svg%3E")',
+            opacity: 0.3,
+          }}></div>
+          <div style={{ position: 'relative', zIndex: 1 }}>
+            <h2 style={{ fontSize: 28, fontWeight: 800, color: 'white', marginBottom: 12 }}>
+              👋 Bem-vindo ao PokerWizard
+            </h2>
+            <p style={{ fontSize: 16, color: 'rgba(255, 255, 255, 0.9)', marginBottom: 24, maxWidth: 600, margin: '0 auto 24px' }}>
+              Plataforma profissional de análise de poker com IA. Comece agora gratuitamente.
+            </p>
+            <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+              <button 
+                onClick={() => navigate('/login')}
+                style={{
+                  padding: '14px 32px',
+                  background: 'white',
+                  color: '#8b5cf6',
+                  fontWeight: 700,
+                  fontSize: 15,
+                  borderRadius: 12,
+                  border: 'none',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)',
+                  transition: 'all 0.3s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px) scale(1.05)';
+                  e.currentTarget.style.boxShadow = '0 6px 24px rgba(0, 0, 0, 0.3)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.2)';
+                }}
+              >
+                🚀 Começar Grátis
+              </button>
+              <button 
+                onClick={() => navigate('/trainer')}
+                style={{
+                  padding: '14px 32px',
+                  background: 'rgba(255, 255, 255, 0.2)',
+                  color: 'white',
+                  fontWeight: 600,
+                  fontSize: 15,
+                  borderRadius: 12,
+                  border: '1px solid rgba(255, 255, 255, 0.3)',
+                  cursor: 'pointer',
+                  backdropFilter: 'blur(10px)',
+                  transition: 'all 0.3s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                }}
+              >
+                Ver Demo
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Hero Section - Orientado a Ação */}
       <div style={{ 
         marginBottom: 60, 
