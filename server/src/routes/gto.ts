@@ -13,68 +13,163 @@ interface HandHistoryRequest {
   position: string;
 }
 
-// Análise GTO profissional baseada em dados reais
+// Análise GTO profissional estilo coaching
 function getGTOAnalysis(hands: string[], position: string, actionsMap: Record<string, string>): string {
   const positionNames: Record<string, string> = {
-    'UTG': 'Under The Gun (primeira posição)',
+    'UTG': 'Under The Gun',
     'HJ': 'Hijack',
     'CO': 'Cutoff',
-    'BTN': 'Button (melhor posição)',
+    'BTN': 'Button',
     'SB': 'Small Blind',
     'BB': 'Big Blind'
   };
 
-  const positionAdvice: Record<string, string> = {
-    'UTG': 'Range mais tight. Apenas mãos premium e connectors suited fortes.',
-    'HJ': 'Range moderadamente tight. Pode adicionar mais suited connectors.',
-    'CO': 'Range mais solto. Pode roubar blinds com frequência.',
-    'BTN': 'Posição mais lucrativa. Range amplo com vantagem posicional.',
-    'SB': 'Posição difícil. 3-bet ou fold na maioria das situações.',
-    'BB': 'Defenda seu blind com ranges amplos. Pot odds favoráveis.'
+  // Ranges típicos de abertura por posição (% aproximado)
+  const positionRanges: Record<string, { fold: number; raise: number; call: number; allin: number }> = {
+    'UTG': { fold: 85, raise: 12, call: 2, allin: 1 },
+    'HJ': { fold: 80, raise: 16, call: 3, allin: 1 },
+    'CO': { fold: 72, raise: 22, call: 5, allin: 1 },
+    'BTN': { fold: 55, raise: 35, call: 8, allin: 2 },
+    'SB': { fold: 60, raise: 30, call: 7, allin: 3 },
+    'BB': { fold: 40, raise: 15, call: 42, allin: 3 }
   };
 
-  const handAnalysis = hands.slice(0, 5).map(hand => {
-    const action = actionsMap[hand]?.toUpperCase() || 'FOLD';
-    let reasoning = '';
-    
-    if (action === 'ALLIN') {
-      reasoning = 'Premium absoluta. Push máximo valor.';
-    } else if (action === 'RAISE') {
-      reasoning = 'Mão forte para o range. Raise por valor.';
-    } else if (action === 'CALL') {
-      reasoning = 'Mão especulativa. Call por odds implícitas.';
-    } else {
-      reasoning = 'Fora do range. Fold padrão GTO.';
-    }
-    
-    return `• **${hand}**: ${action} — ${reasoning}`;
-  }).join('\n');
+  const posFullName = positionNames[position] || position;
+  const posRange = positionRanges[position] || positionRanges['BTN'];
 
+  // Contar ações das mãos selecionadas
   const stats = {
     allin: hands.filter(h => actionsMap[h] === 'allin').length,
     raise: hands.filter(h => actionsMap[h] === 'raise').length,
     call: hands.filter(h => actionsMap[h] === 'call').length,
-    fold: hands.filter(h => actionsMap[h] === 'fold').length,
+    fold: hands.filter(h => actionsMap[h] === 'fold' || !actionsMap[h]).length,
   };
 
-  return `🎯 **Análise GTO Profissional - ${positionNames[position] || position}**
+  // Determinar se todas as mãos são fold
+  const allAreFold = stats.fold === hands.length;
+  const hasPlayableHands = stats.allin > 0 || stats.raise > 0 || stats.call > 0;
 
-📊 **Mãos Selecionadas (${hands.length}):**
-${handAnalysis}
+  // Gerar descrições detalhadas das mãos
+  const getHandDescription = (hand: string): string => {
+    const rank1 = hand[0];
+    const rank2 = hand[1];
+    const suited = hand.includes('s');
+    const offsuit = hand.includes('o');
+    const isPair = rank1 === rank2;
+    
+    // Mãos premium
+    if (['AA', 'KK', 'QQ', 'AKs', 'AKo'].includes(hand)) {
+      return `→ **Premium absoluta.** Sempre raise/all-in por valor máximo.`;
+    }
+    if (['JJ', 'TT', 'AQs', 'AQo', 'AJs'].includes(hand)) {
+      return `→ **Mão forte.** Raise por valor, 4-bet vs 3-bet leves.`;
+    }
+    if (['99', '88', '77', 'ATs', 'KQs', 'KJs'].includes(hand)) {
+      return `→ **Mão sólida.** Raise padrão, call 3-bet em posição.`;
+    }
+    
+    // Pares médios/baixos
+    if (isPair) {
+      const pairRank = parseInt(rank1) || { 'A': 14, 'K': 13, 'Q': 12, 'J': 11, 'T': 10 }[rank1] || 0;
+      if (pairRank >= 6) {
+        return `→ **Par médio.** Jogável em posição tardia. Set mining com odds implícitas.`;
+      }
+      return `→ **Par baixo.** Set mining apenas com boas odds implícitas (>15:1).`;
+    }
+    
+    // Suited connectors
+    if (suited) {
+      const gap = Math.abs(
+        (['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'].indexOf(rank1)) -
+        (['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'].indexOf(rank2))
+      );
+      
+      if (gap <= 1) {
+        return `→ **Suited connector.** Boa jogabilidade pós-flop. Potencial de straights e flushes.`;
+      }
+      if (gap <= 3 && rank1 >= '6') {
+        return `→ **Suited gapper.** Especulativa. Apenas com stack profundo e posição.`;
+      }
+      if (rank1 === 'A') {
+        return `→ **Ax suited.** Potencial de nut flush. Jogável em posição tardia.`;
+      }
+      if (rank1 === 'K') {
+        return `→ **Kx suited.** Segundo nut flush potencial. Cuidado com dominated flushes.`;
+      }
+    }
+    
+    // Offsuit trash
+    if (offsuit) {
+      const highCard = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'].indexOf(rank1);
+      const lowCard = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'].indexOf(rank2);
+      const gap = Math.abs(highCard - lowCard);
+      
+      if (gap >= 5 && lowCard > 6) {
+        return `→ **Sem conectividade.** Baixa equidade e jogabilidade ruim mesmo em posição.`;
+      }
+      if (rank1 === 'T' || rank1 === '9') {
+        return `→ **Desconectada.** Kicker fraco, facilmente dominada por mãos melhores.`;
+      }
+    }
+    
+    return `→ **Mão marginal.** Avalie stack sizes e dinâmica antes de jogar.`;
+  };
 
-📈 **Distribuição de Ações:**
-• All-in: ${stats.allin} mão(s) — ${Math.round((stats.allin/hands.length)*100) || 0}%
-• Raise: ${stats.raise} mão(s) — ${Math.round((stats.raise/hands.length)*100) || 0}%
-• Call: ${stats.call} mão(s) — ${Math.round((stats.call/hands.length)*100) || 0}%
-• Fold: ${stats.fold} mão(s) — ${Math.round((stats.fold/hands.length)*100) || 0}%
+  // Análise individual de cada mão
+  const handAnalysis = hands.map(hand => {
+    const action = actionsMap[hand]?.toUpperCase() || 'FOLD';
+    const description = getHandDescription(hand);
+    return `**${hand}** — ${action}\n${description}`;
+  }).join('\n\n');
 
-💡 **Estratégia ${position}:**
-${positionAdvice[position] || 'Ajuste seu range baseado na dinâmica da mesa.'}
+  // Determinar recomendação principal
+  let mainRecommendation = '';
+  if (allAreFold) {
+    mainRecommendation = `As mãos analisadas estão **fora do range lucrativo** do ${posFullName}.\n**FOLD** é a única ação correta em 100% dos cenários GTO.`;
+  } else if (stats.allin > 0) {
+    mainRecommendation = `${stats.allin} mão(s) no range de **all-in/premium**. Maximize valor pré-flop.`;
+  } else if (stats.raise > 0) {
+    mainRecommendation = `${stats.raise} mão(s) são **jogáveis para raise**. Abra agressivamente em posição.`;
+  } else if (stats.call > 0) {
+    mainRecommendation = `${stats.call} mão(s) são **especulativas para call**. Jogue por odds implícitas.`;
+  }
 
-⚡ **Dicas de Implementação:**
-• Mantenha consistência nas suas linhas de jogo
-• Varie sizing para dificultar reads dos oponentes
-• Considere stack sizes antes de commits grandes`;
+  // Montar distribuição apenas se houver variação
+  let distributionText = '';
+  if (hasPlayableHands) {
+    const parts = [];
+    if (stats.raise > 0) parts.push(`🟩 **Raise:** ${stats.raise} mão(s)`);
+    if (stats.call > 0) parts.push(`🟦 **Call:** ${stats.call} mão(s)`);
+    if (stats.allin > 0) parts.push(`🟨 **All-in:** ${stats.allin} mão(s)`);
+    if (stats.fold > 0) parts.push(`🟥 **Fold:** ${stats.fold} mão(s)`);
+    
+    distributionText = `\n\n📊 **Distribuição das Mãos Analisadas:**\n${parts.join('\n')}`;
+  } else {
+    distributionText = `\n\n📊 **Resultado:** Todas as ${hands.length} mão(s) são **FOLD** nesta posição.`;
+  }
+
+  // CTA final premium
+  const ctaText = `\n\n━━━━━━━━━━━━━━━━━━━━━━
+
+🎓 **Quer dominar os ranges do ${posFullName}?**
+• Estude o matrix completo para ver todas as mãos jogáveis
+• Pratique diferentes cenários de 3-bet e 4-bet
+• Ajuste seu jogo baseado nos tendências dos oponentes
+
+💡 *Dica Pro: No ${posFullName}, você deve abrir aproximadamente **${posRange.raise}%** das mãos.*`;
+
+  return `📋 **RESUMO GTO — ${posFullName}**
+
+${mainRecommendation}
+
+━━━━━━━━━━━━━━━━━━━━━━
+
+🃏 **Análise Detalhada:**
+
+${handAnalysis}${distributionText}
+
+📈 **Range Típico do ${posFullName} (RFI):**
+🟩 Raise: ${posRange.raise}% │ 🟦 Call: ${posRange.call}% │ 🟥 Fold: ${posRange.fold}%${ctaText}`;
 }
 
 // Análise de histórico de mão
