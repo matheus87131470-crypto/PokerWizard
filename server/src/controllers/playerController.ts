@@ -231,7 +231,7 @@ type TrainerScenario = {
   position: string;
   gameType: string;
   street: string;
-  preflopAction: string;
+  action: string; // ✅ FONTE ÚNICA (validada por street)
   heroCards: string[];
   board: string[];
   villainRange: string;
@@ -260,10 +260,28 @@ function ensureUsageFor(userId: string) {
 }
 
 export async function generateScenario(req: any, res: any) {
-  const { position = 'BTN', gameType = 'MTT', street = 'Pré-flop', preflopAction = 'Any', network = 'PokerStars', targetNick = '' } = req.body || {};
+  const { position = 'BTN', gameType = 'MTT', street = 'Pré-flop', action, network = 'PokerStars', targetNick = '' } = req.body || {};
   const userId = req.userId || (req.body && req.body.user) || (req.query && req.query.user) || null;
 
   if (!userId) return res.status(401).json({ ok: false, error: 'unauthorized' });
+
+  // 🛡️ VALIDAÇÃO BACKEND - Regra de negócio obrigatória
+  const ACTION_OPTIONS_BY_STREET: Record<string, string[]> = {
+    'Pré-flop': ['Fold', 'Call', 'Raise', '3-bet', '4-bet', 'All-in'],
+    'Flop': ['Check', 'Bet', 'Call', 'Raise', 'Fold'],
+    'Turn': ['Check', 'Bet', 'Call', 'Raise', 'Fold'],
+    'River': ['Check', 'Bet', 'Call', 'Raise', 'Fold'],
+  };
+
+  // Validar se a ação é válida para a street
+  const validActions = ACTION_OPTIONS_BY_STREET[street];
+  if (!validActions || !action || !validActions.includes(action)) {
+    return res.status(400).json({ 
+      ok: false, 
+      error: 'invalid_action', 
+      message: `Ação "${action}" inválida para ${street}. Opções válidas: ${validActions?.join(', ') || 'nenhuma'}` 
+    });
+  }
 
   // Deduct one usage via userService
   const allowed = await deductCredit(userId, 'trainer.generate');
@@ -289,7 +307,7 @@ export async function generateScenario(req: any, res: any) {
     position,
     gameType,
     street,
-    preflopAction,
+    action, // ✅ CAMPO ÚNICO validado
     heroCards: hero,
     board,
     villainRange,

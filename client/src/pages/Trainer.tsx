@@ -4,13 +4,20 @@ import { useAuth } from '../contexts/AuthContext';
 
 const API_BASE = (import.meta && (import.meta as any).env && (import.meta as any).env.VITE_API_BASE) || 'http://localhost:3000';
 
+// 🎯 FONTE ÚNICA DE AÇÃO - Regra de Negócio
+const ACTION_OPTIONS_BY_STREET: Record<string, string[]> = {
+  'Pré-flop': ['Fold', 'Call', 'Raise', '3-bet', '4-bet', 'All-in'],
+  'Flop': ['Check', 'Bet', 'Call', 'Raise', 'Fold'],
+  'Turn': ['Check', 'Bet', 'Call', 'Raise', 'Fold'],
+  'River': ['Check', 'Bet', 'Call', 'Raise', 'Fold'],
+};
+
 export default function Trainer() {
   const auth = useAuth();
   const [position, setPosition] = useState('CO');
   const [gameType, setGameType] = useState('MTT');
   const [street, setStreet] = useState('Flop');
-  const [streetAction, setStreetAction] = useState('Bet'); // Ação para Flop/Turn/River
-  const [preflopAction, setPreflopAction] = useState('Raise'); // Ação para Pré-flop
+  const [action, setAction] = useState('Bet'); // ✅ FONTE ÚNICA
   const [networks, setNetworks] = useState<any[]>([]);
   const [selectedNetwork, setSelectedNetwork] = useState('partypoker');
   const [scenario, setScenario] = useState<any>(null);
@@ -46,14 +53,12 @@ export default function Trainer() {
     };
   }
 
-  // 🔄 Lógica de dependência: Resetar ação quando Street mudar
+  // 🔄 RESET OBRIGATÓRIO ao mudar Street
   useEffect(() => {
-    if (street === 'Pré-flop') {
-      // Resetar para ação pré-flop padrão
-      setPreflopAction('Raise');
-    } else {
-      // Resetar para ação de street padrão
-      setStreetAction('Bet');
+    const validActions = ACTION_OPTIONS_BY_STREET[street];
+    if (validActions && validActions.length > 0) {
+      // Sempre reseta para primeira opção válida
+      setAction(validActions[0]);
     }
   }, [street]);
 
@@ -97,9 +102,18 @@ export default function Trainer() {
         return;
       }
 
-      // Enviar a ação correta baseado na street
-      const actionToSend = street === 'Pré-flop' ? preflopAction : streetAction;
+      // 🛡️ VALIDAÇÃO FRONTEND (regra de negócio)
+      const validActions = ACTION_OPTIONS_BY_STREET[street];
+      if (!validActions.includes(action)) {
+        setFeedback({ 
+          error: 'validation', 
+          message: `Ação "${action}" inválida para ${street}. Opções válidas: ${validActions.join(', ')}` 
+        });
+        setLoading(false);
+        return;
+      }
       
+      // ✅ PAYLOAD LIMPO (sem preflopAction)
       const res = await fetch(`${API_BASE}/api/trainer/generate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${auth.token}` },
@@ -107,7 +121,7 @@ export default function Trainer() {
           position, 
           gameType, 
           street, 
-          preflopAction: actionToSend, // Backend ainda usa este nome, mas agora é contextual
+          action, // ✅ Fonte única
           network: selectedNetwork 
         }),
       });
@@ -311,66 +325,32 @@ export default function Trainer() {
               </select>
             </div>
 
-            {/* 🎯 Campo dependente da Street com animação */}
-            <div style={{ position: 'relative' }}>
-              {street === 'Pré-flop' ? (
-                // Pré-flop: Mostrar ações pré-flop
-                <div style={{ animation: 'fadeIn 0.3s ease-in' }}>
-                  <label className="block text-sm font-bold text-gray-300 mb-2 flex items-center gap-2">
-                    ⚡ Ação pré-flop
-                    <span style={{
-                      fontSize: '10px',
-                      background: 'linear-gradient(90deg, #f97316 0%, #ea580c 100%)',
-                      color: 'white',
-                      padding: '2px 6px',
-                      borderRadius: '4px',
-                      fontWeight: 'bold'
-                    }}>
-                      PRÉ-FLOP
-                    </span>
-                  </label>
-                  <select 
-                    value={preflopAction}
-                    onChange={(e) => setPreflopAction(e.target.value)}
-                    className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-3 py-2 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50"
-                  >
-                    <option value="Raise">Raise</option>
-                    <option value="Call">Call</option>
-                    <option value="Fold">Fold</option>
-                    <option value="3-bet">3-bet</option>
-                    <option value="4-bet">4-bet</option>
-                    <option value="All-in">All-in</option>
-                  </select>
-                </div>
-              ) : (
-                // Flop/Turn/River: Mostrar ações de street
-                <div style={{ animation: 'fadeIn 0.3s ease-in' }}>
-                  <label className="block text-sm font-bold text-gray-300 mb-2 flex items-center gap-2">
-                    🎲 Ação da Street
-                    <span style={{
-                      fontSize: '10px',
-                      background: 'linear-gradient(90deg, #3b82f6 0%, #2563eb 100%)',
-                      color: 'white',
-                      padding: '2px 6px',
-                      borderRadius: '4px',
-                      fontWeight: 'bold'
-                    }}>
-                      {street.toUpperCase()}
-                    </span>
-                  </label>
-                  <select 
-                    value={streetAction}
-                    onChange={(e) => setStreetAction(e.target.value)}
-                    className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-3 py-2 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50"
-                  >
-                    <option value="Bet">Bet</option>
-                    <option value="Check">Check</option>
-                    <option value="Call">Call</option>
-                    <option value="Raise">Raise</option>
-                    <option value="Fold">Fold</option>
-                  </select>
-                </div>
-              )}
+            {/* 🎯 FONTE ÚNICA DE AÇÃO - Opções baseadas na Street */}
+            <div style={{ position: 'relative', animation: 'fadeIn 0.3s ease-in' }} key={street}>
+              <label className="block text-sm font-bold text-gray-300 mb-2 flex items-center gap-2">
+                {street === 'Pré-flop' ? '⚡ Ação' : '🎲 Ação'}
+                <span style={{
+                  fontSize: '10px',
+                  background: street === 'Pré-flop' 
+                    ? 'linear-gradient(90deg, #f97316 0%, #ea580c 100%)'
+                    : 'linear-gradient(90deg, #3b82f6 0%, #2563eb 100%)',
+                  color: 'white',
+                  padding: '2px 6px',
+                  borderRadius: '4px',
+                  fontWeight: 'bold'
+                }}>
+                  {street.toUpperCase()}
+                </span>
+              </label>
+              <select 
+                value={action}
+                onChange={(e) => setAction(e.target.value)}
+                className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-3 py-2 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50"
+              >
+                {ACTION_OPTIONS_BY_STREET[street].map(opt => (
+                  <option key={opt} value={opt}>{opt}</option>
+                ))}
+              </select>
             </div>
 
             <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
