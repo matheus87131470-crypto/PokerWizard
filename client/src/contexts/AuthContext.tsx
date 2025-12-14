@@ -52,14 +52,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const res = await fetch(`${API_BASE}/api/auth/me`, {
         headers: { 'Authorization': `Bearer ${authToken}` },
       });
-      if (!res.ok) throw new Error('Failed to fetch user');
+      if (!res.ok) {
+        // Se der erro 401, token inválido - fazer logout
+        if (res.status === 401) {
+          console.log('Token inválido, fazendo logout');
+          localStorage.removeItem('pokerwizard_token');
+          localStorage.removeItem('pokerwizard_user');
+          setToken(null);
+          setUser(null);
+        }
+        return;
+      }
       const data = await res.json();
-      setUser(data.user);
-      try { localStorage.setItem('pokerwizard_user', JSON.stringify(data.user)); } catch (e) {}
+      if (data.user) {
+        setUser(data.user);
+        try { localStorage.setItem('pokerwizard_user', JSON.stringify(data.user)); } catch (e) {}
+      }
     } catch (err) {
-      // Token might be expired
-      localStorage.removeItem('pokerwizard_token');
-      setToken(null);
+      // Em caso de erro de rede, manter o usuário logado com os dados do localStorage
+      console.log('Erro ao validar token (rede?), mantendo sessão local:', err);
     }
   }
 
