@@ -228,6 +228,7 @@ export function getRankings(req: any, res: Response) {
 
 type TrainerScenario = {
   id: string;
+  table?: string; // 📦 NOVO (heads-up / 6-max / 9-max)
   position: string;
   gameType: string;
   street: string;
@@ -260,7 +261,7 @@ function ensureUsageFor(userId: string) {
 }
 
 export async function generateScenario(req: any, res: any) {
-  const { position = 'BTN', gameType = 'MTT', street = 'Pré-flop', action, network = 'PokerStars', targetNick = '' } = req.body || {};
+  const { table = '6-max', position = 'BTN', gameType = 'MTT', street = 'Pré-flop', action, network = 'PokerStars', targetNick = '' } = req.body || {};
   const userId = req.userId || (req.body && req.body.user) || (req.query && req.query.user) || null;
 
   if (!userId) return res.status(401).json({ ok: false, error: 'unauthorized' });
@@ -304,6 +305,7 @@ export async function generateScenario(req: any, res: any) {
 
   const scenario: TrainerScenario = {
     id: sid,
+    table,      // 📦 NOVO
     position,
     gameType,
     street,

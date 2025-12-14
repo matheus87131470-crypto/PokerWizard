@@ -4,6 +4,17 @@ import { useAuth } from '../contexts/AuthContext';
 
 const API_BASE = (import.meta && (import.meta as any).env && (import.meta as any).env.VITE_API_BASE) || 'http://localhost:3000';
 
+// 📋 TYPES
+type TableType = 'heads-up' | '6-max' | '9-max';
+type Position = 'BTN' | 'SB' | 'BB' | 'UTG' | 'UTG+1' | 'MP' | 'HJ' | 'CO';
+
+// 🎯 POSIÇÕES POR MESA (CORE)
+const positionsByTable: Record<TableType, Position[]> = {
+  'heads-up': ['BTN', 'BB'],
+  '6-max': ['UTG', 'HJ', 'CO', 'BTN', 'SB', 'BB'],
+  '9-max': ['UTG', 'UTG+1', 'MP', 'HJ', 'CO', 'BTN', 'SB', 'BB'],
+};
+
 // 🎯 FONTE ÚNICA DE AÇÃO - Regra de Negócio
 const ACTION_OPTIONS_BY_STREET: Record<string, string[]> = {
   'Pré-flop': ['Fold', 'Call', 'Raise', '3-bet', '4-bet', 'All-in'],
@@ -14,7 +25,8 @@ const ACTION_OPTIONS_BY_STREET: Record<string, string[]> = {
 
 export default function Trainer() {
   const auth = useAuth();
-  const [position, setPosition] = useState('CO');
+  const [table, setTable] = useState<TableType>('6-max');
+  const [position, setPosition] = useState<Position>('CO');
   const [gameType, setGameType] = useState('MTT');
   const [street, setStreet] = useState('Flop');
   const [action, setAction] = useState('Bet'); // ✅ FONTE ÚNICA
@@ -32,6 +44,7 @@ export default function Trainer() {
     const sid = `s-example-${Date.now()}`;
     return {
       id: sid,
+      table,      // 📦 NOVO
       position,
       gameType,
       street,
@@ -52,6 +65,15 @@ export default function Trainer() {
       ],
     };
   }
+
+  // 🔄 RESET AUTOMÁTICO - Position quando trocar Mesa (igual GTO Wizard)
+  useEffect(() => {
+    const validPositions = positionsByTable[table];
+    
+    if (!validPositions.includes(position)) {
+      setPosition(validPositions[0]);
+    }
+  }, [table]);
 
   // 🔄 RESET OBRIGATÓRIO ao mudar Street
   useEffect(() => {
@@ -118,6 +140,7 @@ export default function Trainer() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${auth.token}` },
         body: JSON.stringify({ 
+          table,      // 📦 NOVO
           position, 
           gameType, 
           street, 
@@ -290,15 +313,30 @@ export default function Trainer() {
               </select>
             </div>
 
+            {/* ✅ SELECT DE MESA (NOVO) */}
+            <div>
+              <label className="block text-sm font-bold text-gray-300 mb-2">🪑 Mesa</label>
+              <select 
+                value={table}
+                onChange={(e) => setTable(e.target.value as TableType)}
+                className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-3 py-2 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50"
+              >
+                <option value="heads-up">Heads-up</option>
+                <option value="6-max">6-max</option>
+                <option value="9-max">9-max</option>
+              </select>
+            </div>
+
+            {/* ✅ SELECT DE POSIÇÃO (DINÂMICO) */}
             <div>
               <label className="block text-sm font-bold text-gray-300 mb-2">📍 Posição</label>
               <select 
                 value={position}
-                onChange={(e) => setPosition(e.target.value)}
+                onChange={(e) => setPosition(e.target.value as Position)}
                 className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-3 py-2 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50"
               >
-                {['UTG', 'HJ', 'CO', 'BTN', 'SB', 'BB'].map(pos => (
-                  <option key={pos} value={pos}>{pos}</option>
+                {positionsByTable[table].map((p) => (
+                  <option key={p} value={p}>{p}</option>
                 ))}
               </select>
             </div>
