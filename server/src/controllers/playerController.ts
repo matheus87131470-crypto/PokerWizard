@@ -340,7 +340,7 @@ export async function generateScenario(req: any, res: any) {
   const OPENAI = process.env.OPENAI_API_KEY;
   if (OPENAI) {
     try {
-      const prompt = `You are an expert poker trainer. Given the following situation, return a JSON object with keys: villainRange (string), correctAction (one of Fold|Call|Raise|All-in|Check), explanation (short text), ev (number). Situation: position=${position}, gameType=${gameType}, street=${street}, preflopAction=${preflopAction}, heroCards=${hero.join(' ')}, board=${board.join(' ')}. Respond ONLY with valid JSON.`;
+      const prompt = `You are an expert poker trainer. Given the following situation, return a JSON object with keys: villainRange (string), correctAction (one of Fold|Call|Raise|All-in|Check), explanation (short text), ev (number). Situation: position=${position}, gameType=${gameType}, street=${street}, action=${action}, heroCards=${hero.join(' ')}, board=${board.join(' ')}. Respond ONLY with valid JSON.`;
 
       // Allow a priority list of models via OPENAI_MODEL_LIST (comma-separated),
       // or a single model via OPENAI_MODEL. Fallback order below.
