@@ -2,7 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
-const API_BASE = (import.meta && (import.meta as any).env && (import.meta as any).env.VITE_API_BASE) || 'http://localhost:3000';
+// Detectar ambiente automaticamente
+function getApiBase(): string {
+  if (import.meta && (import.meta as any).env && (import.meta as any).env.VITE_API_BASE) {
+    return (import.meta as any).env.VITE_API_BASE;
+  }
+  if (typeof window !== 'undefined' && !window.location.hostname.includes('localhost')) {
+    return 'https://pokerwizard.onrender.com';
+  }
+  return 'http://localhost:3000';
+}
+const API_BASE = getApiBase();
 
 export default function Analysis() {
   const auth = useAuth();

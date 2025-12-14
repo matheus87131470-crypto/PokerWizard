@@ -2,7 +2,17 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export default function ForgotPassword() {
-  const API_BASE = (import.meta && (import.meta as any).env && (import.meta as any).env.VITE_API_BASE) || 'http://localhost:3000';
+  // Detectar ambiente automaticamente
+  function getApiBase(): string {
+    if (import.meta && (import.meta as any).env && (import.meta as any).env.VITE_API_BASE) {
+      return (import.meta as any).env.VITE_API_BASE;
+    }
+    if (typeof window !== 'undefined' && !window.location.hostname.includes('localhost')) {
+      return 'https://pokerwizard.onrender.com';
+    }
+    return 'http://localhost:3000';
+  }
+  const API_BASE = getApiBase();
   
   const [step, setStep] = useState<'email' | 'code' | 'newPassword'>('email');
   const [email, setEmail] = useState('');

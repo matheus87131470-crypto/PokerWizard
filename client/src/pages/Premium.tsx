@@ -12,7 +12,17 @@ export default function Premium() {
   const [timeLeft, setTimeLeft] = useState<number>(30 * 60); // 30 minutos em segundos
   const [pollCount, setPollCount] = useState(0);
 
-  const API_BASE = (import.meta && (import.meta as any).env && (import.meta as any).env.VITE_API_BASE) || 'http://localhost:3000';
+  // Detectar ambiente automaticamente
+  function getApiBase(): string {
+    if (import.meta && (import.meta as any).env && (import.meta as any).env.VITE_API_BASE) {
+      return (import.meta as any).env.VITE_API_BASE;
+    }
+    if (typeof window !== 'undefined' && !window.location.hostname.includes('localhost')) {
+      return 'https://pokerwizard.onrender.com';
+    }
+    return 'http://localhost:3000';
+  }
+  const API_BASE = getApiBase();
 
   // Gera data de expiração (30 minutos a partir de agora)
   function getExpirationTime() {

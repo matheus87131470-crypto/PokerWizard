@@ -21,13 +21,27 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Detectar ambiente automaticamente
+function getApiBase(): string {
+  // Se tiver variável de ambiente, usar ela
+  if (import.meta && (import.meta as any).env && (import.meta as any).env.VITE_API_BASE) {
+    return (import.meta as any).env.VITE_API_BASE;
+  }
+  // Em produção (não localhost), usar a API do Render
+  if (typeof window !== 'undefined' && !window.location.hostname.includes('localhost')) {
+    return 'https://pokerwizard.onrender.com';
+  }
+  // Local
+  return 'http://localhost:3000';
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const API_BASE = (import.meta && (import.meta as any).env && (import.meta as any).env.VITE_API_BASE) || 'http://localhost:3000';
+  const API_BASE = getApiBase();
 
   // Load token/user from localStorage on mount
   useEffect(() => {
