@@ -196,6 +196,26 @@ export default function Login() {
             </div>
           </div>
 
+          {/* Link Esqueci Senha */}
+          {isLogin && (
+            <div style={{ textAlign: 'right', marginTop: -8 }}>
+              <span
+                onClick={() => navigate('/forgot-password')}
+                style={{
+                  color: 'var(--accent-primary)',
+                  cursor: 'pointer',
+                  fontSize: 13,
+                  fontWeight: 500,
+                  transition: 'opacity 0.2s'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'}
+                onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+              >
+                🔑 Esqueci minha senha
+              </span>
+            </div>
+          )}
+
           <button
             type="submit"
             disabled={loading}
