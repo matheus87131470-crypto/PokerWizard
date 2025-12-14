@@ -200,6 +200,7 @@ export default function Solutions() {
     setSelectedHandsList(prev => prev.filter(h => h !== hand));
   };
 
+  // Análise do histórico de mão digitado
   const handleAIAnalysis = async () => {
     if (!handHistory.trim()) {
       setAiAnalysis('⚠️ Digite ou cole o histórico da mão para analisar!');
@@ -210,21 +211,20 @@ export default function Solutions() {
     
     // Se IA não está ativa, análise básica
     if (!aiMode) {
-      setAiAnalysis('🎯 Análise Básica\n\nDica: Ative a IA para feedback avançado e personalizado.');
+      setAiAnalysis('🎯 Análise Básica\n\nPara receber análise completa com GTO, ative a IA no botão acima.');
       setTimeout(() => setLoadingAI(false), 800);
       return;
     }
 
-    setAiAnalysis('🤖 Analisando...');
+    setAiAnalysis('🤖 Analisando com IA...');
 
     try {
-      const response = await fetch(`${API_BASE}/api/gto/analyze`, {
+      const response = await fetch(`${API_BASE}/api/gto/analyze-history`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           handHistory: handHistory,
           position: activePosition,
-          aiMode: aiMode,
         }),
       });
 
@@ -233,10 +233,48 @@ export default function Solutions() {
       if (data.ok && data.analysis) {
         setAiAnalysis(data.analysis);
       } else {
-        setAiAnalysis('❌ Erro ao analisar. Tente novamente.');
+        setAiAnalysis(data.error || '❌ Erro ao analisar. Tente novamente.');
       }
     } catch (error) {
       console.error('AI Analysis error:', error);
+      setAiAnalysis('❌ Erro de conexão. Verifique sua internet e tente novamente.');
+    } finally {
+      setLoadingAI(false);
+    }
+  };
+
+  // Análise das mãos selecionadas no matrix
+  const handleMatrixAnalysis = async () => {
+    if (selectedHandsList.length === 0) {
+      setAiAnalysis('⚠️ Selecione pelo menos uma mão no matrix para analisar!');
+      return;
+    }
+
+    setLoadingAI(true);
+    setAiAnalysis('🤖 Analisando mãos selecionadas...');
+
+    try {
+      const rangeData = hands.map(h => ({ hand: h.hand, action: h.action }));
+      
+      const response = await fetch(`${API_BASE}/api/gto/analyze`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          position: activePosition,
+          hands: selectedHandsList,
+          rangeData: rangeData,
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (data.ok && data.analysis) {
+        setAiAnalysis(data.analysis);
+      } else {
+        setAiAnalysis(data.error || '❌ Erro ao analisar. Tente novamente.');
+      }
+    } catch (error) {
+      console.error('Matrix Analysis error:', error);
       setAiAnalysis('❌ Erro de conexão. Verifique sua internet e tente novamente.');
     } finally {
       setLoadingAI(false);
@@ -446,7 +484,7 @@ export default function Solutions() {
                 Análise IA - {activePosition}
               </h2>
               <button
-                onClick={handleAIAnalysis}
+                onClick={handleMatrixAnalysis}
                 disabled={loadingAI || selectedHandsList.length === 0}
                 className={`px-6 py-3 rounded-lg font-bold transition-all ${
                   loadingAI || selectedHandsList.length === 0

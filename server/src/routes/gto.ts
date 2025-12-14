@@ -14,6 +14,99 @@ interface GTOAnalysisRequest {
   rangeData: Array<{ hand: string; action: string }>;
 }
 
+interface HandHistoryRequest {
+  handHistory: string;
+  position: string;
+}
+
+// Endpoint para análise de histórico de mão (texto livre)
+router.post('/analyze-history', async (req: Request, res: Response) => {
+  try {
+    const { handHistory, position } = req.body as HandHistoryRequest;
+
+    if (!handHistory || !handHistory.trim()) {
+      return res.json({ ok: false, error: '⚠️ Digite o histórico da mão para analisar!' });
+    }
+
+    const prompt = `Você é um coach profissional de poker especializado em estratégia GTO. Analise o seguinte histórico de mão:
+
+${handHistory}
+
+Contexto: Jogador está na posição ${position || 'não especificada'}.
+
+Forneça uma análise completa (máximo 200 palavras) cobrindo:
+1. 📊 Avaliação da situação pré-flop/flop/turn/river
+2. 🎯 Ação recomendada pelo GTO
+3. 💡 Erros ou melhorias na linha de jogo
+4. ⚡ Dicas práticas específicas
+
+Seja direto, objetivo e use emojis para organizar a resposta.`;
+
+    // Check if OpenAI is configured
+    if (!process.env.OPENAI_API_KEY) {
+      // Análise mock quando não tem API key
+      return res.json({
+        ok: true,
+        analysis: `🎯 Análise GTO da Situação
+
+📊 **Avaliação:**
+O histórico descreve uma situação comum de ${position || 'mesa'}.
+
+💡 **Recomendação GTO:**
+- Considere o tamanho do pot e SPR (Stack-to-Pot Ratio)
+- Avalie os ranges dos oponentes baseado nas ações prévias
+- Em posição, você tem vantagem informacional
+
+⚡ **Dicas:**
+- Mantenha ranges balanceados
+- Ajuste sizing baseado na textura do board
+- Considere fold equity em spots de blefe
+
+⚠️ *Configure OPENAI_API_KEY no servidor para análises mais detalhadas com IA!*`
+      });
+    }
+
+    // Call OpenAI
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      messages: [
+        {
+          role: 'system',
+          content: 'Você é um coach profissional de poker especializado em estratégia GTO. Seja conciso, objetivo e use emojis para organizar suas respostas. Foque em análise acionável.'
+        },
+        {
+          role: 'user',
+          content: prompt
+        }
+      ],
+      max_tokens: 400,
+      temperature: 0.7,
+    });
+
+    const analysis = completion.choices[0]?.message?.content || 'Não foi possível gerar análise.';
+
+    res.json({ ok: true, analysis });
+  } catch (error: any) {
+    console.error('Hand History Analysis error:', error);
+    
+    res.json({
+      ok: true,
+      analysis: `🎯 Análise Básica
+
+📊 Situação analisada com base em princípios GTO.
+
+💡 Recomendações gerais:
+- Mantenha ranges equilibrados
+- Considere posição e stack sizes
+- Avalie pot odds antes de decisões
+
+⚠️ Erro ao conectar com IA: ${error.message}
+
+*Tente novamente em alguns segundos.*`
+    });
+  }
+});
+
 router.post('/analyze', async (req: Request, res: Response) => {
   try {
     const { position, hands, rangeData } = req.body as GTOAnalysisRequest;
