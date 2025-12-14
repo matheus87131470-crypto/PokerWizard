@@ -186,7 +186,7 @@ import { setPremium } from './userService';
 
 let _autoConfirmInterval: NodeJS.Timeout | null = null;
 
-export function startAutoConfirmation(intervalMs: number = 15_000, thresholdMs: number = 60_000) {
+export function startAutoConfirmation(intervalMs: number = 1_000, thresholdMs: number = 10_000) {
   // Fast defaults via env: allow speeding up confirmation
   const envInterval = process.env.PIX_AUTO_CONFIRM_INTERVAL_MS ? Number(process.env.PIX_AUTO_CONFIRM_INTERVAL_MS) : undefined;
   const envThreshold = process.env.PIX_AUTO_CONFIRM_THRESHOLD_MS ? Number(process.env.PIX_AUTO_CONFIRM_THRESHOLD_MS) : undefined;
