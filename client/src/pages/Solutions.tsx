@@ -231,7 +231,7 @@ export default function Solutions() {
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 flex items-center gap-3">
               <span className="text-4xl">🎯</span>
-              GTO Solutions AI
+              Análise de Mãos
             </h1>
             <div className="flex items-center gap-4">
               <button

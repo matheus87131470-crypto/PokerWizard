@@ -164,7 +164,7 @@ export default function TrainingLab() {
         }}>
           <div>
             <h1 style={{ fontSize: 32, fontWeight: 700, marginBottom: 4, color: 'white', display: 'flex', alignItems: 'center', gap: 10 }}>
-              🎯 Training Lab
+              Laboratório de Treino
             </h1>
             <p style={{ fontSize: 14, color: '#a78bfa', margin: 0 }}>Treine situações reais de poker com análise profissional</p>
           </div>

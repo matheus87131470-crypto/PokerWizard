@@ -7,14 +7,14 @@ export default function Features() {
   const features = [
     {
       icon: '🧠',
-      title: 'Training Lab',
-      desc: 'Treino GTO com feedback da IA em tempo real',
+      title: 'Laboratório de Treino',
+      desc: 'Treino com feedback da IA em tempo real',
       badge: 'Popular',
       action: () => navigate('/trainer')
     },
     {
       icon: '📊',
-      title: 'GTO Solutions',
+      title: 'Análise de Mãos',
       desc: 'Análise instantânea de qualquer mão',
       badge: 'Grátis',
       action: () => navigate('/solutions')
@@ -105,7 +105,7 @@ export default function Features() {
           className="btn btn-primary" 
           style={{ padding: '14px 32px', fontSize: 15 }}
         >
-          ⚡ Gerar Treino GTO
+          Iniciar Treino
         </button>
       </div>
     </div>

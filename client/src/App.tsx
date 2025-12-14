@@ -29,8 +29,8 @@ function Layout({ children }: { children: React.ReactNode }) {
           <Link to="/" className="nav-link">Home</Link>
           <Link to="/rankings" className="nav-link">Rankings</Link>
           <Link to="/analysis" className="nav-link">Análise</Link>
-          <Link to="/trainer" className="nav-link">🧪 Training Lab</Link>
-          <Link to="/solutions" className="nav-link">🎯 GTO Solutions</Link>
+          <Link to="/trainer" className="nav-link">Laboratório de Treino</Link>
+          <Link to="/solutions" className="nav-link">Análise de Mãos</Link>
           <Link to="/features" className="nav-link">Funcionalidades</Link>
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             {auth.user ? (
@@ -142,7 +142,7 @@ function Home() {
           </span>
         </h1>
         <p style={{ fontSize: 18, color: 'var(--text-secondary)', maxWidth: 550, margin: '0 auto 32px', lineHeight: 1.6 }}>
-          Receba feedback GTO imediato, descubra leaks ocultos e evolua seu jogo em minutos — não em meses.
+          Receba feedback imediato, descubra leaks ocultos e evolua seu jogo em minutos — não em meses.
         </p>
         
         {/* CTA Principal */}
@@ -158,7 +158,7 @@ function Home() {
             🎯 COMECE POR AQUI
           </p>
           <p style={{ fontSize: 15, color: 'var(--text-secondary)', marginBottom: 16 }}>
-            Gere um treino GTO ou analise uma mão em menos de 1 minuto.
+            Gere um treino ou analise uma mão em menos de 1 minuto.
           </p>
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
             <button 
@@ -166,7 +166,7 @@ function Home() {
               className="btn btn-success" 
               style={{ padding: '14px 24px', fontSize: 15, fontWeight: 700 }}
             >
-              ⚡ Gerar Treino GTO
+              Iniciar Treino
             </button>
             <button 
               onClick={() => navigate('/solutions')}
@@ -213,10 +213,10 @@ function Home() {
             <div>
               <div style={{ fontSize: 48, marginBottom: 16 }}>🧠</div>
               <h2 style={{ fontSize: 28, fontWeight: 800, marginBottom: 12, color: 'white' }}>
-                Training Lab com IA
+                Laboratório de Treino com IA
               </h2>
               <p style={{ fontSize: 16, color: '#94a3b8', lineHeight: 1.7, marginBottom: 20 }}>
-                <strong style={{ color: '#10b981' }}>Receba feedback GTO imediato</strong> e descubra exatamente onde você está perdendo dinheiro. A IA analisa suas decisões e sugere melhorias específicas.
+                <strong style={{ color: '#10b981' }}>Receba feedback imediato</strong> e descubra exatamente onde você está perdendo dinheiro. A IA analisa suas decisões e sugere melhorias específicas.
               </p>
               <ul style={{ listStyle: 'none', padding: 0, marginBottom: 24 }}>
                 {['Situações reais de torneio e cash', 'Análise de range e equity', 'Feedback personalizado da IA'].map((item, i) => (
@@ -257,7 +257,7 @@ function Home() {
         </p>
         
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
-          {/* Card 1 - GTO Solutions */}
+          {/* Card 1 - Análise de Mãos */}
           <div className="card" style={{ 
             display: 'flex', 
             flexDirection: 'column', 
@@ -279,9 +279,9 @@ function Home() {
                   GRATUITO
                 </span>
               </div>
-              <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>GTO Solutions</h3>
+              <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Análise de Mãos</h3>
               <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 16 }}>
-                Cole sua mão e receba análise GTO instantânea. Descubra se você jogou certo ou errado.
+                Cole sua mão e receba análise instantânea. Descubra se você jogou certo ou errado.
               </p>
             </div>
             <button 
@@ -423,7 +423,7 @@ function Home() {
           🔥 Pronto para evoluir seu jogo?
         </h2>
         <p style={{ fontSize: 16, color: 'var(--text-secondary)', marginBottom: 28, maxWidth: 450, margin: '0 auto 28px' }}>
-          Gere seu primeiro treino GTO ou analise uma mão agora. É grátis.
+          Gere seu primeiro treino ou analise uma mão agora. É grátis.
         </p>
         <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
           <button 
@@ -431,14 +431,14 @@ function Home() {
             className="btn btn-success" 
             style={{ padding: '16px 32px', fontSize: 16, fontWeight: 700 }}
           >
-            🎯 Gerar Treino GTO
+            Iniciar Treino
           </button>
           <button 
             onClick={() => navigate('/solutions')}
             className="btn btn-primary" 
             style={{ padding: '16px 32px', fontSize: 16 }}
           >
-            📊 Analisar Mão
+            Analisar Mão
           </button>
         </div>
       </div>
