@@ -30,53 +30,108 @@ function Layout({ children }: { children: React.ReactNode }) {
         boxShadow: '0 4px 24px rgba(0, 0, 0, 0.4), 0 0 80px rgba(139, 92, 246, 0.1)',
         padding: '18px 40px',
       }}>
-        {/* Logo Premium - Variação 1: Gráfico + Carta */}
-        <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', transition: 'all 0.3s ease' }}
+        {/* Logo Premium Ultra Profissional */}
+        <Link to="/" style={{ 
+          textDecoration: 'none', 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: 14, 
+          cursor: 'pointer', 
+          transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+          padding: '8px 16px',
+          borderRadius: '12px',
+          background: 'rgba(139, 92, 246, 0.05)',
+          border: '1px solid rgba(139, 92, 246, 0.1)',
+        }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'translateY(-1px)';
-            e.currentTarget.style.filter = 'drop-shadow(0 0 12px rgba(139, 92, 246, 0.6))';
+            e.currentTarget.style.transform = 'translateY(-2px)';
+            e.currentTarget.style.background = 'rgba(139, 92, 246, 0.1)';
+            e.currentTarget.style.border = '1px solid rgba(139, 92, 246, 0.3)';
+            e.currentTarget.style.boxShadow = '0 8px 32px rgba(139, 92, 246, 0.3), 0 0 60px rgba(139, 92, 246, 0.2)';
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.filter = 'none';
+            e.currentTarget.style.background = 'rgba(139, 92, 246, 0.05)';
+            e.currentTarget.style.border = '1px solid rgba(139, 92, 246, 0.1)';
+            e.currentTarget.style.boxShadow = 'none';
           }}
         >
-          {/* Ícone: Cérebro + Carta Estilizado */}
+          {/* Ícone Premium: Chip + AI Spark */}
           <div style={{
-            width: 42,
-            height: 42,
-            background: 'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)',
-            borderRadius: '10px',
+            position: 'relative',
+            width: 46,
+            height: 46,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: '0 4px 16px rgba(139, 92, 246, 0.4)',
-            position: 'relative',
           }}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              {/* Carta de poker minimalista */}
-              <rect x="4" y="4" width="16" height="16" rx="2" fill="white" fillOpacity="0.95"/>
-              <path d="M12 7L13.5 10.5L17 11L14.5 13.5L15 17L12 15L9 17L9.5 13.5L7 11L10.5 10.5L12 7Z" fill="#8b5cf6"/>
-            </svg>
+            {/* Anel externo girante */}
+            <div style={{
+              position: 'absolute',
+              width: '100%',
+              height: '100%',
+              borderRadius: '50%',
+              border: '2px solid transparent',
+              borderTopColor: '#8b5cf6',
+              borderRightColor: '#ec4899',
+              opacity: 0.4,
+              animation: 'spin 3s linear infinite',
+            }}></div>
+            
+            {/* Chip principal */}
+            <div style={{
+              width: 38,
+              height: 38,
+              background: 'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 4px 20px rgba(139, 92, 246, 0.5), inset 0 1px 3px rgba(255, 255, 255, 0.3)',
+              border: '2px solid rgba(255, 255, 255, 0.2)',
+              position: 'relative',
+            }}>
+              {/* Símbolo AI + Spade */}
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2L15 9L22 9L16 14L19 21L12 16L5 21L8 14L2 9L9 9L12 2Z" fill="white" fillOpacity="0.95"/>
+                <circle cx="12" cy="12" r="2" fill="#8b5cf6"/>
+              </svg>
+            </div>
           </div>
           
-          {/* Texto da Logo */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {/* Texto Premium */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 0, minWidth: 140 }}>
             <div style={{
-              fontSize: 22,
-              fontWeight: 800,
-              background: 'linear-gradient(135deg, #a78bfa 0%, #ec4899 100%)',
+              fontSize: 20,
+              fontWeight: 900,
+              background: 'linear-gradient(135deg, #e9d5ff 0%, #f5d0fe 50%, #fae8ff 100%)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
-              letterSpacing: '-0.5px',
+              letterSpacing: '-0.3px',
+              lineHeight: 1,
+              textShadow: '0 0 30px rgba(139, 92, 246, 0.5)',
             }}>
               PokerWizard
             </div>
-            <div style={{ fontSize: 9, color: 'rgba(168, 123, 250, 0.7)', fontWeight: 500, letterSpacing: '0.5px' }}>
-              AI POKER TRAINER
+            <div style={{ 
+              fontSize: 10, 
+              color: 'rgba(168, 123, 250, 0.8)', 
+              fontWeight: 600, 
+              letterSpacing: '1.2px',
+              marginTop: 4,
+              textTransform: 'uppercase',
+            }}>
+              AI Poker Pro
             </div>
           </div>
         </Link>
+        
+        <style>{`
+          @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
+        `}</style>
 
         <nav className="app-nav">
           <Link to="/" className="nav-link">Home</Link>
