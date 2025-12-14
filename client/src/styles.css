@@ -199,23 +199,24 @@ select option:checked {
   color: #0b1220 !important;
 }
 
-/* Buttons */
+/* Buttons - Padrão Moderno Premium */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 12px 20px;
+  padding: 12px 24px;
   border-radius: 12px;
   border: 0;
   cursor: pointer;
   font-weight: 600;
   font-size: 14px;
-  transition: all var(--transition-base);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   font-family: inherit;
   white-space: nowrap;
   position: relative;
   overflow: hidden;
+  backdrop-filter: blur(10px);
 }
 
 .btn::before {
@@ -233,6 +234,10 @@ select option:checked {
   left: 100%;
 }
 
+.btn:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.02);
+}
+
 .btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -243,10 +248,16 @@ select option:checked {
   transform: scale(0.98);
 }
 
+/* Primary Button - Gradiente Roxo */
 .btn-primary {
-  background: linear-gradient(135deg, var(--accent-primary), #6d28d9);
+  background: linear-gradient(135deg, #a855f7, #ec4899);
   color: white;
-  box-shadow: 0 6px 20px rgba(124, 58, 237, 0.3);
+  box-shadow: 0 4px 14px rgba(168, 85, 247, 0.4);
+  border: none;
+}
+
+.btn-primary:hover:not(:disabled) {
+  box-shadow: 0 6px 20px rgba(168, 85, 247, 0.6);
 }
 
 .btn-primary:hover:not(:disabled) {
@@ -254,28 +265,31 @@ select option:checked {
   box-shadow: 0 12px 35px rgba(124, 58, 237, 0.5);
 }
 
+/* Ghost Button - Outline Premium */
 .btn-ghost {
-  background: transparent;
-  border: 1px solid var(--border-color);
+  background: rgba(55, 65, 81, 0.6);
+  border: 1px solid rgba(107, 114, 128, 0.4);
   color: var(--text-secondary);
+  backdrop-filter: blur(10px);
 }
 
 .btn-ghost:hover:not(:disabled) {
-  border-color: var(--accent-primary);
+  border-color: rgba(168, 85, 247, 0.5);
   color: var(--text-primary);
-  background: rgba(124, 58, 237, 0.1);
-  transform: translateY(-2px);
+  background: rgba(168, 85, 247, 0.15);
+  box-shadow: 0 4px 12px rgba(168, 85, 247, 0.2);
 }
 
+/* Success Button - Verde Premium */
 .btn-success {
-  background: linear-gradient(135deg, var(--accent-green), #059669);
+  background: linear-gradient(135deg, #10b981, #059669);
   color: white;
-  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+  border: none;
 }
 
 .btn-success:hover:not(:disabled) {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 35px rgba(16, 185, 129, 0.5);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6);
 }
 
 /* Spinner */

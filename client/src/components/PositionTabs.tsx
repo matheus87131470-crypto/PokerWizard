@@ -27,6 +27,19 @@ const POSITION_DESCRIPTIONS: Record<Position, string> = {
   BB: 'Big Blind',
 };
 
+// Gradientes premium para cada posição
+function getPositionGradient(position: Position): string {
+  const gradients: Record<Position, string> = {
+    UTG: '#dc2626, #991b1b',
+    HJ: '#ea580c, #c2410c',
+    CO: '#ca8a04, #a16207',
+    BTN: '#16a34a, #15803d',
+    SB: '#2563eb, #1d4ed8',
+    BB: '#9333ea, #7e22ce',
+  };
+  return gradients[position];
+}
+
 export default function PositionTabs({ 
   positions, 
   activePosition, 
@@ -54,27 +67,61 @@ export default function PositionTabs({
             <button
               key={position}
               onClick={() => onPositionChange(position)}
-              className={`
-                relative px-6 py-3 rounded-lg font-bold text-sm
-                transition-all duration-200
-                ${isActive 
-                  ? `bg-gradient-to-br ${POSITION_COLORS[position]} text-white scale-105 shadow-lg` 
-                  : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white'
+              style={{
+                position: 'relative',
+                padding: '14px 24px',
+                borderRadius: '12px',
+                fontWeight: 700,
+                fontSize: '14px',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                cursor: 'pointer',
+                border: isActive ? '2px solid rgba(255, 255, 255, 0.3)' : '2px solid rgba(75, 85, 99, 0.5)',
+                background: isActive 
+                  ? `linear-gradient(135deg, ${getPositionGradient(position)})`
+                  : 'rgba(31, 41, 55, 0.8)',
+                color: isActive ? 'white' : '#9ca3af',
+                backdropFilter: 'blur(10px)',
+                boxShadow: isActive 
+                  ? '0 6px 20px rgba(0, 0, 0, 0.3), 0 0 30px rgba(168, 85, 247, 0.2)'
+                  : '0 2px 8px rgba(0, 0, 0, 0.2)',
+                transform: isActive ? 'scale(1.05) translateY(-2px)' : 'scale(1)',
+              }}
+              onMouseEnter={(e) => {
+                if (!isActive) {
+                  e.currentTarget.style.background = 'rgba(55, 65, 81, 0.9)';
+                  e.currentTarget.style.color = 'white';
+                  e.currentTarget.style.borderColor = 'rgba(107, 114, 128, 0.7)';
+                  e.currentTarget.style.transform = 'scale(1.02) translateY(-1px)';
                 }
-                border-2 ${isActive ? 'border-white border-opacity-30' : 'border-gray-700'}
-              `}
+              }}
+              onMouseLeave={(e) => {
+                if (!isActive) {
+                  e.currentTarget.style.background = 'rgba(31, 41, 55, 0.8)';
+                  e.currentTarget.style.color = '#9ca3af';
+                  e.currentTarget.style.borderColor = 'rgba(75, 85, 99, 0.5)';
+                  e.currentTarget.style.transform = 'scale(1)';
+                }
+              }}
             >
-              <div className="flex flex-col items-center gap-0.5">
-                <span className="text-lg">{position}</span>
-                <span className="text-[10px] opacity-75 font-normal">
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+                <span style={{ fontSize: '16px', fontWeight: 700 }}>{position}</span>
+                <span style={{ fontSize: '10px', opacity: 0.8, fontWeight: 400 }}>
                   {POSITION_DESCRIPTIONS[position]}
                 </span>
               </div>
               
               {isActive && (
-                <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2">
-                  <div className="w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-white"></div>
-                </div>
+                <div style={{
+                  position: 'absolute',
+                  bottom: '-8px',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: 0,
+                  height: 0,
+                  borderLeft: '6px solid transparent',
+                  borderRight: '6px solid transparent',
+                  borderTop: '6px solid white',
+                }}></div>
               )}
             </button>
           );

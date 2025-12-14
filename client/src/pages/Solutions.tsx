@@ -275,14 +275,64 @@ export default function Solutions() {
               <button
                 onClick={handleAIAnalysis}
                 disabled={loadingAI || !handHistory.trim()}
-                className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold py-3 rounded-lg hover:shadow-lg hover:shadow-purple-500/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{
+                  flex: 1,
+                  padding: '14px 24px',
+                  background: loadingAI || !handHistory.trim() 
+                    ? 'linear-gradient(135deg, #6b7280, #4b5563)'
+                    : 'linear-gradient(135deg, #a855f7, #ec4899)',
+                  color: 'white',
+                  fontWeight: 600,
+                  fontSize: '15px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  cursor: loadingAI || !handHistory.trim() ? 'not-allowed' : 'pointer',
+                  boxShadow: loadingAI || !handHistory.trim() 
+                    ? 'none'
+                    : '0 4px 14px rgba(168, 85, 247, 0.4)',
+                  transition: 'all 0.3s ease',
+                  transform: 'scale(1)',
+                }}
+                onMouseEnter={(e) => {
+                  if (!loadingAI && handHistory.trim()) {
+                    e.currentTarget.style.transform = 'scale(1.02)';
+                    e.currentTarget.style.boxShadow = '0 6px 20px rgba(168, 85, 247, 0.6)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.boxShadow = loadingAI || !handHistory.trim() 
+                    ? 'none'
+                    : '0 4px 14px rgba(168, 85, 247, 0.4)';
+                }}
               >
                 {loadingAI ? '🤖 Analisando...' : '🚀 Analisar com IA'}
               </button>
               {handHistory && (
                 <button
                   onClick={() => setHandHistory('')}
-                  className="px-4 py-3 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors"
+                  style={{
+                    padding: '14px 20px',
+                    background: 'rgba(55, 65, 81, 0.8)',
+                    color: '#d1d5db',
+                    fontWeight: 500,
+                    fontSize: '14px',
+                    borderRadius: '12px',
+                    border: '1px solid rgba(107, 114, 128, 0.4)',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    backdropFilter: 'blur(10px)',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(75, 85, 99, 0.9)';
+                    e.currentTarget.style.color = 'white';
+                    e.currentTarget.style.borderColor = 'rgba(156, 163, 175, 0.6)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'rgba(55, 65, 81, 0.8)';
+                    e.currentTarget.style.color = '#d1d5db';
+                    e.currentTarget.style.borderColor = 'rgba(107, 114, 128, 0.4)';
+                  }}
                 >
                   Limpar
                 </button>
@@ -306,11 +356,41 @@ export default function Solutions() {
               </div>
               <button
                 onClick={() => setAiMode(!aiMode)}
-                className={`px-6 py-2 font-semibold rounded-lg transition-all ${
-                  aiMode 
-                    ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/50' 
-                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                }`}
+                style={{
+                  padding: '12px 28px',
+                  background: aiMode 
+                    ? 'linear-gradient(135deg, #a855f7, #ec4899)'
+                    : 'rgba(55, 65, 81, 0.8)',
+                  color: 'white',
+                  fontWeight: 600,
+                  fontSize: '14px',
+                  borderRadius: '12px',
+                  border: aiMode ? 'none' : '1px solid rgba(107, 114, 128, 0.4)',
+                  cursor: 'pointer',
+                  boxShadow: aiMode 
+                    ? '0 4px 14px rgba(168, 85, 247, 0.5)'
+                    : 'none',
+                  transition: 'all 0.3s ease',
+                  backdropFilter: 'blur(10px)',
+                }}
+                onMouseEnter={(e) => {
+                  if (aiMode) {
+                    e.currentTarget.style.boxShadow = '0 6px 20px rgba(168, 85, 247, 0.7)';
+                    e.currentTarget.style.transform = 'scale(1.05)';
+                  } else {
+                    e.currentTarget.style.background = 'rgba(75, 85, 99, 0.9)';
+                    e.currentTarget.style.borderColor = 'rgba(156, 163, 175, 0.6)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'scale(1)';
+                  if (aiMode) {
+                    e.currentTarget.style.boxShadow = '0 4px 14px rgba(168, 85, 247, 0.5)';
+                  } else {
+                    e.currentTarget.style.background = 'rgba(55, 65, 81, 0.8)';
+                    e.currentTarget.style.borderColor = 'rgba(107, 114, 128, 0.4)';
+                  }
+                }}
               >
                 {aiMode ? '✅ IA Ativa' : '🤖 Ativar IA'}
               </button>
