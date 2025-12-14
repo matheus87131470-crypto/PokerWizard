@@ -197,20 +197,32 @@ export default function Trainer() {
               <span className="text-4xl">🧪</span>
               Training Lab AI
             </h1>
-            <div className="flex items-center gap-4">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
               <button
                 onClick={() => setAiMode(!aiMode)}
-                className={`px-4 py-2 rounded-lg font-semibold transition-all ${
-                  aiMode 
-                    ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg shadow-blue-500/50' 
-                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                }`}
+                style={{
+                  background: aiMode ? 'linear-gradient(90deg, #3b82f6 0%, #a855f7 100%)' : '#374151',
+                  color: aiMode ? 'white' : '#9ca3af',
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  boxShadow: aiMode ? '0 4px 14px rgba(59, 130, 246, 0.5)' : 'none'
+                }}
+                onMouseEnter={(e) => {
+                  if (!aiMode) e.currentTarget.style.background = '#4b5563';
+                }}
+                onMouseLeave={(e) => {
+                  if (!aiMode) e.currentTarget.style.background = '#374151';
+                }}
               >
                 {aiMode ? '🤖 IA Ativa' : '🤖 Ativar IA'}
               </button>
               {auth.user && (
-                <div className="text-sm text-gray-400">
-                  Olá, <span className="text-white font-semibold">{auth.user.name}</span>
+                <div style={{ fontSize: '14px', color: '#9ca3af' }}>
+                  Olá, <span style={{ color: 'white', fontWeight: '600' }}>{auth.user.name}</span>
                 </div>
               )}
             </div>
@@ -285,18 +297,55 @@ export default function Trainer() {
               </select>
             </div>
 
-            <div className="flex gap-2 mt-2">
+            <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
               <button 
                 disabled={loading} 
                 type="submit" 
-                className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold py-3 rounded-lg hover:from-purple-600 hover:to-pink-600 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-purple-500/50 transition-all"
+                style={{
+                  flex: 1,
+                  background: loading ? '#6b7280' : 'linear-gradient(90deg, #a855f7 0%, #ec4899 100%)',
+                  color: 'white',
+                  fontWeight: 'bold',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  opacity: loading ? 0.5 : 1,
+                  boxShadow: loading ? 'none' : '0 4px 14px rgba(168, 85, 247, 0.5)',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  if (!loading) {
+                    e.currentTarget.style.background = 'linear-gradient(90deg, #9333ea 0%, #db2777 100%)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!loading) {
+                    e.currentTarget.style.background = 'linear-gradient(90deg, #a855f7 0%, #ec4899 100%)';
+                  }
+                }}
               >
                 {loading ? '⏳ Gerando...' : '✨ Gerar Situação'}
               </button>
               <button 
                 type="button" 
                 onClick={() => { setScenario(null); setFeedback(null); setIsExampleScenario(false); setAiAnalysis(''); }} 
-                className="px-4 bg-gray-700 text-gray-300 font-semibold rounded-lg hover:bg-gray-600 transition-all"
+                style={{
+                  padding: '0 16px',
+                  background: '#374151',
+                  color: '#d1d5db',
+                  fontWeight: '600',
+                  borderRadius: '8px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#4b5563';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#374151';
+                }}
               >
                 🗑️
               </button>
@@ -310,7 +359,25 @@ export default function Trainer() {
             {usage && usage.remaining === 0 && (
               <button 
                 onClick={handleSubscribe} 
-                className="w-full mt-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold py-2 rounded-lg hover:from-green-600 hover:to-emerald-600 shadow-lg"
+                style={{
+                  width: '100%',
+                  marginTop: '8px',
+                  background: 'linear-gradient(90deg, #22c55e 0%, #10b981 100%)',
+                  color: 'white',
+                  fontWeight: 'bold',
+                  padding: '8px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 14px rgba(34, 197, 94, 0.5)',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'linear-gradient(90deg, #16a34a 0%, #059669 100%)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'linear-gradient(90deg, #22c55e 0%, #10b981 100%)';
+                }}
               >
                 ⭐ Assinar PRO — R$ 5,90/mês
               </button>
@@ -410,21 +477,41 @@ export default function Trainer() {
                   </div>
                 </div>
 
-                <div className="mt-6 grid grid-cols-5 gap-3">
+                <div style={{ marginTop: '24px', display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '12px' }}>
                   {[
-                    { action: 'Fold', color: 'from-red-500 to-red-700', emoji: '❌' },
-                    { action: 'Call', color: 'from-green-500 to-green-700', emoji: '✅' },
-                    { action: 'Raise', color: 'from-orange-500 to-orange-700', emoji: '📈' },
-                    { action: 'All-in', color: 'from-purple-500 to-purple-700', emoji: '💥' },
-                    { action: 'Check', color: 'from-blue-500 to-blue-700', emoji: '✔️' },
-                  ].map(({ action, color, emoji }) => (
+                    { action: 'Fold', gradient: 'linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)', shadow: '0 4px 14px rgba(239, 68, 68, 0.5)', emoji: '❌' },
+                    { action: 'Call', gradient: 'linear-gradient(135deg, #22c55e 0%, #15803d 100%)', shadow: '0 4px 14px rgba(34, 197, 94, 0.5)', emoji: '✅' },
+                    { action: 'Raise', gradient: 'linear-gradient(135deg, #f97316 0%, #c2410c 100%)', shadow: '0 4px 14px rgba(249, 115, 22, 0.5)', emoji: '📈' },
+                    { action: 'All-in', gradient: 'linear-gradient(135deg, #a855f7 0%, #7e22ce 100%)', shadow: '0 4px 14px rgba(168, 85, 247, 0.5)', emoji: '💥' },
+                    { action: 'Check', gradient: 'linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)', shadow: '0 4px 14px rgba(59, 130, 246, 0.5)', emoji: '✔️' },
+                  ].map(({ action, gradient, shadow, emoji }) => (
                     <button 
                       key={action} 
                       onClick={() => { handleChoose(action); if (aiMode && !aiAnalysis) handleAIAnalysis(); }} 
-                      className={`bg-gradient-to-br ${color} text-white font-bold py-4 rounded-lg hover:scale-105 transition-all shadow-lg`}
+                      style={{
+                        background: gradient,
+                        color: 'white',
+                        fontWeight: 'bold',
+                        padding: '16px 8px',
+                        borderRadius: '12px',
+                        border: 'none',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        boxShadow: shadow,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: '4px'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'scale(1.05)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'scale(1)';
+                      }}
                     >
-                      <div className="text-2xl mb-1">{emoji}</div>
-                      <div className="text-sm">{action}</div>
+                      <div style={{ fontSize: '28px' }}>{emoji}</div>
+                      <div style={{ fontSize: '13px' }}>{action}</div>
                     </button>
                   ))}
                 </div>
@@ -454,15 +541,32 @@ export default function Trainer() {
 
                 {/* AI Analysis Button */}
                 {aiMode && scenario && (
-                  <div className="mt-4">
+                  <div style={{ marginTop: '16px' }}>
                     <button
                       onClick={handleAIAnalysis}
                       disabled={loadingAI}
-                      className={`w-full py-3 rounded-lg font-bold transition-all ${
-                        loadingAI
-                          ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                          : 'bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:from-blue-600 hover:to-purple-600 shadow-lg shadow-blue-500/50'
-                      }`}
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        borderRadius: '8px',
+                        border: 'none',
+                        fontWeight: 'bold',
+                        cursor: loadingAI ? 'not-allowed' : 'pointer',
+                        background: loadingAI ? '#4b5563' : 'linear-gradient(90deg, #3b82f6 0%, #a855f7 100%)',
+                        color: loadingAI ? '#9ca3af' : 'white',
+                        boxShadow: loadingAI ? 'none' : '0 4px 14px rgba(59, 130, 246, 0.5)',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!loadingAI) {
+                          e.currentTarget.style.background = 'linear-gradient(90deg, #2563eb 0%, #9333ea 100%)';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!loadingAI) {
+                          e.currentTarget.style.background = 'linear-gradient(90deg, #3b82f6 0%, #a855f7 100%)';
+                        }
+                      }}
                     >
                       {loadingAI ? '⏳ Analisando com IA...' : '🤖 Análise Completa com IA'}
                     </button>
