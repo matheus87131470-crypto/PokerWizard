@@ -11,6 +11,7 @@ export default function Premium() {
   const [copied, setCopied] = useState(false);
   const [timeLeft, setTimeLeft] = useState<number>(30 * 60); // 30 minutos em segundos
   const [pollCount, setPollCount] = useState(0);
+  const [paidBanner, setPaidBanner] = useState<string | null>(null);
 
   // Detectar ambiente automaticamente
   function getApiBase(): string {
@@ -51,20 +52,23 @@ export default function Premium() {
         const j = await res.json();
         
         if (j.status === 'confirmed') {
-          // Pagamento confirmado!
+          // Pagamento confirmado! Mostrar banner e redirecionar em 2s
           try { if (j.user) { localStorage.setItem('pokerwizard_user', JSON.stringify(j.user)); } } catch (e) {}
-          setPayment(null);
-          alert('✅ Pagamento confirmado! Premium ativado!');
-          navigate('/');
+          setPaidBanner('✅ Pagamento confirmado! Premium ativado. Redirecionando...');
+          clearInterval(pollInterval);
+          setTimeout(() => {
+            setPayment(null);
+            navigate('/');
+          }, 2000);
         }
       } catch (err) {
         // Falha silenciosa, continua polando
       }
       setPollCount(p => p + 1);
-    }, 3000); // Verifica a cada 3 segundos
+    }, 1000); // Verifica a cada 1 segundo para resposta mais rápida
 
     return () => clearInterval(pollInterval);
-  }, [payment, auth.token]);
+  }, [payment, auth.token, navigate]);
 
   async function createPix() {
     setLoading(true);
@@ -184,7 +188,26 @@ export default function Premium() {
             </div>
 
             {error && (
-              <div style={{ 
+              {paidBanner && (
+                <div style={{ 
+                  padding: 14,
+                  background: 'rgba(16, 185, 129, 0.12)',
+                  border: '1px solid rgba(16, 185, 129, 0.35)',
+                  color: '#10b981',
+                  borderRadius: 10,
+                  marginBottom: 16,
+                  fontSize: 13,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 10,
+                  fontWeight: 600
+                }}>
+                  <span style={{ fontSize: 18 }}>🎉</span>
+                  <span>{paidBanner}</span>
+                </div>
+              )}
+
+              {error && (
                 padding: 14, 
                 background: 'rgba(239, 68, 68, 0.1)', 
                 border: '1px solid rgba(239, 68, 68, 0.3)',
@@ -194,12 +217,14 @@ export default function Premium() {
                 fontSize: 13,
                 display: 'flex',
                 flexDirection: 'column',
-                gap: 12,
-                fontWeight: 500
+                  flexDirection: 'column',
+                  gap: 12,
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <span style={{ fontSize: 18 }}>⚠️</span>
-                  <span>{error}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span style={{ fontSize: 18 }}>⚠️</span>
+                    <span>{error}</span>
+                  </div>
                 </div>
                 {error.includes('Sessão expirada') && (
                   <button
