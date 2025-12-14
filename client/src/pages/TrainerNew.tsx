@@ -14,7 +14,7 @@ export default function TrainingLab() {
   const auth = useAuth();
 
   // 🟦 ESTADOS GLOBAIS
-  const [iaAtiva, setIaAtiva] = useState(true);
+  const [iaAtiva, setIaAtiva] = useState(false); // ✅ Desabilitado por padrão (evita erro 429)
   const [isLoading, setIsLoading] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [treinosRestantes, setTreinosRestantes] = useState<number | null>(null);
@@ -390,49 +390,110 @@ export default function TrainingLab() {
               >
                 <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 20 }}>🎯 Situação Gerada</h2>
 
-                <div style={{ marginBottom: 20 }}>
-                  <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>Posição</div>
-                      <div style={{ fontSize: 16, fontWeight: 600 }}>{cenario.position}</div>
+                {/* MESA VISUAL */}
+                <div style={{ 
+                  position: 'relative', 
+                  width: '100%', 
+                  height: 400, 
+                  background: 'linear-gradient(135deg, #1e3a2f 0%, #0d1f1a 100%)',
+                  borderRadius: 200,
+                  border: '8px solid #2d5a47',
+                  marginBottom: 24,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  {/* CENTRO DA MESA - BOARD */}
+                  <div style={{
+                    textAlign: 'center',
+                    background: 'rgba(0,0,0,0.3)',
+                    padding: '16px 24px',
+                    borderRadius: 12,
+                    border: '1px solid rgba(255,255,255,0.1)'
+                  }}>
+                    <div style={{ fontSize: 11, color: '#86efac', marginBottom: 8, fontWeight: 600 }}>
+                      {cenario.street}
                     </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>Mesa</div>
-                      <div style={{ fontSize: 16, fontWeight: 600 }}>{cenario.table}</div>
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>Street</div>
-                      <div style={{ fontSize: 16, fontWeight: 600 }}>{cenario.street}</div>
-                    </div>
+                    {cenario.board && cenario.board.length > 0 ? (
+                      <div style={{ fontSize: 28, fontWeight: 700, color: 'white', letterSpacing: 4 }}>
+                        {cenario.board.join(' ')}
+                      </div>
+                    ) : (
+                      <div style={{ fontSize: 16, color: '#86efac', fontWeight: 600 }}>
+                        Pré-flop
+                      </div>
+                    )}
                   </div>
 
-                  <div style={{ marginTop: 16 }}>
-                    <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>Suas cartas</div>
-                    <div style={{ fontSize: 24, fontWeight: 700 }}>{cenario.heroCards?.join(' ') || 'N/A'}</div>
+                  {/* POSIÇÕES NA MESA */}
+                  {posicoesPorMesa[mesa].map((pos, idx) => {
+                    const total = posicoesPorMesa[mesa].length;
+                    const angle = (idx / total) * 2 * Math.PI - Math.PI / 2;
+                    const radius = 160;
+                    const x = Math.cos(angle) * radius;
+                    const y = Math.sin(angle) * radius;
+                    const isHero = pos === cenario.position;
+
+                    return (
+                      <div
+                        key={pos}
+                        style={{
+                          position: 'absolute',
+                          left: '50%',
+                          top: '50%',
+                          transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`,
+                          background: isHero 
+                            ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
+                            : 'rgba(0,0,0,0.4)',
+                          border: isHero ? '3px solid #34d399' : '2px solid rgba(255,255,255,0.2)',
+                          borderRadius: '50%',
+                          width: 60,
+                          height: 60,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: 13,
+                          fontWeight: 700,
+                          color: 'white',
+                          boxShadow: isHero ? '0 0 20px rgba(16, 185, 129, 0.5)' : 'none',
+                        }}
+                      >
+                        {pos}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* SUAS CARTAS */}
+                <div style={{
+                  background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+                  padding: 20,
+                  borderRadius: 12,
+                  border: '2px solid #334155',
+                  marginBottom: 20
+                }}>
+                  <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 8, fontWeight: 600 }}>
+                    🃏 Suas cartas
                   </div>
+                  <div style={{ fontSize: 32, fontWeight: 700, color: 'white', letterSpacing: 8 }}>
+                    {cenario.heroCards?.join(' ') || 'N/A'}
+                  </div>
+                </div>
 
-                  {cenario.board && cenario.board.length > 0 && (
-                    <div style={{ marginTop: 16 }}>
-                      <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>Board</div>
-                      <div style={{ fontSize: 24, fontWeight: 700 }}>{cenario.board.join(' ')}</div>
-                    </div>
-                  )}
-
-                  <div style={{ marginTop: 16 }}>
-                    <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>Ação GTO</div>
-                    <div
-                      style={{
-                        fontSize: 18,
-                        fontWeight: 700,
-                        color: '#10b981',
-                        padding: '8px 12px',
-                        background: '#d1fae5',
-                        borderRadius: 6,
-                        display: 'inline-block',
-                      }}
-                    >
-                      {cenario.correctAction}
-                    </div>
+                {/* AÇÃO GTO */}
+                <div style={{
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  padding: 16,
+                  borderRadius: 12,
+                  border: '2px solid #34d399',
+                  marginBottom: 20,
+                  boxShadow: '0 4px 20px rgba(16, 185, 129, 0.3)'
+                }}>
+                  <div style={{ fontSize: 12, color: '#d1fae5', marginBottom: 4, fontWeight: 600 }}>
+                    ✅ Ação GTO recomendada
+                  </div>
+                  <div style={{ fontSize: 24, fontWeight: 700, color: 'white' }}>
+                    {cenario.correctAction}
                   </div>
                 </div>
 
