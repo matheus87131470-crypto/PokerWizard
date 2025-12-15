@@ -282,24 +282,8 @@ body {
   h3 { font-size: 16px; }
 }
 
-/* Hide nav in mobile when collapsed */
-.mobile-nav {
-  display: none;
-}
-@media (max-width: 640px) {
-  .mobile-nav.open {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 10px;
-  }
-}
-
-/* Mobile toggle button visibility */
-.mobile-toggle { display: none; }
-@media (max-width: 640px) {
-  .mobile-toggle { display: inline-flex; align-items: center; }
-}
+/* Hide nav in mobile when collapsed - DISABLED */
+/* Mobile toggle button visibility - DISABLED */
 
 .search-input:focus {
   outline: none;

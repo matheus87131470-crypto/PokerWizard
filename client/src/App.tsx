@@ -16,7 +16,6 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 function Layout({ children }: { children: React.ReactNode }) {
   const auth = useAuth();
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -136,25 +135,13 @@ function Layout({ children }: { children: React.ReactNode }) {
           }
         `}</style>
 
-        {/* Mobile toggle */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button
-            aria-label="Abrir menu"
-            onClick={() => setMobileNavOpen((v) => !v)}
-            className="btn btn-ghost mobile-toggle"
-            style={{ padding: '8px 12px' }}
-          >
-            ☰ Menu
-          </button>
-        </div>
-
-        <nav className={mobileNavOpen ? 'app-nav mobile-nav open' : 'app-nav mobile-nav'}>
+        <nav className="app-nav">
           {/* Destacar rota ativa com NavLink */}
-          <NavLink to="/" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'} onClick={() => setMobileNavOpen(false)}>Home</NavLink>
-          <NavLink to="/rankings" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'} onClick={() => setMobileNavOpen(false)}>Rankings</NavLink>
-          <NavLink to="/analysis" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'} onClick={() => setMobileNavOpen(false)}>Análise</NavLink>
-          <NavLink to="/solutions" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'} onClick={() => setMobileNavOpen(false)}>Análise de Mãos</NavLink>
-          <NavLink to="/features" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'} onClick={() => setMobileNavOpen(false)}>Funcionalidades</NavLink>
+          <NavLink to="/" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Home</NavLink>
+          <NavLink to="/rankings" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Rankings</NavLink>
+          <NavLink to="/analysis" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Análise</NavLink>
+          <NavLink to="/solutions" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Análise de Mãos</NavLink>
+          <NavLink to="/features" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Funcionalidades</NavLink>
             <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             {auth.user ? (
               <>
@@ -198,19 +185,19 @@ function Layout({ children }: { children: React.ReactNode }) {
                     ⚡ Upgrade
                   </button>
                 )}
-                <button onClick={() => { navigate('/premium'); setMobileNavOpen(false); }} className="btn btn-ghost" style={{ padding: '8px 16px', fontSize: 13 }}>
+                <button onClick={() => navigate('/premium')} className="btn btn-ghost" style={{ padding: '8px 16px', fontSize: 13 }}>
                   💳 Planos
                 </button>
-                <button onClick={() => { handleLogout(); setMobileNavOpen(false); }} className="btn btn-ghost" style={{ padding: '8px 16px', fontSize: 13 }}>
+                <button onClick={handleLogout} className="btn btn-ghost" style={{ padding: '8px 16px', fontSize: 13 }}>
                   Sair
                 </button>
               </>
             ) : (
               <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                <button onClick={() => { navigate('/premium'); setMobileNavOpen(false); }} className="btn btn-ghost" style={{ padding: '8px 16px', fontSize: 13 }}>
+                <button onClick={() => navigate('/premium')} className="btn btn-ghost" style={{ padding: '8px 16px', fontSize: 13 }}>
                   💳 Planos
                 </button>
-                <button onClick={() => { navigate('/login'); setMobileNavOpen(false); }} className="btn btn-primary" style={{ padding: '8px 20px', fontSize: 13, background: 'linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%)', border: 'none' }}>
+                <button onClick={() => navigate('/login')} className="btn btn-primary" style={{ padding: '8px 20px', fontSize: 13, background: 'linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%)', border: 'none' }}>
                   Entrar
                 </button>
               </div>
