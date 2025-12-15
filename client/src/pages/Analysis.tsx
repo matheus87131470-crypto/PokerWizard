@@ -712,3 +712,5 @@ function LineChart({ series, labels, height = 180, max = 100 }: {
     </div>
   );
 }
+
+// Deploy fix 2025-12-14 22:48:56
