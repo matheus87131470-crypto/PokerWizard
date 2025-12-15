@@ -242,7 +242,7 @@ function Layout({ children }: { children: React.ReactNode }) {
                     </button>
                   )
                 )}
-                <button onClick={() => navigate('/premium')} className="btn btn-ghost" style={{ padding: '8px 16px', fontSize: 13 }}>
+                <button onClick={() => navigate('/profile')} className="btn btn-ghost" style={{ padding: '8px 16px', fontSize: 13 }}>
                   💳 Planos
                 </button>
                 <button onClick={handleLogout} className="btn btn-ghost" style={{ padding: '8px 16px', fontSize: 13 }}>
