@@ -666,25 +666,40 @@ export default function Trainer() {
     return (
       <div>
         <h1>🎯 Trainer GTO Premium</h1>
-        <div className="card" style={{ textAlign: 'center', padding: 40 }}>
-          <div style={{ fontSize: 48, marginBottom: 16 }}>💎</div>
-          <h2>Seus Créditos Acabaram</h2>
-          <p style={{ color: 'var(--text-secondary)', marginBottom: 8 }}>
-            Você utilizou seus 5 treinos gratuitos.
+        <div className="card" style={{ textAlign: 'center', padding: 48 }}>
+          <div style={{ fontSize: 56, marginBottom: 20 }}>💎</div>
+          <h2 style={{ fontSize: 24, marginBottom: 12 }}>Trial Finalizado</h2>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: 8, fontSize: 15 }}>
+            Você utilizou seus <strong>5 treinos gratuitos</strong>.
           </p>
-          <p style={{ color: 'var(--text-muted)', marginBottom: 24, fontSize: 14 }}>
-            Assine o Premium para treinos ilimitados e evolua seu jogo exponencialmente.
+          <p style={{ color: 'var(--text-muted)', marginBottom: 28, fontSize: 13, maxWidth: 320, margin: '0 auto 28px' }}>
+            Para continuar treinando e evoluir seu jogo com ranges GTO profissionais, assine o plano Premium.
           </p>
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(109, 40, 217, 0.05))',
+            border: '1px solid rgba(139, 92, 246, 0.2)',
+            borderRadius: 12,
+            padding: 20,
+            marginBottom: 24,
+          }}>
+            <div style={{ fontSize: 28, fontWeight: 800, color: '#a78bfa', marginBottom: 4 }}>
+              R$ 5,90<span style={{ fontSize: 14, fontWeight: 400 }}>/mês</span>
+            </div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+              Treinos ilimitados • Cancele quando quiser
+            </div>
+          </div>
           <button 
             className="btn btn-primary" 
             onClick={() => navigate('/premium')}
             style={{ 
-              padding: '14px 40px', 
+              padding: '16px 48px', 
               fontSize: 16,
+              fontWeight: 700,
               background: 'linear-gradient(135deg, #8b5cf6, #6d28d9)',
             }}
           >
-            ⚡ Assinar Premium
+            ⚡ Desbloquear Acesso Premium
           </button>
         </div>
       </div>

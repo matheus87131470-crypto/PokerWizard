@@ -171,15 +171,25 @@ export function canCreateAccount(req: any, email: string, deviceInfo?: DeviceFin
     }
   }
 
-  // 🟡 FORTE 2: Limite de contas por dispositivo (máximo 3 contas permanentes)
+  // � CRÍTICO: Limite de 1 conta por IP (anti-abuse)
+  const accountsFromIP = accountRegistry.filter(acc => acc.ip === ip);
+  
+  if (accountsFromIP.length >= 1) {
+    return {
+      allowed: false,
+      reason: 'Já existe uma conta registrada neste endereço. Se você já possui uma conta, faça login.'
+    };
+  }
+
+  // 🟡 FORTE 2: Limite de contas por dispositivo (máximo 1 conta)
   const permanentAccountsFromDevice = accountRegistry.filter(
     acc => acc.deviceId === deviceId
   );
   
-  if (permanentAccountsFromDevice.length >= 3) {
+  if (permanentAccountsFromDevice.length >= 1) {
     return {
       allowed: false,
-      reason: 'Limite máximo de contas atingido neste dispositivo. Entre em contato com o suporte se precisar de ajuda.'
+      reason: 'Limite máximo de contas atingido neste dispositivo. Se você já possui uma conta, faça login.'
     };
   }
 
