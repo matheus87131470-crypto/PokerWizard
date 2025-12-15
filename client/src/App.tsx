@@ -144,6 +144,32 @@ function Layout({ children }: { children: React.ReactNode }) {
           <NavLink to="/trainer" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>🎯 Trainer</NavLink>
           <NavLink to="/solutions" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Análise de Mãos</NavLink>
           <NavLink to="/analysis" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Análise Jogadores</NavLink>
+          <a 
+            href="https://mpago.la/2soAEN3" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            style={{
+              color: '#c084fc',
+              fontSize: 13,
+              fontWeight: 600,
+              textDecoration: 'none',
+              padding: '6px 12px',
+              borderRadius: 8,
+              background: 'rgba(192, 132, 252, 0.1)',
+              border: '1px solid rgba(192, 132, 252, 0.2)',
+              transition: 'all 0.2s',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(192, 132, 252, 0.2)';
+              e.currentTarget.style.borderColor = 'rgba(192, 132, 252, 0.4)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(192, 132, 252, 0.1)';
+              e.currentTarget.style.borderColor = 'rgba(192, 132, 252, 0.2)';
+            }}
+          >
+            💜 Apoiar
+          </a>
             <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             {auth.user ? (
               <>
@@ -838,6 +864,28 @@ function Home() {
       <div style={{ textAlign: 'center', borderTop: '1px solid var(--border-color)', paddingTop: 32, paddingBottom: 24, color: 'var(--text-muted)', fontSize: 13 }}>
         <p style={{ marginBottom: 8, fontWeight: 600, color: 'var(--text-secondary)' }}>PokerWizard — AI Poker Trainer</p>
         <p style={{ marginBottom: 12 }}>Construído para jogadores que querem resultados reais.</p>
+        
+        {/* Link de doação */}
+        <p style={{ marginBottom: 16, color: 'var(--text-secondary)' }}>
+          Gostou do PokerWizard? Apoie o projeto{' '}
+          <a 
+            href="https://mpago.la/2soAEN3" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            style={{
+              color: '#c084fc',
+              fontWeight: 600,
+              textDecoration: 'none',
+              padding: '4px 10px',
+              borderRadius: 6,
+              background: 'rgba(192, 132, 252, 0.15)',
+              transition: 'all 0.2s',
+            }}
+          >
+            💜 R$ 0,50
+          </a>
+        </p>
+        
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, fontSize: 12 }}>
           <span>© 2025</span>
           <span style={{ color: 'var(--border-color)' }}>•</span>
