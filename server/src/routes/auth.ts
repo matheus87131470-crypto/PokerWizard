@@ -49,6 +49,10 @@ router.post('/register', async (req: any, res: Response) => {
         name: user.name,
         credits: user.credits,
         usosRestantes: (user as any).usosRestantes ?? user.credits,
+        // Novos campos por funcionalidade
+        usosTrainer: (user as any).usosTrainer ?? 5,
+        usosAnalise: (user as any).usosAnalise ?? 10,
+        usosJogadores: (user as any).usosJogadores ?? 5,
         statusPlano: (user as any).statusPlano ?? (user.premium ? 'premium' : 'free'),
         premium: user.premium,
         price: user.price ?? 5.9,
@@ -101,6 +105,10 @@ router.post('/login', async (req: any, res: Response) => {
         name: user.name,
         credits: user.credits,
         usosRestantes: (user as any).usosRestantes ?? user.credits,
+        // Novos campos por funcionalidade
+        usosTrainer: (user as any).usosTrainer ?? 5,
+        usosAnalise: (user as any).usosAnalise ?? 10,
+        usosJogadores: (user as any).usosJogadores ?? 5,
         statusPlano: (user as any).statusPlano ?? (user.premium ? 'premium' : 'free'),
         premium: user.premium,
         price: user.price ?? 5.9,
@@ -136,6 +144,10 @@ router.get('/me', authMiddleware, async (req: AuthRequest, res: Response) => {
         name: user.name,
         credits: user.credits,
         usosRestantes: (user as any).usosRestantes ?? user.credits,
+        // Novos campos por funcionalidade
+        usosTrainer: (user as any).usosTrainer ?? 5,
+        usosAnalise: (user as any).usosAnalise ?? 10,
+        usosJogadores: (user as any).usosJogadores ?? 5,
         statusPlano: (user as any).statusPlano ?? (user.premium ? 'premium' : 'free'),
         premium: user.premium,
         premiumUntil: user.premiumUntil,

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import HandMatrix, { HandData, HandAction } from '../components/HandMatrix';
 import ActionPanel, { ActionData } from '../components/ActionPanel';
 import RangeBar, { RangeSegment } from '../components/RangeBar';
@@ -95,7 +96,8 @@ function getApiBase(): string {
 const API_BASE = getApiBase();
 
 export default function Solutions() {
-  const { user } = useAuth();
+  const { user, token, refreshUser } = useAuth();
+  const navigate = useNavigate();
   const [activePosition, setActivePosition] = useState<Position>('BTN');
   const [hands, setHands] = useState<HandData[]>([]);
   const [selectedHandsList, setSelectedHandsList] = useState<string[]>([]);
@@ -104,6 +106,11 @@ export default function Solutions() {
   const [loadingAI, setLoadingAI] = useState(false);
   const [handHistory, setHandHistory] = useState<string>('');
   const [showAiTooltip, setShowAiTooltip] = useState(false);
+
+  // Controle de usos - Análise de Mãos tem 10 usos gratuitos
+  const usosAnalise = (user as any)?.usosAnalise ?? 10;
+  const isPremium = user?.premium || (user as any)?.statusPlano === 'premium';
+  const canUse = isPremium || usosAnalise > 0;
 
   const positions: Position[] = ['UTG', 'HJ', 'CO', 'BTN', 'SB', 'BB'];
 
@@ -207,6 +214,12 @@ export default function Solutions() {
       return;
     }
 
+    // Verificar se pode usar
+    if (!canUse) {
+      setAiAnalysis('💎 Você atingiu o limite de 10 análises gratuitas.\n\nAssine o Premium para análises ilimitadas!');
+      return;
+    }
+
     setLoadingAI(true);
     
     // Se IA não está ativa, análise básica
@@ -219,19 +232,32 @@ export default function Solutions() {
     setAiAnalysis('🤖 Analisando com IA...');
 
     try {
-      const response = await fetch(`${API_BASE}/api/gto/analyze-history`, {
+      // Chama a API de análise (que vai consumir o uso)
+      const response = await fetch(`${API_BASE}/api/ai/analyze`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
         body: JSON.stringify({
-          handHistory: handHistory,
-          position: activePosition,
+          history: handHistory,
+          fileName: 'manual_input',
         }),
       });
 
       const data = await response.json();
       
+      // Verificar se acabaram os usos
+      if (data.error === 'no_credits') {
+        setAiAnalysis('💎 Você atingiu o limite de 10 análises gratuitas.\n\nAssine o Premium para análises ilimitadas!');
+        if (refreshUser) await refreshUser();
+        return;
+      }
+      
       if (data.ok && data.analysis) {
         setAiAnalysis(data.analysis);
+        // Atualiza os usos restantes
+        if (refreshUser) await refreshUser();
       } else {
         setAiAnalysis(data.error || '❌ Erro ao analisar. Tente novamente.');
       }
@@ -281,6 +307,36 @@ export default function Solutions() {
     }
   };
 
+  // Tela de bloqueio quando acabam os usos
+  if (user && !canUse) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-6 flex items-center justify-center">
+        <div className="max-w-md w-full bg-gray-800/80 border border-purple-500/30 rounded-2xl p-10 text-center backdrop-blur-xl">
+          <div className="text-6xl mb-6">💎</div>
+          <h2 className="text-2xl font-bold text-white mb-4">Trial Finalizado</h2>
+          <p className="text-gray-400 mb-2">
+            Você utilizou suas <strong className="text-white">10 análises gratuitas</strong>.
+          </p>
+          <p className="text-gray-500 text-sm mb-8">
+            Para continuar analisando suas mãos com IA, assine o plano Premium.
+          </p>
+          <div className="bg-purple-500/10 border border-purple-500/20 rounded-xl p-5 mb-6">
+            <div className="text-3xl font-bold text-purple-400 mb-1">
+              R$ 5,90<span className="text-sm font-normal">/mês</span>
+            </div>
+            <div className="text-xs text-gray-500">Análises ilimitadas • Cancele quando quiser</div>
+          </div>
+          <button
+            onClick={() => navigate('/premium')}
+            className="w-full py-4 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl text-white font-bold text-lg hover:opacity-90 transition-all"
+          >
+            ⚡ Desbloquear Acesso Premium
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-6">
       <div className="max-w-7xl mx-auto">
@@ -295,12 +351,26 @@ export default function Solutions() {
                 Analise ranges por posição ou cole uma mão para análise completa
               </p>
             </div>
-            {user && (
-              <div className="text-right">
-                <div className="text-sm text-gray-400">Olá,</div>
-                <div className="text-white font-semibold">{user.name}</div>
-              </div>
-            )}
+            <div className="flex items-center gap-4">
+              {/* Indicador de usos */}
+              {user && !isPremium && (
+                <div className="px-4 py-2 bg-purple-500/10 border border-purple-500/30 rounded-lg">
+                  <span className="text-xs text-gray-400">Análises: </span>
+                  <span className="text-purple-400 font-bold">{usosAnalise}/10</span>
+                </div>
+              )}
+              {user && isPremium && (
+                <div className="px-4 py-2 bg-green-500/10 border border-green-500/30 rounded-lg">
+                  <span className="text-green-400 font-semibold text-xs">♾️ PREMIUM</span>
+                </div>
+              )}
+              {user && (
+                <div className="text-right">
+                  <div className="text-sm text-gray-400">Olá,</div>
+                  <div className="text-white font-semibold">{user.name}</div>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Action Card - Analisar Mão Específica */}

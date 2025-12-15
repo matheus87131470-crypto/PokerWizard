@@ -585,9 +585,10 @@ export default function Trainer() {
   const [evolutionHistory, setEvolutionHistory] = useState<{ hand: number; accuracy: number; correct: boolean }[]>([]);
   const [loadingUse, setLoadingUse] = useState(false);
   
-  const usosRestantes = (auth.user as any)?.usosRestantes ?? 5;
-  const isPremium = auth.user?.premium || usosRestantes === -1;
-  const canUse = isPremium || usosRestantes > 0;
+  // Usa campo específico do Trainer (5 usos)
+  const usosTrainer = (auth.user as any)?.usosTrainer ?? 5;
+  const isPremium = auth.user?.premium || (auth.user as any)?.statusPlano === 'premium';
+  const canUse = isPremium || usosTrainer > 0;
   
   // Função para consumir um uso via API
   const consumeUse = async (): Promise<boolean> => {
@@ -786,7 +787,7 @@ export default function Trainer() {
             fontSize: 13,
           }}>
             <span style={{ color: 'var(--text-secondary)' }}>Treinos restantes: </span>
-            <span style={{ color: '#a78bfa', fontWeight: 700 }}>{usosRestantes}</span>
+            <span style={{ color: '#a78bfa', fontWeight: 700 }}>{usosTrainer}/5</span>
           </div>
         )}
         

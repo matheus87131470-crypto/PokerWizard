@@ -18,7 +18,11 @@ export interface User {
   googleId?: string;
   price?: number;
   credits: number;
-  usosRestantes: number | null; // null or -1 indicates unlimited
+  usosRestantes: number | null; // null or -1 indicates unlimited (legacy)
+  // Limites por funcionalidade
+  usosTrainer: number;      // 5 usos gratuitos
+  usosAnalise: number;      // 10 usos gratuitos  
+  usosJogadores: number;    // 5 usos gratuitos
   statusPlano: 'free' | 'premium';
   premium: boolean;
   premiumUntil: Date | null;
@@ -70,8 +74,12 @@ export async function createUser(
     passwordHash: password ? bcrypt.hashSync(password, 10) : undefined,
     googleId,
     price: typeof price === 'number' ? price : 5.9,
-    credits: 5,
-    usosRestantes: 5,
+    credits: 10, // Legacy - mantendo compatibilidade
+    usosRestantes: 10, // Legacy
+    // Novos limites por funcionalidade
+    usosTrainer: 5,      // 🎯 Trainer GTO - 5 usos
+    usosAnalise: 10,     // 📊 Análise de Mãos - 10 usos
+    usosJogadores: 5,    // 🔍 Análise de Jogadores - 5 usos
     statusPlano: 'free',
     premium: false,
     premiumUntil: null,
@@ -123,29 +131,82 @@ export async function verifyPassword(email: string, password: string): Promise<b
   return bcrypt.compareSync(password, user.passwordHash);
 }
 
-export async function deductCredit(userId: string, endpoint: string = 'generic'): Promise<boolean> {
+// Tipo de funcionalidade para controle de usos
+export type FeatureType = 'trainer' | 'analise' | 'jogadores' | 'generic';
+
+// Limites por funcionalidade
+const FEATURE_LIMITS: Record<FeatureType, number> = {
+  trainer: 5,      // 🎯 Trainer GTO
+  analise: 10,     // 📊 Análise de Mãos
+  jogadores: 5,    // 🔍 Análise de Jogadores
+  generic: 5,      // Fallback
+};
+
+export async function deductCredit(userId: string, feature: FeatureType = 'generic'): Promise<boolean> {
   const user = await getUserById(userId);
   if (!user) return false;
 
   // Premium users have unlimited
-  if (user.statusPlano === 'premium') return true;
-  if (user.usosRestantes === null || user.usosRestantes === -1) return true;
-
-  if (typeof user.usosRestantes === 'number' && user.usosRestantes > 0) {
-    const newUsos = user.usosRestantes - 1;
-    const newCredits = Math.max(0, user.credits - 1);
-
-    if (dbAvailable) {
-      await dbUpdateUser(userId, { usosRestantes: newUsos, credits: newCredits });
-    } else {
-      user.usosRestantes = newUsos;
-      user.credits = newCredits;
-    }
-
-    return true;
+  if (user.statusPlano === 'premium' || user.premium) return true;
+  
+  // Determinar qual campo usar baseado na feature
+  let currentUsos: number;
+  let fieldToUpdate: string;
+  
+  switch (feature) {
+    case 'trainer':
+      currentUsos = user.usosTrainer ?? FEATURE_LIMITS.trainer;
+      fieldToUpdate = 'usosTrainer';
+      break;
+    case 'analise':
+      currentUsos = user.usosAnalise ?? FEATURE_LIMITS.analise;
+      fieldToUpdate = 'usosAnalise';
+      break;
+    case 'jogadores':
+      currentUsos = user.usosJogadores ?? FEATURE_LIMITS.jogadores;
+      fieldToUpdate = 'usosJogadores';
+      break;
+    default:
+      // Fallback para sistema legado
+      currentUsos = user.usosRestantes ?? 5;
+      fieldToUpdate = 'usosRestantes';
   }
+  
+  // Verificar se tem usos disponíveis
+  if (currentUsos <= 0) {
+    return false;
+  }
+  
+  const newUsos = currentUsos - 1;
+  
+  if (dbAvailable) {
+    await dbUpdateUser(userId, { [fieldToUpdate]: newUsos });
+  } else {
+    (user as any)[fieldToUpdate] = newUsos;
+  }
+  
+  console.log(`[userService] ✅ Uso consumido: ${feature} | User: ${user.email} | Restantes: ${newUsos}`);
+  return true;
+}
 
-  return false;
+// Função para obter usos restantes de uma feature específica
+export async function getFeatureUsage(userId: string, feature: FeatureType): Promise<number> {
+  const user = await getUserById(userId);
+  if (!user) return 0;
+  
+  // Premium tem ilimitado
+  if (user.statusPlano === 'premium' || user.premium) return -1;
+  
+  switch (feature) {
+    case 'trainer':
+      return user.usosTrainer ?? FEATURE_LIMITS.trainer;
+    case 'analise':
+      return user.usosAnalise ?? FEATURE_LIMITS.analise;
+    case 'jogadores':
+      return user.usosJogadores ?? FEATURE_LIMITS.jogadores;
+    default:
+      return user.usosRestantes ?? 5;
+  }
 }
 
 export async function setPremium(userId: string, days: number = 30): Promise<void> {

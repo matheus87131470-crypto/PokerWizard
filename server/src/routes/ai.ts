@@ -35,14 +35,16 @@ router.post('/analyze', authMiddleware, async (req: AuthRequest, res) => {
       return res.status(413).json({ error: 'history_too_large', maxBytes });
     }
 
-    // Check credits
-    const hasCredit = await deductCredit(req.userId, 'ai.analyze');
+    // Check credits - usa tipo 'analise' (10 usos gratuitos)
+    const hasCredit = await deductCredit(req.userId, 'analise');
     if (!hasCredit) {
       return res.status(403).json({
         ok: false,
         error: 'no_credits',
-        message: 'Você atingiu o limite de análises gratuitas. Faça upgrade para premium.',
+        message: 'Você atingiu o limite de 10 análises gratuitas. Assine o Premium para continuar.',
         credits: user.credits,
+        remaining: (user as any).usosAnalise ?? 0,
+        feature: 'analise'
       });
     }
 

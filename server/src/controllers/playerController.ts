@@ -284,11 +284,17 @@ export async function generateScenario(req: any, res: any) {
     });
   }
 
-  // Deduct one usage via userService
-  const allowed = await deductCredit(userId, 'trainer.generate');
+  // Deduct one usage via userService - usa tipo 'trainer'
+  const allowed = await deductCredit(userId, 'trainer');
   if (!allowed) {
     const u = await getUserById(userId);
-    return res.status(403).json({ ok: false, error: 'no_credits', message: 'Você atingiu o limite de usos gratuitos. Faça upgrade para premium.', remaining: u?.usosRestantes ?? u?.credits ?? 0 });
+    return res.status(403).json({ 
+      ok: false, 
+      error: 'no_credits', 
+      message: 'Você atingiu o limite de 5 treinos gratuitos. Assine o Premium para continuar.', 
+      remaining: (u as any)?.usosTrainer ?? 0,
+      feature: 'trainer'
+    });
   }
 
   // create pseudo-random scenario
