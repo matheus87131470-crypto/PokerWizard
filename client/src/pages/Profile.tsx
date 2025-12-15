@@ -230,12 +230,42 @@ export default function Profile() {
         </div>
 
         {/* BOTÕES DE AÇÃO */}
-        <div style={{ display: 'flex', gap: 16, marginBottom: 24 }}>
+        <div style={{ display: 'flex', gap: 16, marginBottom: 24, flexWrap: 'wrap' }}>
+          {/* Botão Ver Planos */}
+          <button 
+            onClick={() => window.location.assign('/premium')}
+            style={{
+              flex: 1,
+              minWidth: 150,
+              padding: '16px 32px',
+              borderRadius: 12,
+              border: '2px solid #8b5cf6',
+              background: 'rgba(139, 92, 246, 0.1)',
+              color: '#a78bfa',
+              fontSize: 16,
+              fontWeight: 700,
+              cursor: 'pointer',
+              transition: 'all 0.3s',
+              letterSpacing: '0.5px'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(139, 92, 246, 0.2)';
+              e.currentTarget.style.transform = 'translateY(-2px)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(139, 92, 246, 0.1)';
+              e.currentTarget.style.transform = 'translateY(0)';
+            }}
+          >
+            💳 Ver Planos
+          </button>
+          
           {!isPremium && (
             <button 
               onClick={() => window.location.assign('/premium')}
               style={{
                 flex: 1,
+                minWidth: 150,
                 padding: '16px 32px',
                 borderRadius: 12,
                 border: 'none',
