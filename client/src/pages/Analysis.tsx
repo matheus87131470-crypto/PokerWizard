@@ -27,7 +27,7 @@ export default function Analysis() {
   const [history, setHistory] = useState<any[]>([]);
 
   useEffect(() => {
-    const usos = (auth.user as any)?.usosRestantes;
+    const usos = (auth.user as any)?.usosJogadores;
     const noUsos = typeof usos === 'number' ? (usos <= 0 && usos !== -1) : (typeof auth.user?.credits === 'number' && auth.user!.credits <= 0 && !auth.user!.premium);
     if (auth.user && !auth.user.premium && noUsos) {
       navigate('/premium');
@@ -78,7 +78,7 @@ export default function Analysis() {
       leaks,
       tournaments,
       analysis,
-      remaining: (auth.user as any)?.usosRestantes ?? 5,
+      remaining: (auth.user as any)?.usosJogadores ?? 5,
     };
   }
 
@@ -100,13 +100,32 @@ export default function Analysis() {
         return;
       }
 
-      const usos = (auth.user as any)?.usosRestantes;
+      const usos = (auth.user as any)?.usosJogadores;
       const noUsos = typeof usos === 'number' ? (usos <= 0 && usos !== -1) : (typeof auth.user?.credits === 'number' && auth.user!.credits <= 0 && !auth.user!.premium);
       if (auth.user && !auth.user.premium && noUsos) {
         setError('Seus créditos acabaram. Assine para continuar.');
         setLoading(false);
         navigate('/premium');
         return;
+      }
+
+      // Consumir crédito antes de buscar (somente se não for premium)
+      if (!auth.user?.premium) {
+        try {
+          const deductRes = await api.post('/api/auth/deduct-credit', { feature: 'jogadores' });
+          if (!deductRes.ok) {
+            setError(deductRes.message || 'Créditos esgotados.');
+            setLoading(false);
+            navigate('/premium');
+            return;
+          }
+          // Atualizar dados do usuário
+          if (auth.refreshUser) await auth.refreshUser();
+        } catch (deductErr: any) {
+          setError('Erro ao verificar créditos.');
+          setLoading(false);
+          return;
+        }
       }
 
       // Try backend SharkScope proxy first; fallback to mock if unavailable
@@ -131,7 +150,7 @@ export default function Analysis() {
           leaks: ['Divergência de ROI vs volume', 'Frequência de calls em 3-bet'],
           tournaments: [],
           analysis: `Perfil: jogos=${data.games ?? '?'} • ROI=${data.roi ?? '?'} • cashes=${data.cashes ?? '?'}`,
-          remaining: (auth.user as any)?.usosRestantes ?? 5,
+          remaining: (auth.user as any)?.usosJogadores ?? 5,
         };
         setHistory([mapped, ...history.slice(0, 9)]);
         setResult(mapped);

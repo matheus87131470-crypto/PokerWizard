@@ -1,6 +1,6 @@
 import express, { Response } from 'express';
 import { generateToken, authMiddleware, AuthRequest } from '../middleware/auth';
-import { createUser, getUserByEmail, getUserById, verifyPassword, updatePassword } from '../services/userService';
+import { createUser, getUserByEmail, getUserById, verifyPassword, updatePassword, deductCredit, FeatureType } from '../services/userService';
 import { canCreateAccount, registerAccount, getRealIP } from '../services/antiFraud';
 import { createResetToken, verifyResetCode, invalidateResetToken } from '../services/passwordResetService';
 import { sendPasswordResetEmail } from '../services/emailService';
@@ -51,7 +51,7 @@ router.post('/register', async (req: any, res: Response) => {
         usosRestantes: (user as any).usosRestantes ?? user.credits,
         // Novos campos por funcionalidade
         usosTrainer: (user as any).usosTrainer ?? 5,
-        usosAnalise: (user as any).usosAnalise ?? 10,
+        usosAnalise: (user as any).usosAnalise ?? 5,
         usosJogadores: (user as any).usosJogadores ?? 5,
         statusPlano: (user as any).statusPlano ?? (user.premium ? 'premium' : 'free'),
         premium: user.premium,
@@ -107,7 +107,7 @@ router.post('/login', async (req: any, res: Response) => {
         usosRestantes: (user as any).usosRestantes ?? user.credits,
         // Novos campos por funcionalidade
         usosTrainer: (user as any).usosTrainer ?? 5,
-        usosAnalise: (user as any).usosAnalise ?? 10,
+        usosAnalise: (user as any).usosAnalise ?? 5,
         usosJogadores: (user as any).usosJogadores ?? 5,
         statusPlano: (user as any).statusPlano ?? (user.premium ? 'premium' : 'free'),
         premium: user.premium,
@@ -146,7 +146,7 @@ router.get('/me', authMiddleware, async (req: AuthRequest, res: Response) => {
         usosRestantes: (user as any).usosRestantes ?? user.credits,
         // Novos campos por funcionalidade
         usosTrainer: (user as any).usosTrainer ?? 5,
-        usosAnalise: (user as any).usosAnalise ?? 10,
+        usosAnalise: (user as any).usosAnalise ?? 5,
         usosJogadores: (user as any).usosJogadores ?? 5,
         statusPlano: (user as any).statusPlano ?? (user.premium ? 'premium' : 'free'),
         premium: user.premium,
@@ -323,6 +323,57 @@ router.post('/reset-password', async (req: any, res: Response) => {
     return res.status(500).json({
       error: 'reset_failed',
       message: err.message || 'Erro ao redefinir senha',
+    });
+  }
+});
+
+/**
+ * POST /auth/deduct-credit
+ * Deduz crédito de uma funcionalidade específica
+ */
+router.post('/deduct-credit', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.userId) {
+      return res.status(401).json({ ok: false, error: 'unauthorized' });
+    }
+
+    const { feature } = req.body as { feature?: FeatureType };
+    const featureType: FeatureType = feature || 'generic';
+    
+    // Verificar se é uma feature válida
+    const validFeatures: FeatureType[] = ['trainer', 'analise', 'jogadores', 'generic'];
+    if (!validFeatures.includes(featureType)) {
+      return res.status(400).json({ ok: false, error: 'invalid_feature', message: 'Feature inválida' });
+    }
+
+    const allowed = await deductCredit(req.userId, featureType);
+    
+    if (!allowed) {
+      const user = await getUserById(req.userId);
+      return res.status(403).json({
+        ok: false,
+        error: 'no_credits',
+        message: 'Você atingiu o limite de usos gratuitos. Faça upgrade para premium.',
+        remaining: 0,
+      });
+    }
+
+    const user = await getUserById(req.userId);
+    return res.json({
+      ok: true,
+      message: 'Crédito deduzido com sucesso',
+      remaining: {
+        trainer: (user as any)?.usosTrainer ?? 0,
+        analise: (user as any)?.usosAnalise ?? 0,
+        jogadores: (user as any)?.usosJogadores ?? 0,
+      },
+    });
+  } catch (err: any) {
+    console.error('[deduct-credit] Error:', err);
+    return res.status(500).json({
+      ok: false,
+      error: 'deduct_failed',
+      message: err.message || 'Erro ao deduzir crédito',
     });
   }
 });

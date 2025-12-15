@@ -74,11 +74,11 @@ export async function createUser(
     passwordHash: password ? bcrypt.hashSync(password, 10) : undefined,
     googleId,
     price: typeof price === 'number' ? price : 5.9,
-    credits: 10, // Legacy - mantendo compatibilidade
-    usosRestantes: 10, // Legacy
-    // Novos limites por funcionalidade
+    credits: 5, // Legacy - mantendo compatibilidade
+    usosRestantes: 5, // Legacy
+    // Novos limites por funcionalidade - TODOS 5 usos
     usosTrainer: 5,      // 🎯 Trainer GTO - 5 usos
-    usosAnalise: 10,     // 📊 Análise de Mãos - 10 usos
+    usosAnalise: 5,      // 📊 Análise de Mãos - 5 usos
     usosJogadores: 5,    // 🔍 Análise de Jogadores - 5 usos
     statusPlano: 'free',
     premium: false,
@@ -134,10 +134,10 @@ export async function verifyPassword(email: string, password: string): Promise<b
 // Tipo de funcionalidade para controle de usos
 export type FeatureType = 'trainer' | 'analise' | 'jogadores' | 'generic';
 
-// Limites por funcionalidade
+// Limites por funcionalidade - TODOS 5 usos
 const FEATURE_LIMITS: Record<FeatureType, number> = {
   trainer: 5,      // 🎯 Trainer GTO
-  analise: 10,     // 📊 Análise de Mãos
+  analise: 5,      // 📊 Análise de Mãos
   jogadores: 5,    // 🔍 Análise de Jogadores
   generic: 5,      // Fallback
 };

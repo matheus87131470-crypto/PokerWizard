@@ -107,8 +107,8 @@ export default function Solutions() {
   const [handHistory, setHandHistory] = useState<string>('');
   const [showAiTooltip, setShowAiTooltip] = useState(false);
 
-  // Controle de usos - Análise de Mãos tem 10 usos gratuitos
-  const usosAnalise = (user as any)?.usosAnalise ?? 10;
+  // Controle de usos - Análise de Mãos tem 5 usos gratuitos
+  const usosAnalise = (user as any)?.usosAnalise ?? 5;
   const isPremium = user?.premium || (user as any)?.statusPlano === 'premium';
   const canUse = isPremium || usosAnalise > 0;
 
@@ -315,7 +315,7 @@ export default function Solutions() {
           <div className="text-6xl mb-6">💎</div>
           <h2 className="text-2xl font-bold text-white mb-4">Trial Finalizado</h2>
           <p className="text-gray-400 mb-2">
-            Você utilizou suas <strong className="text-white">10 análises gratuitas</strong>.
+            Você utilizou suas <strong className="text-white">5 análises gratuitas</strong>.
           </p>
           <p className="text-gray-500 text-sm mb-8">
             Para continuar analisando suas mãos com IA, assine o plano Premium.
@@ -353,11 +353,25 @@ export default function Solutions() {
             </div>
             <div className="flex items-center gap-4">
               {/* Indicador de usos */}
-              {user && !isPremium && (
+              {user && !isPremium && usosAnalise > 0 && (
                 <div className="px-4 py-2 bg-purple-500/10 border border-purple-500/30 rounded-lg">
                   <span className="text-xs text-gray-400">Análises: </span>
-                  <span className="text-purple-400 font-bold">{usosAnalise}/10</span>
+                  <span className="text-purple-400 font-bold">{usosAnalise}/5</span>
                 </div>
+              )}
+              {user && !isPremium && usosAnalise <= 0 && (
+                <button
+                  onClick={() => navigate('/premium')}
+                  className="px-5 py-2 rounded-lg font-bold text-sm"
+                  style={{
+                    background: 'linear-gradient(135deg, #fbbf24, #f59e0b)',
+                    color: '#000',
+                    border: 'none',
+                    boxShadow: '0 4px 20px rgba(251, 191, 36, 0.4)',
+                  }}
+                >
+                  👑 Assinar Premium
+                </button>
               )}
               {user && isPremium && (
                 <div className="px-4 py-2 bg-green-500/10 border border-green-500/30 rounded-lg">

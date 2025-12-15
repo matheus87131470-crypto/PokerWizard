@@ -778,7 +778,7 @@ export default function Trainer() {
       }}>
         <h1 style={{ margin: 0 }}>🎯 Trainer GTO</h1>
         
-        {!isPremium && (
+        {!isPremium && usosTrainer > 0 && (
           <div style={{
             padding: '8px 16px',
             background: 'rgba(139, 92, 246, 0.1)',
@@ -789,6 +789,25 @@ export default function Trainer() {
             <span style={{ color: 'var(--text-secondary)' }}>Treinos restantes: </span>
             <span style={{ color: '#a78bfa', fontWeight: 700 }}>{usosTrainer}/5</span>
           </div>
+        )}
+        
+        {!isPremium && usosTrainer <= 0 && (
+          <button
+            onClick={() => navigate('/premium')}
+            style={{
+              padding: '10px 20px',
+              background: 'linear-gradient(135deg, #fbbf24, #f59e0b)',
+              border: 'none',
+              borderRadius: 10,
+              color: '#000',
+              fontSize: 13,
+              fontWeight: 800,
+              cursor: 'pointer',
+              boxShadow: '0 4px 20px rgba(251, 191, 36, 0.4)',
+            }}
+          >
+            👑 Assinar Premium
+          </button>
         )}
         
         {isPremium && (

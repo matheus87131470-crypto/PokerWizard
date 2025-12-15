@@ -25,10 +25,10 @@ router.get('/player/:name', authMiddleware, async (req: AuthRequest, res) => {
     if (!name) return res.status(400).json({ ok: false, message: 'Nome do jogador obrigatório' });
     if (!req.userId) return res.status(401).json({ ok: false, message: 'unauthorized' });
 
-    const allowed = await deductCredit(req.userId as string, 'sharkscope.search');
+    const allowed = await deductCredit(req.userId as string, 'jogadores');
     if (!allowed) {
       const u = await getUserById(req.userId);
-      return res.status(403).json({ ok: false, error: 'no_credits', message: 'Você atingiu o limite de usos gratuitos. Faça upgrade para premium.', remaining: u?.usosRestantes ?? u?.credits ?? 0 });
+      return res.status(403).json({ ok: false, error: 'no_credits', message: 'Você atingiu o limite de usos gratuitos. Faça upgrade para premium.', remaining: u?.usosJogadores ?? 0 });
     }
 
     const data = await fetchPlayerFromSharkScope(name);
