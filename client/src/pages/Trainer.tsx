@@ -1,763 +1,949 @@
-import React, { useEffect, useState } from 'react';
-import CustomSelect from '../components/CustomSelect';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
-// Detectar ambiente automaticamente
-function getApiBase(): string {
-  if (import.meta && (import.meta as any).env && (import.meta as any).env.VITE_API_BASE) {
-    return (import.meta as any).env.VITE_API_BASE;
-  }
-  if (typeof window !== 'undefined' && !window.location.hostname.includes('localhost')) {
-    return 'https://pokerwizard.onrender.com';
-  }
-  return 'http://localhost:3000';
+// ===== TIPOS =====
+type Position = 'UTG' | 'HJ' | 'CO' | 'BTN' | 'SB' | 'BB';
+type GameType = 'cash' | 'mtt';
+type TableSize = '6max' | '9max';
+type Stakes = 'NL50' | 'NL100' | 'NL200' | 'NL500';
+type Street = 'preflop' | 'flop' | 'turn' | 'river';
+type PreflopAction = 'any' | 'srp' | '3bet' | '4bet' | '5bet' | 'squeeze' | 'limp' | 'iso';
+type Action = 'fold' | 'call' | 'raise' | 'check' | 'bet' | 'allin';
+
+interface TrainingConfig {
+  gameType: GameType;
+  tableSize: TableSize;
+  stakes: Stakes;
+  startingSpot: Street;
+  preflopAction: PreflopAction;
+  heroPosition: Position;
+  villainPosition: Position | null;
 }
-const API_BASE = getApiBase();
 
-// 📋 TYPES
-type TableType = 'heads-up' | '6-max' | '9-max';
-type Position = 'BTN' | 'SB' | 'BB' | 'UTG' | 'UTG+1' | 'MP' | 'HJ' | 'CO';
+interface Hand {
+  card1: string;
+  card2: string;
+}
 
-// 🎯 POSIÇÕES POR MESA (CORE)
-const positionsByTable: Record<TableType, Position[]> = {
-  'heads-up': ['BTN', 'BB'],
-  '6-max': ['UTG', 'HJ', 'CO', 'BTN', 'SB', 'BB'],
-  '9-max': ['UTG', 'UTG+1', 'MP', 'HJ', 'CO', 'BTN', 'SB', 'BB'],
+interface TrainingStats {
+  total: number;
+  correct: number;
+  streak: number;
+  bestStreak: number;
+}
+
+// ===== DADOS GTO =====
+const POSITIONS_6MAX: Position[] = ['UTG', 'HJ', 'CO', 'BTN', 'SB', 'BB'];
+
+const CARD_RANKS = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'];
+
+// Ranges GTO simplificados por posição
+const GTO_RANGES: Record<Position, Record<PreflopAction, string[]>> = {
+  UTG: {
+    any: ['AA', 'KK', 'QQ', 'JJ', 'TT', '99', 'AKs', 'AKo', 'AQs', 'AQo', 'AJs', 'KQs'],
+    srp: ['AA', 'KK', 'QQ', 'JJ', 'TT', 'AKs', 'AKo', 'AQs'],
+    '3bet': ['AA', 'KK', 'QQ', 'AKs'],
+    '4bet': ['AA', 'KK'],
+    '5bet': ['AA'],
+    squeeze: ['AA', 'KK', 'QQ', 'AKs'],
+    limp: [],
+    iso: ['AA', 'KK', 'QQ', 'JJ', 'TT', 'AKs', 'AKo'],
+  },
+  HJ: {
+    any: ['AA', 'KK', 'QQ', 'JJ', 'TT', '99', '88', 'AKs', 'AKo', 'AQs', 'AQo', 'AJs', 'ATs', 'KQs', 'KQo', 'KJs', 'QJs'],
+    srp: ['AA', 'KK', 'QQ', 'JJ', 'TT', '99', 'AKs', 'AKo', 'AQs', 'AQo', 'AJs'],
+    '3bet': ['AA', 'KK', 'QQ', 'JJ', 'AKs', 'AKo'],
+    '4bet': ['AA', 'KK', 'QQ'],
+    '5bet': ['AA', 'KK'],
+    squeeze: ['AA', 'KK', 'QQ', 'JJ', 'AKs', 'AKo'],
+    limp: [],
+    iso: ['AA', 'KK', 'QQ', 'JJ', 'TT', '99', 'AKs', 'AKo', 'AQs'],
+  },
+  CO: {
+    any: ['AA', 'KK', 'QQ', 'JJ', 'TT', '99', '88', '77', 'AKs', 'AKo', 'AQs', 'AQo', 'AJs', 'ATs', 'A9s', 'KQs', 'KQo', 'KJs', 'KTs', 'QJs', 'QTs', 'JTs'],
+    srp: ['AA', 'KK', 'QQ', 'JJ', 'TT', '99', '88', 'AKs', 'AKo', 'AQs', 'AQo', 'AJs', 'ATs', 'KQs'],
+    '3bet': ['AA', 'KK', 'QQ', 'JJ', 'TT', 'AKs', 'AKo', 'AQs'],
+    '4bet': ['AA', 'KK', 'QQ', 'JJ'],
+    '5bet': ['AA', 'KK'],
+    squeeze: ['AA', 'KK', 'QQ', 'JJ', 'TT', 'AKs', 'AKo', 'AQs'],
+    limp: [],
+    iso: ['AA', 'KK', 'QQ', 'JJ', 'TT', '99', '88', 'AKs', 'AKo', 'AQs', 'AQo', 'AJs'],
+  },
+  BTN: {
+    any: ['AA', 'KK', 'QQ', 'JJ', 'TT', '99', '88', '77', '66', '55', 'AKs', 'AKo', 'AQs', 'AQo', 'AJs', 'AJo', 'ATs', 'A9s', 'A8s', 'A7s', 'A6s', 'A5s', 'A4s', 'A3s', 'A2s', 'KQs', 'KQo', 'KJs', 'KJo', 'KTs', 'K9s', 'QJs', 'QJo', 'QTs', 'Q9s', 'JTs', 'J9s', 'T9s', '98s', '87s', '76s', '65s', '54s'],
+    srp: ['AA', 'KK', 'QQ', 'JJ', 'TT', '99', '88', '77', 'AKs', 'AKo', 'AQs', 'AQo', 'AJs', 'ATs', 'A9s', 'KQs', 'KQo', 'KJs', 'QJs'],
+    '3bet': ['AA', 'KK', 'QQ', 'JJ', 'TT', '99', 'AKs', 'AKo', 'AQs', 'AQo', 'AJs', 'KQs'],
+    '4bet': ['AA', 'KK', 'QQ', 'JJ', 'TT'],
+    '5bet': ['AA', 'KK', 'QQ'],
+    squeeze: ['AA', 'KK', 'QQ', 'JJ', 'TT', '99', 'AKs', 'AKo', 'AQs', 'AQo'],
+    limp: [],
+    iso: ['AA', 'KK', 'QQ', 'JJ', 'TT', '99', '88', '77', 'AKs', 'AKo', 'AQs', 'AQo', 'AJs', 'ATs', 'KQs', 'KJs'],
+  },
+  SB: {
+    any: ['AA', 'KK', 'QQ', 'JJ', 'TT', '99', '88', '77', '66', 'AKs', 'AKo', 'AQs', 'AQo', 'AJs', 'AJo', 'ATs', 'A9s', 'A8s', 'KQs', 'KQo', 'KJs', 'KTs', 'QJs', 'QTs', 'JTs'],
+    srp: ['AA', 'KK', 'QQ', 'JJ', 'TT', '99', 'AKs', 'AKo', 'AQs', 'AQo', 'AJs', 'ATs', 'KQs'],
+    '3bet': ['AA', 'KK', 'QQ', 'JJ', 'TT', 'AKs', 'AKo', 'AQs'],
+    '4bet': ['AA', 'KK', 'QQ', 'JJ'],
+    '5bet': ['AA', 'KK'],
+    squeeze: ['AA', 'KK', 'QQ', 'JJ', 'TT', 'AKs', 'AKo'],
+    limp: ['22', '33', '44', '55', '66', 'A2s', 'A3s', 'A4s', 'A5s', '76s', '87s', '98s'],
+    iso: ['AA', 'KK', 'QQ', 'JJ', 'TT', '99', 'AKs', 'AKo', 'AQs', 'AQo', 'AJs'],
+  },
+  BB: {
+    any: ['AA', 'KK', 'QQ', 'JJ', 'TT', '99', '88', '77', '66', '55', '44', '33', '22', 'AKs', 'AKo', 'AQs', 'AQo', 'AJs', 'AJo', 'ATs', 'ATo', 'A9s', 'A8s', 'A7s', 'A6s', 'A5s', 'A4s', 'A3s', 'A2s', 'KQs', 'KQo', 'KJs', 'KJo', 'KTs', 'K9s', 'QJs', 'QJo', 'QTs', 'Q9s', 'JTs', 'J9s', 'T9s', 'T8s', '98s', '97s', '87s', '86s', '76s', '75s', '65s', '64s', '54s', '53s', '43s'],
+    srp: ['AA', 'KK', 'QQ', 'JJ', 'TT', '99', '88', 'AKs', 'AKo', 'AQs', 'AQo', 'AJs', 'ATs', 'KQs', 'KJs', 'QJs'],
+    '3bet': ['AA', 'KK', 'QQ', 'JJ', 'TT', 'AKs', 'AKo', 'AQs', 'AQo'],
+    '4bet': ['AA', 'KK', 'QQ'],
+    '5bet': ['AA', 'KK'],
+    squeeze: ['AA', 'KK', 'QQ', 'JJ', 'TT', 'AKs', 'AKo', 'AQs'],
+    limp: [],
+    iso: [],
+  },
 };
 
-export default function Trainer() {
-  const auth = useAuth();
-  const [table, setTable] = useState<TableType>('6-max');
-  const [position, setPosition] = useState<Position>('CO');
-  const [gameType, setGameType] = useState('MTT');
-  const [street, setStreet] = useState<'Pré-flop' | 'Flop' | 'Turn' | 'River'>('Pré-flop');
+// ===== FUNÇÕES AUXILIARES =====
+function generateRandomHand(): Hand {
+  const suits = ['s', 'h', 'd', 'c'];
+  const getRandomCard = () => {
+    const rank = CARD_RANKS[Math.floor(Math.random() * CARD_RANKS.length)];
+    const suit = suits[Math.floor(Math.random() * suits.length)];
+    return rank + suit;
+  };
   
-  // ✅ DOIS STATES SEPARADOS (igual GTO Wizard)
-  const [preflopAction, setPreflopAction] = useState('Raise');
-  const [postflopAction, setPostflopAction] = useState('Bet');
+  let card1 = getRandomCard();
+  let card2 = getRandomCard();
   
-  const [networks, setNetworks] = useState<any[]>([]);
-  const [selectedNetwork, setSelectedNetwork] = useState('partypoker');
-  const [scenario, setScenario] = useState<any>(null);
-  const [selectedHeroPos, setSelectedHeroPos] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<any>(null);
-  const [usage, setUsage] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
-  const [isExampleScenario, setIsExampleScenario] = useState(false);
-
-  // Helper to create an example scenario when backend is unavailable
-  function createExampleScenario(): any {
-    const sid = `s-example-${Date.now()}`;
-    return {
-      id: sid,
-      table,
-      position,
-      gameType,
-      street,
-      action: street === 'Pré-flop' ? preflopAction : postflopAction,
-      heroCards: ['K♠', '9♥'],
-      board: street !== 'Pré-flop' ? ['A♣', '7♦', '2♥'] : [],
-      villainRange: 'JJ+, AKs, AKo',
-      correctAction: 'Call',
-      ev: 12.34,
-      network: selectedNetwork,
-      seats: [
-        { position: 'UTG', name: 'PokerMaster99', stack: 1420 },
-        { position: 'HJ', name: 'SilentAssassin', stack: 1180 },
-        { position: 'CO', name: 'FlopKing', stack: 1360 },
-        { position: 'BTN', name: 'BluffMaster', stack: 1580 },
-        { position: 'SB', name: 'AllInWin', stack: 1010 },
-        { position: 'BB', name: 'PerfectPlay', stack: 1210 },
-      ],
-    };
+  while (card1 === card2) {
+    card2 = getRandomCard();
   }
+  
+  return { card1, card2 };
+}
 
-  // 🔄 RESET AUTOMÁTICO - Position quando trocar Mesa (igual GTO Wizard)
-  useEffect(() => {
-    const validPositions = positionsByTable[table];
-    
-    if (!validPositions.includes(position)) {
-      setPosition(validPositions[0]);
-    }
-  }, [table]);
+function handToNotation(hand: Hand): string {
+  const rank1 = hand.card1[0];
+  const rank2 = hand.card2[0];
+  const suit1 = hand.card1[1];
+  const suit2 = hand.card2[1];
+  
+  const ranks = CARD_RANKS;
+  const idx1 = ranks.indexOf(rank1);
+  const idx2 = ranks.indexOf(rank2);
+  
+  if (rank1 === rank2) {
+    return rank1 + rank2;
+  }
+  
+  const highRank = idx1 < idx2 ? rank1 : rank2;
+  const lowRank = idx1 < idx2 ? rank2 : rank1;
+  const suited = suit1 === suit2 ? 's' : 'o';
+  
+  return highRank + lowRank + suited;
+}
 
-  // 🔄 RESET AUTOMÁTICO - Action ao trocar Street (igual GTO Wizard)
-  useEffect(() => {
-    if (street === 'Pré-flop') {
-      setPreflopAction('Raise');
+function isHandInRange(hand: Hand, range: string[]): boolean {
+  const notation = handToNotation(hand);
+  
+  if (range.includes(notation)) return true;
+  
+  const pairNotation = notation.substring(0, 2);
+  if (notation[0] === notation[1] && range.includes(pairNotation)) return true;
+  
+  const baseHand = notation.substring(0, 2);
+  if (range.includes(baseHand + 's') || range.includes(baseHand + 'o')) return true;
+  if (range.includes(baseHand)) return true;
+  
+  return false;
+}
+
+function getCorrectAction(hand: Hand, position: Position, preflopAction: PreflopAction): { action: Action; explanation: string } {
+  const range = GTO_RANGES[position]?.[preflopAction] || [];
+  const inRange = isHandInRange(hand, range);
+  const handStr = handToNotation(hand);
+  
+  if (preflopAction === 'any' || preflopAction === 'srp') {
+    if (inRange) {
+      return {
+        action: 'raise',
+        explanation: `✅ ${handStr} está no range de abertura de ${position}. Esta mão tem valor suficiente para abrir raise. Você maximiza valor com mãos fortes e ganha fold equity.`
+      };
     } else {
-      setPostflopAction('Bet');
-    }
-  }, [street]);
-
-  useEffect(() => {
-    async function loadNetworks() {
-      try {
-        const res = await fetch(`${API_BASE}/api/players/networks`);
-        const j = await res.json();
-        const fetched = j.networks || [];
-        setNetworks(fetched);
-        if (fetched && fetched.length) {
-          // prefer partypoker if available, otherwise pick first
-          const hasParty = fetched.some((n: any) => (n.name || '').toLowerCase() === 'partypoker');
-          if (hasParty) setSelectedNetwork('partypoker');
-          else setSelectedNetwork(fetched[0].name);
-        }
-      } catch (e) {
-        console.error(e);
-      }
-    }
-    async function loadUsage() {
-      try {
-        if (!auth.token) return;
-        const res = await fetch(`${API_BASE}/api/trainer/usage`, { headers: { Authorization: `Bearer ${auth.token}` } });
-        const j = await res.json();
-        setUsage(j);
-      } catch (e) {}
-    }
-    loadNetworks();
-    loadUsage();
-  }, []);
-
-  async function handleGenerate(e?: React.FormEvent) {
-    e?.preventDefault();
-    setFeedback(null);
-    setLoading(true);
-    try {
-      if (!auth.token) {
-        setFeedback({ error: 'auth', message: 'Faça login para gerar situações.' });
-        setLoading(false);
-        return;
-      }
-
-      // ✅ PAYLOAD CORRETO (sem gambiarra)
-      const action = street === 'Pré-flop' ? preflopAction : postflopAction;
-      
-      const res = await fetch(`${API_BASE}/api/trainer/generate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${auth.token}` },
-        body: JSON.stringify({ 
-          table,
-          position, 
-          gameType, 
-          street, 
-          action,
-          network: selectedNetwork 
-        }),
-      });
-      const j = await res.json();
-      if (!j.ok) {
-        // If backend returns an error, fallback to a local example scenario
-        const example = createExampleScenario();
-        setScenario(example);
-        setSelectedHeroPos(example.position || null);
-        setIsExampleScenario(true);
-        setUsage((prev: any) => ({ ...prev, remaining: j && typeof j.remaining !== 'undefined' ? j.remaining : (prev ? prev.remaining : 5) }));
-        setFeedback({ error: j.error || 'backend_error', message: j.message || 'Servidor indisponível — mostrando exemplo local.' });
-        setLoading(false);
-        return;
-      }
-      setScenario(j.scenario);
-      setSelectedHeroPos(j.scenario.position || null);
-      setUsage((prev: any) => ({ ...prev, remaining: j.remaining }));
-    } catch (err) {
-      console.error(err);
-      // On network error, inject an example scenario so UI remains usable
-      const example = createExampleScenario();
-      setScenario(example);
-      setSelectedHeroPos(example.position || null);
-      setIsExampleScenario(true);
-      setFeedback({ error: 'network', message: 'Não foi possível conectar ao servidor — mostrando exemplo local.' });
-    } finally {
-      setLoading(false);
+      return {
+        action: 'fold',
+        explanation: `📊 ${handStr} não está no range de abertura de ${position}. Abrir com esta mão seria -EV a longo prazo. Mantenha sua disciplina e espere por spots melhores.`
+      };
     }
   }
-
-  async function handleChoose(action: string) {
-    if (!scenario) return;
-    if (!auth.token) {
-      setFeedback({ error: 'auth', message: 'Faça login para registrar escolhas.' });
-      return;
-    }
-
-    const res = await fetch(`${API_BASE}/api/trainer/record`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${auth.token}` },
-      body: JSON.stringify({ scenarioId: scenario.id, chosenAction: action }),
-    });
-    const j = await res.json();
-    if (j.ok) {
-      setFeedback(j.feedback);
-    }
-    // refresh usage/stats
-    const ures = await fetch(`${API_BASE}/api/trainer/usage`, { headers: { Authorization: `Bearer ${auth.token}` } });
-    setUsage(await ures.json());
-  }
-
-  function handleSeatClick(pos: string) {
-    // change hero position locally and highlight
-    setSelectedHeroPos(pos);
-    setScenario((s: any) => s ? { ...s, position: pos } : s);
-    setFeedback(null);
-  }
-
-  async function handleSubscribe() {
-    if (!auth.token) { setFeedback({ error: 'auth', message: 'Faça login para assinar.' }); return; }
-    await fetch(`${API_BASE}/api/trainer/subscribe`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${auth.token}` } });
-    setUsage({ remaining: -1 });
-  }
-
-  const [aiAnalysis, setAiAnalysis] = useState<string>('');
-  const [loadingAI, setLoadingAI] = useState(false);
-  const [aiMode, setAiMode] = useState(true);
-
-  async function handleAIAnalysis() {
-    if (!scenario) return;
-    
-    setLoadingAI(true);
-    setAiAnalysis('🤖 Analisando situação com IA...');
-
-    try {
-      const response = await fetch(`${API_BASE}/api/trainer/ai-analysis`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          scenario,
-          chosenAction: feedback?.chosenAction || null,
-        }),
-      });
-
-      const data = await response.json();
-      
-      if (data.ok && data.analysis) {
-        setAiAnalysis(data.analysis);
-      } else {
-        setAiAnalysis('❌ Erro ao analisar. Tente novamente.');
-      }
-    } catch (error) {
-      console.error('AI Analysis error:', error);
-      setAiAnalysis('❌ Erro de conexão com IA.');
-    } finally {
-      setLoadingAI(false);
+  
+  if (preflopAction === '3bet') {
+    if (inRange) {
+      return {
+        action: 'raise',
+        explanation: `🎯 ${handStr} é forte o suficiente para 3-bet de ${position}. Você tem equidade contra o range de abertura do vilão e boa fold equity. 3-bet por valor!`
+      };
+    } else {
+      return {
+        action: Math.random() > 0.5 ? 'fold' : 'call',
+        explanation: `⚖️ ${handStr} não está no range de 3-bet de ${position}. Com mãos especulativas, considere call para set mining ou fold se as odds não justificam.`
+      };
     }
   }
+  
+  if (preflopAction === '4bet' || preflopAction === '5bet') {
+    if (inRange) {
+      return {
+        action: 'raise',
+        explanation: `💎 ${handStr} tem valor para ${preflopAction} de ${position}. Mãos premium como esta justificam máxima agressividade pré-flop. All-in também é válido!`
+      };
+    } else {
+      return {
+        action: 'fold',
+        explanation: `🛑 ${handStr} não suporta ${preflopAction} de ${position}. Escalar potes com mãos marginais contra ranges fortes é um leak comum. Fold e aguarde.`
+      };
+    }
+  }
+  
+  if (preflopAction === 'squeeze') {
+    if (inRange) {
+      return {
+        action: 'raise',
+        explanation: `🔥 ${handStr} é ideal para squeeze de ${position}. Você pressiona o raiser original e o caller com dead money no pote. Excelente spot!`
+      };
+    } else {
+      return {
+        action: 'fold',
+        explanation: `⚠️ ${handStr} não tem equidade suficiente para squeeze. Contra múltiplos ranges, você precisa de mãos mais fortes. Fold é correto.`
+      };
+    }
+  }
+  
+  return {
+    action: 'fold',
+    explanation: `Ação padrão para ${handStr} em situação complexa. Quando em dúvida, fold preserva seu stack.`
+  };
+}
 
+// ===== COMPONENTE DA MESA =====
+function PokerTableVisual({ 
+  positions, 
+  heroPosition, 
+  onSelectPosition,
+  activePositions 
+}: { 
+  positions: Position[];
+  heroPosition: Position;
+  onSelectPosition: (pos: Position) => void;
+  activePositions: Position[];
+}) {
+  const positionCoords: Record<Position, { x: number; y: number }> = {
+    UTG: { x: 20, y: 65 },
+    HJ: { x: 15, y: 35 },
+    CO: { x: 35, y: 12 },
+    BTN: { x: 65, y: 12 },
+    SB: { x: 85, y: 35 },
+    BB: { x: 80, y: 65 },
+  };
+  
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900/20 to-gray-900 p-6">
-      <style>{`
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(-10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-      `}</style>
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 flex items-center gap-3">
-              <span className="text-4xl">🧪</span>
-              Training Lab AI
-            </h1>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-              <button
-                onClick={() => setAiMode(!aiMode)}
-                style={{
-                  background: aiMode ? 'linear-gradient(90deg, #3b82f6 0%, #a855f7 100%)' : '#374151',
-                  color: aiMode ? 'white' : '#9ca3af',
-                  padding: '8px 16px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  boxShadow: aiMode ? '0 4px 14px rgba(59, 130, 246, 0.5)' : 'none'
-                }}
-                onMouseEnter={(e) => {
-                  if (!aiMode) e.currentTarget.style.background = '#4b5563';
-                }}
-                onMouseLeave={(e) => {
-                  if (!aiMode) e.currentTarget.style.background = '#374151';
-                }}
-              >
-                {aiMode ? '🤖 IA Ativa' : '🤖 Ativar IA'}
-              </button>
-              {auth.user && (
-                <div style={{ fontSize: '14px', color: '#9ca3af' }}>
-                  Olá, <span style={{ color: 'white', fontWeight: '600' }}>{auth.user.name}</span>
-                </div>
-              )}
-            </div>
-          </div>
+    <div style={{
+      position: 'relative',
+      width: '100%',
+      maxWidth: 600,
+      height: 300,
+      margin: '0 auto',
+      background: 'radial-gradient(ellipse at center, #1a472a 0%, #0d2818 70%, #061510 100%)',
+      borderRadius: '50%/40%',
+      border: '8px solid #2d1810',
+      boxShadow: 'inset 0 0 60px rgba(0,0,0,0.5), 0 10px 40px rgba(0,0,0,0.5)',
+    }}>
+      {/* Linha da mesa */}
+      <div style={{
+        position: 'absolute',
+        top: '15%',
+        left: '10%',
+        right: '10%',
+        bottom: '15%',
+        border: '2px solid rgba(255,215,0,0.3)',
+        borderRadius: '50%/40%',
+      }} />
+      
+      {/* Posições */}
+      {positions.map((pos) => {
+        const coords = positionCoords[pos];
+        if (!coords) return null;
+        
+        const isHero = pos === heroPosition;
+        const isActive = activePositions.includes(pos);
+        
+        return (
+          <button
+            key={pos}
+            onClick={() => onSelectPosition(pos)}
+            style={{
+              position: 'absolute',
+              left: `${coords.x}%`,
+              top: `${coords.y}%`,
+              transform: 'translate(-50%, -50%)',
+              width: 56,
+              height: 56,
+              borderRadius: '50%',
+              background: isHero 
+                ? 'linear-gradient(135deg, #8b5cf6, #6d28d9)'
+                : isActive 
+                  ? 'linear-gradient(135deg, #059669, #047857)'
+                  : 'linear-gradient(135deg, #374151, #1f2937)',
+              border: isHero 
+                ? '3px solid #a78bfa'
+                : isActive
+                  ? '3px solid #34d399'
+                  : '2px solid #4b5563',
+              color: 'white',
+              fontWeight: 700,
+              fontSize: 13,
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              boxShadow: isHero 
+                ? '0 0 20px rgba(139, 92, 246, 0.5)'
+                : '0 4px 12px rgba(0,0,0,0.3)',
+            }}
+          >
+            {pos}
+            {isHero && (
+              <div style={{
+                position: 'absolute',
+                bottom: -20,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                fontSize: 10,
+                color: '#a78bfa',
+                whiteSpace: 'nowrap',
+              }}>
+                HERO
+              </div>
+            )}
+          </button>
+        );
+      })}
+      
+      {/* Centro - Dealer Button */}
+      <div style={{
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 4,
+      }}>
+        <div style={{
+          width: 32,
+          height: 32,
+          borderRadius: '50%',
+          background: 'linear-gradient(135deg, #fbbf24, #f59e0b)',
+          border: '2px solid #fcd34d',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontWeight: 800,
+          fontSize: 11,
+          color: '#1f2937',
+          boxShadow: '0 4px 12px rgba(251, 191, 36, 0.4)',
+        }}>
+          D
         </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '380px 1fr', gap: 20 }}>
-        <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl shadow-2xl p-6 border border-purple-500/20">
-          <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-            <span>⚙️</span>
-            Configurações
-          </h2>
-          <form onSubmit={handleGenerate} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <div>
-              <label className="block text-sm font-bold text-gray-300 mb-2">🎰 Plataforma</label>
-              <select 
-                value={selectedNetwork}
-                onChange={(e) => setSelectedNetwork(e.target.value)}
-                className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-3 py-2 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50"
-              >
-                {networks.map((n: any) => (
-                  <option key={n.name} value={n.name}>{n.name}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* ✅ SELECT DE MESA (NOVO) */}
-            <div>
-              <label className="block text-sm font-bold text-gray-300 mb-2">🪑 Mesa</label>
-              <select 
-                value={table}
-                onChange={(e) => setTable(e.target.value as TableType)}
-                className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-3 py-2 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50"
-              >
-                <option value="heads-up">Heads-up</option>
-                <option value="6-max">6-max</option>
-                <option value="9-max">9-max</option>
-              </select>
-            </div>
-
-            {/* ✅ SELECT DE POSIÇÃO (DINÂMICO) */}
-            <div>
-              <label className="block text-sm font-bold text-gray-300 mb-2">📍 Posição</label>
-              <select 
-                value={position}
-                onChange={(e) => setPosition(e.target.value as Position)}
-                className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-3 py-2 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50"
-              >
-                {positionsByTable[table].map((p) => (
-                  <option key={p} value={p}>{p}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-bold text-gray-300 mb-2">🎮 Tipo de jogo</label>
-              <input 
-                value={gameType} 
-                onChange={(e) => setGameType(e.target.value)} 
-                className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-3 py-2 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-bold text-gray-300 mb-2">🃏 Street</label>
-              <select 
-                value={street}
-                onChange={(e) => setStreet(e.target.value as 'Pré-flop' | 'Flop' | 'Turn' | 'River')}
-                className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-3 py-2 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50"
-              >
-                <option value="Pré-flop">Pré-flop</option>
-                <option value="Flop">Flop</option>
-                <option value="Turn">Turn</option>
-                <option value="River">River</option>
-              </select>
-            </div>
-
-            {/* ✅ JSX CONDICIONAL - Dois componentes diferentes (igual GTO Wizard) */}
-            {street === 'Pré-flop' ? (
-              <div style={{ animation: 'fadeIn 0.3s ease-in' }}>
-                <label className="block text-sm font-bold text-gray-300 mb-2 flex items-center gap-2">
-                  ⚡ Ação pré-flop
-                  <span style={{
-                    fontSize: '10px',
-                    background: 'linear-gradient(90deg, #f97316 0%, #ea580c 100%)',
-                    color: 'white',
-                    padding: '2px 6px',
-                    borderRadius: '4px',
-                    fontWeight: 'bold'
-                  }}>
-                    PRÉ-FLOP
-                  </span>
-                </label>
-                <select 
-                  value={preflopAction}
-                  onChange={(e) => setPreflopAction(e.target.value)}
-                  className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-3 py-2 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50"
-                >
-                  <option value="Raise">Raise</option>
-                  <option value="Call">Call</option>
-                  <option value="Fold">Fold</option>
-                  <option value="3-bet">3-bet</option>
-                  <option value="4-bet">4-bet</option>
-                  <option value="All-in">All-in</option>
-                </select>
-              </div>
-            ) : (
-              <div style={{ animation: 'fadeIn 0.3s ease-in' }}>
-                <label className="block text-sm font-bold text-gray-300 mb-2 flex items-center gap-2">
-                  🎲 Ação da Street
-                  <span style={{
-                    fontSize: '10px',
-                    background: 'linear-gradient(90deg, #3b82f6 0%, #2563eb 100%)',
-                    color: 'white',
-                    padding: '2px 6px',
-                    borderRadius: '4px',
-                    fontWeight: 'bold'
-                  }}>
-                    {street.toUpperCase()}
-                  </span>
-                </label>
-                <select 
-                  value={postflopAction}
-                  onChange={(e) => setPostflopAction(e.target.value)}
-                  className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-3 py-2 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50"
-                >
-                  <option value="Bet">Bet</option>
-                  <option value="Check">Check</option>
-                  <option value="Call">Call</option>
-                  <option value="Raise">Raise</option>
-                  <option value="Fold">Fold</option>
-                </select>
-              </div>
-            )}
-
-            <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
-              <button 
-                disabled={loading} 
-                type="submit" 
-                style={{
-                  flex: 1,
-                  background: loading ? '#6b7280' : 'linear-gradient(90deg, #a855f7 0%, #ec4899 100%)',
-                  color: 'white',
-                  fontWeight: 'bold',
-                  padding: '12px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  cursor: loading ? 'not-allowed' : 'pointer',
-                  opacity: loading ? 0.5 : 1,
-                  boxShadow: loading ? 'none' : '0 4px 14px rgba(168, 85, 247, 0.5)',
-                  transition: 'all 0.2s ease'
-                }}
-                onMouseEnter={(e) => {
-                  if (!loading) {
-                    e.currentTarget.style.background = 'linear-gradient(90deg, #9333ea 0%, #db2777 100%)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!loading) {
-                    e.currentTarget.style.background = 'linear-gradient(90deg, #a855f7 0%, #ec4899 100%)';
-                  }
-                }}
-              >
-                {loading ? '⏳ Gerando...' : '✨ Gerar Situação'}
-              </button>
-              <button 
-                type="button" 
-                onClick={() => { setScenario(null); setFeedback(null); setIsExampleScenario(false); setAiAnalysis(''); }} 
-                style={{
-                  padding: '0 16px',
-                  background: '#374151',
-                  color: '#d1d5db',
-                  fontWeight: '600',
-                  borderRadius: '8px',
-                  border: 'none',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = '#4b5563';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = '#374151';
-                }}
-              >
-                🗑️
-              </button>
-            </div>
-          </form>
-
-          <div className="mt-6 p-4 bg-gray-900/50 rounded-lg border border-gray-700">
-            <div className="text-sm text-gray-400 mb-2">
-              💎 Treinos restantes: <span className="text-white font-bold">{usage ? (usage.remaining === -1 ? '∞ Ilimitado' : usage.remaining) : '—'}</span>
-            </div>
-            {usage && usage.remaining === 0 && (
-              <button 
-                onClick={handleSubscribe} 
-                style={{
-                  width: '100%',
-                  marginTop: '8px',
-                  background: 'linear-gradient(90deg, #22c55e 0%, #10b981 100%)',
-                  color: 'white',
-                  fontWeight: 'bold',
-                  padding: '8px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  cursor: 'pointer',
-                  boxShadow: '0 4px 14px rgba(34, 197, 94, 0.5)',
-                  transition: 'all 0.2s ease'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'linear-gradient(90deg, #16a34a 0%, #059669 100%)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'linear-gradient(90deg, #22c55e 0%, #10b981 100%)';
-                }}
-              >
-                ⭐ Assinar PRO — R$ 5,90/mês
-              </button>
-            )}
-          </div>
-        </div>
-
-        <div>
-          <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl shadow-2xl p-6 border border-purple-500/20">
-            {!scenario && (
-              <div className="text-center py-20">
-                <div className="text-6xl mb-4">🧠</div>
-                <div className="text-xl text-gray-400">Gere uma situação para treinar</div>
-                <div className="text-sm text-gray-500 mt-2">Configure e clique em "Gerar Situação"</div>
-              </div>
-            )}
-
-            {scenario && (
-              <div>
-                {/* SVG Table visual */}
-                <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexDirection: 'column' }}>
-                  <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
-                    <div style={{ position: 'relative', width: 560, height: 340 }}>
-                      <svg width="560" height="340" viewBox="0 0 560 340" style={{ borderRadius: 12 }}>
-                        <defs>
-                          <radialGradient id="tblGrad" cx="50%" cy="30%">
-                            <stop offset="0%" stopColor="#1a1f3a" />
-                            <stop offset="100%" stopColor="#0a0e27" />
-                          </radialGradient>
-                          <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
-                            <feDropShadow dx="0" dy="8" stdDeviation="18" floodOpacity="0.6"/>
-                          </filter>
-                        </defs>
-                        <ellipse cx="280" cy="170" rx="240" ry="120" fill="url(#tblGrad)" filter="url(#shadow)" />
-                      </svg>
-
-                      {/* render seats from scenario.seats */}
-                      {(scenario.seats || []).map((s: any, i: number) => {
-                        // position map
-                        const posMap: any = {
-                          UTG: { left: '80px', top: '60px' },
-                          HJ: { left: '200px', top: '28px' },
-                          CO: { left: '360px', top: '28px' },
-                          BTN: { left: '480px', top: '60px' },
-                          SB: { left: '420px', top: '260px' },
-                          BB: { left: '140px', top: '260px' },
-                        };
-                        const isSelected = selectedHeroPos === s.position;
-                        return (
-                          <div
-                            key={s.position}
-                            onClick={() => handleSeatClick(s.position)}
-                            style={{
-                              position: 'absolute',
-                              left: posMap[s.position].left,
-                              top: posMap[s.position].top,
-                              transform: 'translate(-50%,-50%)',
-                              width: 120,
-                              cursor: 'pointer',
-                              transition: 'transform 160ms ease, box-shadow 160ms ease',
-                              zIndex: isSelected ? 30 : 20,
-                              boxShadow: isSelected ? '0 10px 30px rgba(124,58,237,0.18)' : '0 6px 18px rgba(0,0,0,0.4)'
-                            }}
-                          >
-                            <div style={{ textAlign: 'center', fontSize: 12, color: isSelected ? 'var(--accent-primary)' : 'var(--text-secondary)', fontWeight: 700 }}>{s.position}</div>
-                            <div style={{ marginTop: 6, width: 110, margin: '6px auto', padding: '8px 10px', borderRadius: 10, background: isSelected ? 'linear-gradient(90deg, rgba(124,58,237,0.12), rgba(6,182,212,0.06))' : 'rgba(255,255,255,0.02)', border: isSelected ? '1px solid rgba(124,58,237,0.22)' : '1px solid rgba(255,255,255,0.04)' }}>
-                              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>{s.name}</div>
-                              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>Stack: <strong style={{ color: 'var(--accent-green)' }}>{s.stack}</strong></div>
-                              {isSelected && <div style={{ marginTop: 6, fontSize: 13, fontWeight: 800, color: 'var(--accent-primary)' }}>HERO</div>}
-                            </div>
-                          </div>
-                        );
-                      })}
-
-                      {/* Center area with community cards */}
-                      <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%,-50%)', pointerEvents: 'none', textAlign: 'center' }}>
-                        <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginBottom: 10 }}>
-                          {(scenario.board && scenario.board.length ? scenario.board : []).map((c: string, i: number) => (
-                            <div key={i} style={{ width: 56, height: 78, borderRadius: 8, background: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>{c}</div>
-                          ))}
-                        </div>
-                        <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>{scenario.network} • Range vilão: {scenario.villainRange}</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Hero cards centered below table */}
-                <div style={{ display: 'flex', justifyContent: 'center', marginTop: 12 }}>
-                  <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 6 }}>Hero</div>
-                    <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
-                      {(scenario.heroCards || []).map((c: string, i: number) => (
-                        <div key={i} style={{ width: 68, height: 90, borderRadius: 8, background: 'linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 18 }}>{c}</div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div style={{ marginTop: '24px', display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '12px' }}>
-                  {[
-                    { action: 'Fold', gradient: 'linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)', shadow: '0 4px 14px rgba(239, 68, 68, 0.5)', emoji: '❌' },
-                    { action: 'Call', gradient: 'linear-gradient(135deg, #22c55e 0%, #15803d 100%)', shadow: '0 4px 14px rgba(34, 197, 94, 0.5)', emoji: '✅' },
-                    { action: 'Raise', gradient: 'linear-gradient(135deg, #f97316 0%, #c2410c 100%)', shadow: '0 4px 14px rgba(249, 115, 22, 0.5)', emoji: '📈' },
-                    { action: 'All-in', gradient: 'linear-gradient(135deg, #a855f7 0%, #7e22ce 100%)', shadow: '0 4px 14px rgba(168, 85, 247, 0.5)', emoji: '💥' },
-                    { action: 'Check', gradient: 'linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)', shadow: '0 4px 14px rgba(59, 130, 246, 0.5)', emoji: '✔️' },
-                  ].map(({ action, gradient, shadow, emoji }) => (
-                    <button 
-                      key={action} 
-                      onClick={() => { handleChoose(action); if (aiMode && !aiAnalysis) handleAIAnalysis(); }} 
-                      style={{
-                        background: gradient,
-                        color: 'white',
-                        fontWeight: 'bold',
-                        padding: '16px 8px',
-                        borderRadius: '12px',
-                        border: 'none',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease',
-                        boxShadow: shadow,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        gap: '4px'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = 'scale(1.05)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'scale(1)';
-                      }}
-                    >
-                      <div style={{ fontSize: '28px' }}>{emoji}</div>
-                      <div style={{ fontSize: '13px' }}>{action}</div>
-                    </button>
-                  ))}
-                </div>
-
-                {feedback && (
-                  <div className="mt-6 p-4 bg-gradient-to-r from-blue-900/50 to-purple-900/50 rounded-lg border border-blue-500/30">
-                    <div className="text-lg font-bold text-white mb-3 flex items-center gap-2">
-                      <span>📊</span>
-                      Feedback GTO
-                    </div>
-                    <div className="space-y-2 text-gray-300">
-                      <div>
-                        Sua jogada: <span className="text-yellow-400 font-bold">{feedback.chosenAction || 'N/A'}</span>
-                      </div>
-                      <div>
-                        Jogada ótima: <span className="text-green-400 font-bold">{feedback.correctAction || scenario.correctAction}</span>
-                      </div>
-                      <div>
-                        EV esperado: <span className="text-blue-400 font-bold">{feedback.ev || scenario.ev}</span>
-                      </div>
-                      <div>
-                        Range vilão: <span className="text-purple-400 font-bold">{feedback.villainRange || scenario.villainRange}</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* AI Analysis Button */}
-                {aiMode && scenario && (
-                  <div style={{ marginTop: '16px' }}>
-                    <button
-                      onClick={handleAIAnalysis}
-                      disabled={loadingAI}
-                      style={{
-                        width: '100%',
-                        padding: '12px',
-                        borderRadius: '8px',
-                        border: 'none',
-                        fontWeight: 'bold',
-                        cursor: loadingAI ? 'not-allowed' : 'pointer',
-                        background: loadingAI ? '#4b5563' : 'linear-gradient(90deg, #3b82f6 0%, #a855f7 100%)',
-                        color: loadingAI ? '#9ca3af' : 'white',
-                        boxShadow: loadingAI ? 'none' : '0 4px 14px rgba(59, 130, 246, 0.5)',
-                        transition: 'all 0.2s ease'
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!loadingAI) {
-                          e.currentTarget.style.background = 'linear-gradient(90deg, #2563eb 0%, #9333ea 100%)';
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!loadingAI) {
-                          e.currentTarget.style.background = 'linear-gradient(90deg, #3b82f6 0%, #a855f7 100%)';
-                        }
-                      }}
-                    >
-                      {loadingAI ? '⏳ Analisando com IA...' : '🤖 Análise Completa com IA'}
-                    </button>
-                  </div>
-                )}
-
-                {/* post-training tabs removed per user request */}
-              </div>
-            )}
-          </div>
-
-          {/* AI Analysis Section */}
-          {aiMode && aiAnalysis && (
-            <div className="mt-6 bg-gradient-to-r from-purple-900/50 to-pink-900/50 rounded-xl shadow-2xl p-6 border border-purple-500/30">
-              <h2 className="text-xl font-bold text-white flex items-center gap-2 mb-4">
-                <span>🤖</span>
-                Análise IA Completa
-              </h2>
-              <div className="bg-gray-900/50 rounded-lg p-4 border border-purple-500/20">
-                <p className="text-gray-200 whitespace-pre-wrap leading-relaxed">{aiAnalysis}</p>
-              </div>
-            </div>
-          )}
-
-          <div className="mt-6 bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl shadow-2xl p-6 border border-purple-500/20">
-            <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-              <span>📈</span>
-              Meu Progresso
-            </h3>
-            <MyProgress />
-          </div>
-        </div>
-      </div>
       </div>
     </div>
   );
 }
 
-function MyProgress() {
-  const [stats, setStats] = useState<any>(null);
-
-  useEffect(() => { load(); async function load(){
-    try{
-      const user = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user') as string).email : 'anon';
-      const res = await fetch(`${API_BASE}/api/trainer/stats?user=${encodeURIComponent(user)}`);
-      const j = await res.json();
-      setStats(j.stats);
-    }catch(e){console.error(e)}
-  } }, []);
-
-  if(!stats) return <div className="text-center text-gray-400 py-8">Nenhum treino registrado ainda. Comece agora!</div>;
-
+// ===== COMPONENTE DE CARTAS =====
+function CardDisplay({ card }: { card: string }) {
+  const rank = card[0];
+  const suit = card[1];
+  
+  const suitSymbol: Record<string, string> = {
+    s: '♠', h: '♥', d: '♦', c: '♣'
+  };
+  
+  const suitColor: Record<string, string> = {
+    s: '#1f2937', h: '#dc2626', d: '#2563eb', c: '#059669'
+  };
+  
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-      <div className="bg-gradient-to-br from-blue-900/30 to-blue-800/30 p-4 rounded-lg border border-blue-500/20">
-        <div className="text-xs text-gray-400 mb-1">📚 Treinos</div>
-        <div className="text-3xl font-bold text-white">{stats.attempts}</div>
+    <div style={{
+      width: 70,
+      height: 100,
+      background: 'linear-gradient(135deg, #ffffff, #f3f4f6)',
+      borderRadius: 8,
+      border: '2px solid #e5e7eb',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+      fontFamily: 'Georgia, serif',
+    }}>
+      <div style={{ 
+        fontSize: 28, 
+        fontWeight: 700, 
+        color: suitColor[suit],
+        lineHeight: 1,
+      }}>
+        {rank}
       </div>
-      <div className="bg-gradient-to-br from-green-900/30 to-green-800/30 p-4 rounded-lg border border-green-500/20">
-        <div className="text-xs text-gray-400 mb-1">✅ Acertos</div>
-        <div className="text-3xl font-bold text-green-400">{stats.correct}</div>
+      <div style={{ 
+        fontSize: 32, 
+        color: suitColor[suit],
+        lineHeight: 1,
+      }}>
+        {suitSymbol[suit]}
       </div>
-      <div className="bg-gradient-to-br from-purple-900/30 to-purple-800/30 p-4 rounded-lg border border-purple-500/20">
-        <div className="text-xs text-gray-400 mb-1">🎯 Precisão</div>
-        <div className="text-3xl font-bold text-purple-400">{stats.percent}%</div>
+    </div>
+  );
+}
+
+// ===== COMPONENTE PRINCIPAL =====
+export default function Trainer() {
+  const auth = useAuth();
+  const navigate = useNavigate();
+  
+  const [config, setConfig] = useState<TrainingConfig>({
+    gameType: 'cash',
+    tableSize: '6max',
+    stakes: 'NL100',
+    startingSpot: 'preflop',
+    preflopAction: 'any',
+    heroPosition: 'BTN',
+    villainPosition: null,
+  });
+  
+  const [isTraining, setIsTraining] = useState(false);
+  const [currentHand, setCurrentHand] = useState<Hand | null>(null);
+  const [showResult, setShowResult] = useState(false);
+  const [lastResult, setLastResult] = useState<{ correct: boolean; explanation: string } | null>(null);
+  const [stats, setStats] = useState<TrainingStats>({ total: 0, correct: 0, streak: 0, bestStreak: 0 });
+  
+  const usosRestantes = (auth.user as any)?.usosRestantes ?? 5;
+  const isPremium = auth.user?.premium || usosRestantes === -1;
+  const canUse = isPremium || usosRestantes > 0;
+  
+  const startTraining = () => {
+    if (!canUse && !isPremium) {
+      navigate('/premium');
+      return;
+    }
+    setIsTraining(true);
+    generateNewHand();
+  };
+  
+  const generateNewHand = () => {
+    const hand = generateRandomHand();
+    setCurrentHand(hand);
+    setShowResult(false);
+    setLastResult(null);
+  };
+  
+  const handleAction = (action: Action) => {
+    if (!currentHand) return;
+    
+    const correct = getCorrectAction(currentHand, config.heroPosition, config.preflopAction);
+    const isCorrect = action === correct.action;
+    
+    setLastResult({
+      correct: isCorrect,
+      explanation: correct.explanation,
+    });
+    setShowResult(true);
+    
+    setStats(prev => ({
+      total: prev.total + 1,
+      correct: prev.correct + (isCorrect ? 1 : 0),
+      streak: isCorrect ? prev.streak + 1 : 0,
+      bestStreak: isCorrect ? Math.max(prev.bestStreak, prev.streak + 1) : prev.bestStreak,
+    }));
+  };
+  
+  const nextHand = () => {
+    generateNewHand();
+  };
+  
+  // Se não está logado
+  if (!auth.token) {
+    return (
+      <div>
+        <h1>🎯 Trainer GTO Premium</h1>
+        <div className="card" style={{ textAlign: 'center', padding: 40 }}>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>🔒</div>
+          <h2>Acesso Exclusivo</h2>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: 20 }}>
+            O Trainer GTO é exclusivo para membros. Crie sua conta gratuitamente e ganhe 5 treinos para testar.
+          </p>
+          <button 
+            className="btn btn-primary" 
+            onClick={() => navigate('/login')}
+            style={{ padding: '12px 32px', fontSize: 16 }}
+          >
+            Entrar / Criar Conta
+          </button>
+        </div>
       </div>
-      <div className="bg-gradient-to-br from-orange-900/30 to-orange-800/30 p-4 rounded-lg border border-orange-500/20">
-        <div className="text-xs text-gray-400 mb-1">💎 WWSF</div>
-        <div className="text-3xl font-bold text-orange-400">{stats.wwsf}</div>
+    );
+  }
+  
+  // Se acabaram os usos
+  if (!canUse) {
+    return (
+      <div>
+        <h1>🎯 Trainer GTO Premium</h1>
+        <div className="card" style={{ textAlign: 'center', padding: 40 }}>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>💎</div>
+          <h2>Seus Créditos Acabaram</h2>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: 8 }}>
+            Você utilizou seus 5 treinos gratuitos.
+          </p>
+          <p style={{ color: 'var(--text-muted)', marginBottom: 24, fontSize: 14 }}>
+            Assine o Premium para treinos ilimitados e evolua seu jogo exponencialmente.
+          </p>
+          <button 
+            className="btn btn-primary" 
+            onClick={() => navigate('/premium')}
+            style={{ 
+              padding: '14px 40px', 
+              fontSize: 16,
+              background: 'linear-gradient(135deg, #8b5cf6, #6d28d9)',
+            }}
+          >
+            ⚡ Assinar Premium
+          </button>
+        </div>
+      </div>
+    );
+  }
+  
+  return (
+    <div>
+      {/* Header */}
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        marginBottom: 24,
+        flexWrap: 'wrap',
+        gap: 16,
+      }}>
+        <h1 style={{ margin: 0 }}>🎯 Trainer GTO</h1>
+        
+        {!isPremium && (
+          <div style={{
+            padding: '8px 16px',
+            background: 'rgba(139, 92, 246, 0.1)',
+            border: '1px solid rgba(139, 92, 246, 0.3)',
+            borderRadius: 8,
+            fontSize: 13,
+          }}>
+            <span style={{ color: 'var(--text-secondary)' }}>Treinos restantes: </span>
+            <span style={{ color: '#a78bfa', fontWeight: 700 }}>{usosRestantes}</span>
+          </div>
+        )}
+        
+        {isPremium && (
+          <div style={{
+            padding: '8px 16px',
+            background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(6, 182, 212, 0.2))',
+            border: '1px solid rgba(16, 185, 129, 0.4)',
+            borderRadius: 8,
+            fontSize: 13,
+          }}>
+            <span style={{ color: '#34d399', fontWeight: 700 }}>💎 Premium • Ilimitado</span>
+          </div>
+        )}
+      </div>
+      
+      {/* Layout Principal */}
+      <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: 20 }}>
+        
+        {/* Sidebar - Configurações */}
+        <div className="card" style={{ padding: 20 }}>
+          <h3 style={{ margin: '0 0 16px 0', fontSize: 14 }}>⚙️ Configurações</h3>
+          
+          {/* Game Type */}
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ fontSize: 12, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>
+              Tipo de Jogo
+            </label>
+            <div style={{ display: 'flex', gap: 8 }}>
+              {(['cash', 'mtt'] as GameType[]).map(type => (
+                <button
+                  key={type}
+                  onClick={() => setConfig(c => ({ ...c, gameType: type }))}
+                  style={{
+                    flex: 1,
+                    padding: '8px 12px',
+                    borderRadius: 6,
+                    border: config.gameType === type ? '2px solid #8b5cf6' : '1px solid var(--border-color)',
+                    background: config.gameType === type ? 'rgba(139, 92, 246, 0.2)' : 'transparent',
+                    color: config.gameType === type ? '#a78bfa' : 'var(--text-secondary)',
+                    cursor: 'pointer',
+                    fontSize: 12,
+                    fontWeight: 600,
+                  }}
+                >
+                  {type === 'cash' ? 'Cash' : 'MTT'}
+                </button>
+              ))}
+            </div>
+          </div>
+          
+          {/* Table Size */}
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ fontSize: 12, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>
+              Mesa
+            </label>
+            <div style={{ display: 'flex', gap: 8 }}>
+              {(['6max', '9max'] as TableSize[]).map(size => (
+                <button
+                  key={size}
+                  onClick={() => setConfig(c => ({ ...c, tableSize: size }))}
+                  style={{
+                    flex: 1,
+                    padding: '8px 12px',
+                    borderRadius: 6,
+                    border: config.tableSize === size ? '2px solid #8b5cf6' : '1px solid var(--border-color)',
+                    background: config.tableSize === size ? 'rgba(139, 92, 246, 0.2)' : 'transparent',
+                    color: config.tableSize === size ? '#a78bfa' : 'var(--text-secondary)',
+                    cursor: 'pointer',
+                    fontSize: 12,
+                    fontWeight: 600,
+                  }}
+                >
+                  {size}
+                </button>
+              ))}
+            </div>
+          </div>
+          
+          {/* Stakes */}
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ fontSize: 12, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>
+              Stakes
+            </label>
+            <select
+              value={config.stakes}
+              onChange={(e) => setConfig(c => ({ ...c, stakes: e.target.value as Stakes }))}
+              className="search-input"
+              style={{ width: '100%', padding: '8px 12px' }}
+            >
+              <option value="NL50">NL50</option>
+              <option value="NL100">NL100</option>
+              <option value="NL200">NL200</option>
+              <option value="NL500">NL500</option>
+            </select>
+          </div>
+          
+          {/* Starting Spot */}
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ fontSize: 12, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>
+              Situação Inicial
+            </label>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {(['preflop', 'flop'] as Street[]).map(street => (
+                <button
+                  key={street}
+                  onClick={() => setConfig(c => ({ ...c, startingSpot: street }))}
+                  style={{
+                    padding: '6px 12px',
+                    borderRadius: 6,
+                    border: config.startingSpot === street ? '2px solid #06b6d4' : '1px solid var(--border-color)',
+                    background: config.startingSpot === street ? 'rgba(6, 182, 212, 0.2)' : 'transparent',
+                    color: config.startingSpot === street ? '#22d3ee' : 'var(--text-secondary)',
+                    cursor: 'pointer',
+                    fontSize: 11,
+                    fontWeight: 600,
+                    textTransform: 'capitalize',
+                  }}
+                >
+                  {street === 'preflop' ? 'Pré-flop' : 'Flop'}
+                </button>
+              ))}
+            </div>
+          </div>
+          
+          {/* Preflop Action */}
+          <div style={{ marginBottom: 20 }}>
+            <label style={{ fontSize: 12, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>
+              Ação Pré-flop
+            </label>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {(['any', 'srp', '3bet', '4bet', 'squeeze'] as PreflopAction[]).map(action => (
+                <button
+                  key={action}
+                  onClick={() => setConfig(c => ({ ...c, preflopAction: action }))}
+                  style={{
+                    padding: '6px 10px',
+                    borderRadius: 6,
+                    border: config.preflopAction === action ? '2px solid #10b981' : '1px solid var(--border-color)',
+                    background: config.preflopAction === action ? 'rgba(16, 185, 129, 0.2)' : 'transparent',
+                    color: config.preflopAction === action ? '#34d399' : 'var(--text-secondary)',
+                    cursor: 'pointer',
+                    fontSize: 11,
+                    fontWeight: 600,
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  {action === 'any' ? 'Qualquer' : action === 'srp' ? 'SRP' : action}
+                </button>
+              ))}
+            </div>
+          </div>
+          
+          {/* Botão Iniciar */}
+          {!isTraining ? (
+            <button
+              onClick={startTraining}
+              className="btn btn-primary"
+              style={{
+                width: '100%',
+                padding: '14px',
+                fontSize: 14,
+                fontWeight: 700,
+                background: 'linear-gradient(135deg, #10b981, #059669)',
+                border: 'none',
+              }}
+            >
+              ▶️ INICIAR TREINO
+            </button>
+          ) : (
+            <button
+              onClick={() => setIsTraining(false)}
+              className="btn btn-ghost"
+              style={{ width: '100%', padding: '12px' }}
+            >
+              ⏹️ Parar Treino
+            </button>
+          )}
+        </div>
+        
+        {/* Área Principal */}
+        <div className="card" style={{ padding: 24 }}>
+          {!isTraining ? (
+            // Tela inicial
+            <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+              <PokerTableVisual
+                positions={POSITIONS_6MAX}
+                heroPosition={config.heroPosition}
+                onSelectPosition={(pos) => setConfig(c => ({ ...c, heroPosition: pos }))}
+                activePositions={[config.heroPosition]}
+              />
+              
+              <div style={{ marginTop: 30 }}>
+                <p style={{ color: 'var(--text-secondary)', marginBottom: 8 }}>
+                  Clique em uma posição para selecionar como HERO
+                </p>
+                <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+                  Configure as opções e clique em "Iniciar Treino"
+                </p>
+              </div>
+            </div>
+          ) : (
+            // Tela de treino
+            <div>
+              {/* Stats */}
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                marginBottom: 20,
+                padding: '12px 16px',
+                background: 'rgba(255,255,255,0.03)',
+                borderRadius: 8,
+              }}>
+                <div>
+                  <span style={{ color: 'var(--text-muted)', fontSize: 11 }}>Acertos</span>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: '#10b981' }}>
+                    {stats.correct}/{stats.total}
+                  </div>
+                </div>
+                <div>
+                  <span style={{ color: 'var(--text-muted)', fontSize: 11 }}>Precisão</span>
+                  <div style={{ fontSize: 18, fontWeight: 700 }}>
+                    {stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0}%
+                  </div>
+                </div>
+                <div>
+                  <span style={{ color: 'var(--text-muted)', fontSize: 11 }}>Sequência</span>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: '#f59e0b' }}>
+                    🔥 {stats.streak}
+                  </div>
+                </div>
+                <div>
+                  <span style={{ color: 'var(--text-muted)', fontSize: 11 }}>Recorde</span>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: '#a78bfa' }}>
+                    ⭐ {stats.bestStreak}
+                  </div>
+                </div>
+              </div>
+              
+              {/* Mesa */}
+              <PokerTableVisual
+                positions={POSITIONS_6MAX}
+                heroPosition={config.heroPosition}
+                onSelectPosition={() => {}}
+                activePositions={[config.heroPosition]}
+              />
+              
+              {/* Cartas */}
+              {currentHand && (
+                <div style={{ 
+                  display: 'flex', 
+                  justifyContent: 'center', 
+                  gap: 12, 
+                  marginTop: 24,
+                  marginBottom: 24,
+                }}>
+                  <CardDisplay card={currentHand.card1} />
+                  <CardDisplay card={currentHand.card2} />
+                </div>
+              )}
+              
+              {/* Info da situação */}
+              <div style={{ 
+                textAlign: 'center', 
+                marginBottom: 20,
+                padding: '12px',
+                background: 'rgba(139, 92, 246, 0.1)',
+                borderRadius: 8,
+              }}>
+                <span style={{ color: 'var(--text-secondary)', fontSize: 13 }}>
+                  Você está em <strong style={{ color: '#a78bfa' }}>{config.heroPosition}</strong>
+                  {config.preflopAction !== 'any' && (
+                    <> • Situação: <strong style={{ color: '#22d3ee' }}>{config.preflopAction.toUpperCase()}</strong></>
+                  )}
+                </span>
+              </div>
+              
+              {/* Resultado */}
+              {showResult && lastResult && (
+                <div style={{
+                  padding: 16,
+                  marginBottom: 20,
+                  borderRadius: 10,
+                  background: lastResult.correct 
+                    ? 'rgba(16, 185, 129, 0.15)'
+                    : 'rgba(239, 68, 68, 0.15)',
+                  border: `2px solid ${lastResult.correct ? '#10b981' : '#ef4444'}`,
+                }}>
+                  <div style={{ 
+                    fontSize: 18, 
+                    fontWeight: 700, 
+                    marginBottom: 8,
+                    color: lastResult.correct ? '#34d399' : '#f87171',
+                  }}>
+                    {lastResult.correct ? '✅ Correto!' : '❌ Incorreto'}
+                  </div>
+                  <p style={{ color: 'var(--text-secondary)', margin: 0, fontSize: 13, lineHeight: 1.6 }}>
+                    {lastResult.explanation}
+                  </p>
+                </div>
+              )}
+              
+              {/* Botões de ação */}
+              {!showResult ? (
+                <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+                  <button
+                    onClick={() => handleAction('fold')}
+                    style={{
+                      padding: '14px 28px',
+                      borderRadius: 8,
+                      border: '2px solid #ef4444',
+                      background: 'rgba(239, 68, 68, 0.1)',
+                      color: '#f87171',
+                      fontSize: 14,
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                    }}
+                  >
+                    FOLD
+                  </button>
+                  <button
+                    onClick={() => handleAction('call')}
+                    style={{
+                      padding: '14px 28px',
+                      borderRadius: 8,
+                      border: '2px solid #06b6d4',
+                      background: 'rgba(6, 182, 212, 0.1)',
+                      color: '#22d3ee',
+                      fontSize: 14,
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                    }}
+                  >
+                    CALL
+                  </button>
+                  <button
+                    onClick={() => handleAction('raise')}
+                    style={{
+                      padding: '14px 28px',
+                      borderRadius: 8,
+                      border: '2px solid #10b981',
+                      background: 'rgba(16, 185, 129, 0.1)',
+                      color: '#34d399',
+                      fontSize: 14,
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                    }}
+                  >
+                    RAISE
+                  </button>
+                </div>
+              ) : (
+                <div style={{ textAlign: 'center' }}>
+                  <button
+                    onClick={nextHand}
+                    className="btn btn-primary"
+                    style={{
+                      padding: '14px 40px',
+                      fontSize: 14,
+                      fontWeight: 700,
+                      background: 'linear-gradient(135deg, #8b5cf6, #6d28d9)',
+                    }}
+                  >
+                    Próxima Mão →
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+      
+      {/* Info Premium */}
+      <div className="card" style={{ marginTop: 20, padding: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+          <div style={{ flex: 1, minWidth: 200 }}>
+            <h3 style={{ margin: '0 0 8px 0', fontSize: 16 }}>🎓 Treine como os Profissionais</h3>
+            <p style={{ color: 'var(--text-secondary)', margin: 0, fontSize: 13 }}>
+              Ranges baseados em GTO solver. Pratique situações específicas e melhore sua tomada de decisão pré-flop.
+            </p>
+          </div>
+          {!isPremium && (
+            <button
+              onClick={() => navigate('/premium')}
+              className="btn btn-primary"
+              style={{
+                padding: '10px 24px',
+                background: 'linear-gradient(135deg, #8b5cf6, #6d28d9)',
+                border: 'none',
+                fontSize: 13,
+              }}
+            >
+              💎 Upgrade Premium
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

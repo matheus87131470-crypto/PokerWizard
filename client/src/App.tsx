@@ -11,6 +11,7 @@ import Solutions from './pages/Solutions';
 import ForgotPassword from './pages/ForgotPassword';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
+import Trainer from './pages/Trainer';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 function Layout({ children }: { children: React.ReactNode }) {
@@ -139,9 +140,9 @@ function Layout({ children }: { children: React.ReactNode }) {
           {/* Destacar rota ativa com NavLink */}
           <NavLink to="/" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Home</NavLink>
           <NavLink to="/rankings" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Rankings</NavLink>
-          <NavLink to="/analysis" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Análise</NavLink>
+          <NavLink to="/trainer" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>🎯 Trainer</NavLink>
           <NavLink to="/solutions" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Análise de Mãos</NavLink>
-          <NavLink to="/features" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Funcionalidades</NavLink>
+          <NavLink to="/analysis" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Análise Jogadores</NavLink>
             <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             {auth.user ? (
               <>
@@ -695,6 +696,7 @@ export default function App() {
             <Route path="/analysis" element={<Analysis />} />
             <Route path="/features" element={<Features />} />
             <Route path="/solutions" element={<Solutions />} />
+            <Route path="/trainer" element={<Trainer />} />
             <Route path="/login" element={<Login />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/premium" element={<Premium />} />
