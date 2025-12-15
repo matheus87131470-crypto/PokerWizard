@@ -144,32 +144,6 @@ function Layout({ children }: { children: React.ReactNode }) {
           <NavLink to="/trainer" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>🎯 Trainer</NavLink>
           <NavLink to="/solutions" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Análise de Mãos</NavLink>
           <NavLink to="/analysis" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Análise Jogadores</NavLink>
-          <a 
-            href="https://mpago.la/2soAEN3" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            style={{
-              color: '#c084fc',
-              fontSize: 13,
-              fontWeight: 600,
-              textDecoration: 'none',
-              padding: '6px 12px',
-              borderRadius: 8,
-              background: 'rgba(192, 132, 252, 0.1)',
-              border: '1px solid rgba(192, 132, 252, 0.2)',
-              transition: 'all 0.2s',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(192, 132, 252, 0.2)';
-              e.currentTarget.style.borderColor = 'rgba(192, 132, 252, 0.4)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(192, 132, 252, 0.1)';
-              e.currentTarget.style.borderColor = 'rgba(192, 132, 252, 0.2)';
-            }}
-          >
-            💜 Apoiar
-          </a>
             <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             {auth.user ? (
               <>
