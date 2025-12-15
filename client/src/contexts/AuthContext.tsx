@@ -15,6 +15,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, name: string, password: string) => Promise<void>;
   logout: () => void;
+  refreshUser: () => Promise<void>;
   loading: boolean;
   error: string | null;
 }
@@ -162,8 +163,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem('pokerwizard_user');
   }
 
+  async function refreshUser() {
+    if (token) {
+      await fetchUserInfo(token);
+    }
+  }
+
   return (
-    <AuthContext.Provider value={{ user, token, login, register, logout, loading, error }}>
+    <AuthContext.Provider value={{ user, token, login, register, logout, refreshUser, loading, error }}>
       {children}
     </AuthContext.Provider>
   );

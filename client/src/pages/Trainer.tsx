@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
+const API_URL = import.meta.env.VITE_API_URL || 'https://pokerwizard-api.onrender.com';
+
 // ===== TIPOS =====
 type Position = 'UTG' | 'HJ' | 'CO' | 'BTN' | 'SB' | 'BB';
 type GameType = 'cash' | 'mtt';
@@ -581,16 +583,72 @@ export default function Trainer() {
   const [lastResult, setLastResult] = useState<{ correct: boolean; explanation: string } | null>(null);
   const [stats, setStats] = useState<TrainingStats>({ total: 0, correct: 0, streak: 0, bestStreak: 0 });
   const [evolutionHistory, setEvolutionHistory] = useState<{ hand: number; accuracy: number; correct: boolean }[]>([]);
+  const [loadingUse, setLoadingUse] = useState(false);
   
   const usosRestantes = (auth.user as any)?.usosRestantes ?? 5;
   const isPremium = auth.user?.premium || usosRestantes === -1;
   const canUse = isPremium || usosRestantes > 0;
   
-  const startTraining = () => {
+  // Função para consumir um uso via API
+  const consumeUse = async (): Promise<boolean> => {
+    if (isPremium) return true; // Premium não consome
+    
+    try {
+      const res = await fetch(`${API_URL}/api/trainer/generate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${auth.token}`,
+        },
+        body: JSON.stringify({
+          table: config.tableSize,
+          position: config.heroPosition,
+          gameType: config.gameType === 'cash' ? 'Cash' : 'MTT',
+          street: 'Pré-flop',
+          action: 'Raise', // Ação válida para consumir
+        }),
+      });
+      
+      const data = await res.json();
+      
+      if (!res.ok || data.error === 'no_credits') {
+        // Atualiza o usuário para refletir que acabaram os usos
+        if (auth.refreshUser) {
+          await auth.refreshUser();
+        }
+        return false;
+      }
+      
+      // Atualiza os usos restantes no contexto
+      if (auth.refreshUser) {
+        await auth.refreshUser();
+      }
+      
+      return true;
+    } catch (err) {
+      console.error('Erro ao consumir uso:', err);
+      return true; // Em caso de erro, permite continuar (fallback)
+    }
+  };
+  
+  const startTraining = async () => {
     if (!canUse && !isPremium) {
       navigate('/premium');
       return;
     }
+    
+    setLoadingUse(true);
+    
+    // Consome um uso antes de começar
+    const allowed = await consumeUse();
+    
+    setLoadingUse(false);
+    
+    if (!allowed) {
+      navigate('/premium');
+      return;
+    }
+    
     setIsTraining(true);
     setEvolutionHistory([]);
     setStats({ total: 0, correct: 0, streak: 0, bestStreak: 0 });
@@ -886,17 +944,21 @@ export default function Trainer() {
           {!isTraining ? (
             <button
               onClick={startTraining}
+              disabled={loadingUse}
               className="btn btn-primary"
               style={{
                 width: '100%',
                 padding: '14px',
                 fontSize: 14,
                 fontWeight: 700,
-                background: 'linear-gradient(135deg, #10b981, #059669)',
+                background: loadingUse 
+                  ? 'linear-gradient(135deg, #6b7280, #4b5563)' 
+                  : 'linear-gradient(135deg, #10b981, #059669)',
                 border: 'none',
+                cursor: loadingUse ? 'wait' : 'pointer',
               }}
             >
-              ▶️ INICIAR TREINO
+              {loadingUse ? '⏳ Carregando...' : '▶️ INICIAR TREINO'}
             </button>
           ) : (
             <button
