@@ -436,26 +436,26 @@ function Home() {
           
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32, alignItems: 'center' }}>
             <div>
-              <div style={{ fontSize: 48, marginBottom: 16 }}>📊</div>
+              <div style={{ fontSize: 48, marginBottom: 16 }}>🎯</div>
               <h2 style={{ fontSize: 28, fontWeight: 800, marginBottom: 12, color: 'white' }}>
-                Análise de Mãos com IA
+                Trainer GTO Premium
               </h2>
               <p style={{ fontSize: 16, color: '#94a3b8', lineHeight: 1.7, marginBottom: 20 }}>
-                <strong style={{ color: '#10b981' }}>Análise completa e profissional</strong> das suas mãos. A IA avalia ranges, equity e sugere as melhores jogadas baseadas em GTO.
+                <strong style={{ color: '#10b981' }}>Treine como os profissionais.</strong> Pratique situações reais de poker com feedback instantâneo baseado em ranges GTO.
               </p>
               <ul style={{ listStyle: 'none', padding: 0, marginBottom: 24 }}>
-                {['Análise GTO completa', 'Cálculo de equity e ranges', 'Feedback detalhado e acionável'].map((item, i) => (
+                {['Ranges GTO por posição', 'Feedback visual instantâneo', 'Gráfico de evolução em tempo real'].map((item, i) => (
                   <li key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10, color: '#cbd5e1', fontSize: 14 }}>
                     <span style={{ color: '#10b981' }}>✓</span> {item}
                   </li>
                 ))}
               </ul>
               <button 
-                onClick={() => navigate('/solutions')}
+                onClick={() => navigate('/trainer')}
                 className="btn btn-primary" 
                 style={{ padding: '16px 32px', fontSize: 16, fontWeight: 700 }}
               >
-                Analisar Mão Agora →
+                Começar Treino →
               </button>
             </div>
             <div style={{ 
@@ -465,8 +465,8 @@ function Home() {
               border: '1px solid rgba(139, 92, 246, 0.2)',
               textAlign: 'center'
             }}>
-              <div style={{ fontSize: 64, marginBottom: 12 }}>🎯</div>
-              <p style={{ color: '#a78bfa', fontSize: 14, fontWeight: 600 }}>Análise GTO profissional</p>
+              <div style={{ fontSize: 64, marginBottom: 12 }}>🃏</div>
+              <p style={{ color: '#a78bfa', fontSize: 14, fontWeight: 600 }}>Treinamento GTO profissional</p>
             </div>
           </div>
         </div>
@@ -481,8 +481,52 @@ function Home() {
           Cada ferramenta foi projetada para resolver um problema específico do seu jogo.
         </p>
         
-        <div className="features-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
-          {/* Card 1 - Análise de Mãos */}
+        <div className="features-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 }}>
+          {/* Card 1 - Trainer GTO */}
+          <div className="card" style={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            padding: 24,
+            minHeight: 280,
+            justifyContent: 'space-between',
+            background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(109, 40, 217, 0.08))',
+            border: '1px solid rgba(139, 92, 246, 0.4)'
+          }}>
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+                <div style={{ fontSize: 36 }}>🎯</div>
+                <span style={{ 
+                  background: 'linear-gradient(135deg, #8b5cf6, #6d28d9)', 
+                  color: '#fff', 
+                  padding: '4px 10px', 
+                  borderRadius: 6, 
+                  fontSize: 11, 
+                  fontWeight: 700 
+                }}>
+                  NOVO
+                </span>
+              </div>
+              <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Trainer GTO</h3>
+              <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 16 }}>
+                Treine decisões pré-flop com ranges GTO. Feedback instantâneo e gráfico de evolução.
+              </p>
+            </div>
+            <button 
+              onClick={() => navigate('/trainer')}
+              className="btn" 
+              style={{ 
+                width: '100%', 
+                padding: '12px',
+                background: 'linear-gradient(135deg, #8b5cf6, #6d28d9)',
+                color: '#fff',
+                fontWeight: 600
+              }}
+            >
+              Treinar Agora →
+            </button>
+          </div>
+
+          {/* Card 2 - Análise de Mãos */}
           <div className="card" style={{ 
             display: 'flex', 
             flexDirection: 'column', 
@@ -518,7 +562,73 @@ function Home() {
             </button>
           </div>
 
-          {/* Card 2 - Rankings */}
+          {/* Card 3 - Análise de Jogadores - EM BREVE */}
+          <div className="card" style={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            padding: 24,
+            minHeight: 280,
+            justifyContent: 'space-between',
+            background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.08), rgba(14, 165, 233, 0.05))',
+            border: '1px solid rgba(6, 182, 212, 0.25)',
+            position: 'relative',
+            overflow: 'hidden'
+          }}>
+            {/* Overlay "Em Breve" */}
+            <div style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'rgba(15, 23, 42, 0.6)',
+              backdropFilter: 'blur(2px)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 2
+            }}>
+              <div style={{
+                background: 'linear-gradient(135deg, #06b6d4, #0ea5e9)',
+                padding: '12px 28px',
+                borderRadius: 30,
+                fontSize: 14,
+                fontWeight: 700,
+                color: 'white',
+                boxShadow: '0 4px 20px rgba(6, 182, 212, 0.4)'
+              }}>
+                🚀 EM BREVE
+              </div>
+            </div>
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+                <div style={{ fontSize: 36 }}>🔍</div>
+                <span style={{ 
+                  background: 'rgba(6, 182, 212, 0.15)', 
+                  color: '#06b6d4', 
+                  padding: '4px 10px', 
+                  borderRadius: 6, 
+                  fontSize: 11, 
+                  fontWeight: 600 
+                }}>
+                  NOVO
+                </span>
+              </div>
+              <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Análise de Jogadores</h3>
+              <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 16 }}>
+                Descubra os leaks dos seus oponentes. Análise completa de tendências e padrões de jogo.
+              </p>
+            </div>
+            <button 
+              className="btn btn-ghost" 
+              style={{ width: '100%', padding: '12px', opacity: 0.5, cursor: 'not-allowed' }}
+              disabled
+            >
+              Em Breve →
+            </button>
+          </div>
+
+          {/* Card 4 - Rankings */}
           <div className="card" style={{ 
             display: 'flex', 
             flexDirection: 'column', 
@@ -583,7 +693,7 @@ function Home() {
                 Treinos ilimitados, análise avançada da IA e relatórios completos de evolução.
               </p>
               <p style={{ fontSize: 13, color: '#fbbf24', fontWeight: 600 }}>
-                R$ 5,90/mês • Cancele quando quiser
+                $9.90/mês • Cancele quando quiser
               </p>
             </div>
             <button 
