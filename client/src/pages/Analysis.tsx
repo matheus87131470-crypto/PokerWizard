@@ -215,7 +215,7 @@ export default function Analysis() {
             <label style={{ fontSize: 13, fontWeight: 700 }}>Buscar Jogador</label>
             <input
               type="text"
-              placeholder="Ex: jogador_exemplo"
+              placeholder="Digite o nick do jogador"
               value={playerName}
               onChange={(e) => { setPlayerName(e.target.value); setError(null); }}
               className="search-input"

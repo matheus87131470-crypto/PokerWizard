@@ -157,7 +157,7 @@ export default function PlayerSearch() {
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Ex: Matheusac7"
+              placeholder="Digite o nick do jogador"
               className="search-input"
             />
             <button type="submit" className="btn btn-primary" disabled={loading} style={{ width: '100%' }}>
