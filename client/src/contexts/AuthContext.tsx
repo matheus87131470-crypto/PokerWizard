@@ -12,8 +12,8 @@ interface User {
 interface AuthContextType {
   user: User | null;
   token: string | null;
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, name: string, password: string) => Promise<void>;
+  login: (identifier: string, password: string) => Promise<void>;
+  register: (email: string, name: string, password: string, username?: string) => Promise<void>;
   logout: () => void;
   refreshUser: () => Promise<void>;
   loading: boolean;
@@ -117,7 +117,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  async function register(email: string, name: string, password: string) {
+  async function register(email: string, name: string, password: string, username?: string) {
     const PRICE = 5.90;
     setLoading(true);
     setError(null);
@@ -131,7 +131,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           email, 
-          name, 
+          name,
+          username: username || undefined, // Envia username se fornecido
           password, 
           price: PRICE,
           deviceInfo // Envia fingerprint do dispositivo

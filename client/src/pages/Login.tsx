@@ -4,9 +4,10 @@ import { useAuth } from '../contexts/AuthContext';
 import { isValidEmail, isDisposableEmail } from '../utils/deviceFingerprint';
 
 export default function Login() {
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState(''); // Email ou Username
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [username, setUsername] = useState(''); // Para registro
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -15,9 +16,9 @@ export default function Login() {
   const navigate = useNavigate();
   const auth = useAuth();
 
-  // Validação de e-mail em tempo real
+  // Validação de e-mail em tempo real (só no registro)
   const handleEmailChange = (value: string) => {
-    setEmail(value);
+    setIdentifier(value);
     setEmailError('');
     
     if (!isLogin && value) {
@@ -37,13 +38,14 @@ export default function Login() {
 
     try {
       if (isLogin) {
-        await auth.login(email, password);
+        // Login aceita email ou username
+        await auth.login(identifier, password);
       } else {
-        // Validações básicas
-        if (!isValidEmail(email)) {
+        // Registro precisa de email válido
+        if (!isValidEmail(identifier)) {
           throw new Error('Por favor, use um e-mail válido');
         }
-        if (isDisposableEmail(email)) {
+        if (isDisposableEmail(identifier)) {
           throw new Error('E-mails temporários não são permitidos. Use um e-mail permanente.');
         }
         if (password.length < 6) {
@@ -53,7 +55,7 @@ export default function Login() {
           throw new Error('Por favor, informe seu nome');
         }
         
-        await auth.register(email, name.trim(), password);
+        await auth.register(identifier, name.trim(), password, username.trim() || undefined);
       }
       navigate('/');
     } catch (err: any) {
@@ -119,6 +121,34 @@ export default function Login() {
             </div>
           )}
 
+          {/* Campo de username só no registro */}
+          {!isLogin && (
+            <div>
+              <label
+                style={{
+                  display: 'block',
+                  fontSize: 13,
+                  fontWeight: 600,
+                  marginBottom: 8,
+                  color: 'var(--text-muted)'
+                }}
+              >
+                Nome de Usuário <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>(opcional)</span>
+              </label>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+                placeholder="seu_usuario"
+                className="search-input"
+                style={{ padding: '12px 14px' }}
+              />
+              <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
+                Usado para login. Apenas letras, números e _
+              </p>
+            </div>
+          )}
+
           <div>
             <label
               style={{
@@ -129,13 +159,13 @@ export default function Login() {
                 color: 'var(--text-muted)'
               }}
             >
-              E-mail
+              {isLogin ? 'E-mail ou Usuário' : 'E-mail'}
             </label>
             <input
-              type="email"
-              value={email}
+              type={isLogin ? 'text' : 'email'}
+              value={identifier}
               onChange={(e) => handleEmailChange(e.target.value)}
-              placeholder="seu@email.com"
+              placeholder={isLogin ? 'email@exemplo.com ou usuario' : 'seu@email.com'}
               className="search-input"
               style={{ 
                 padding: '12px 14px',

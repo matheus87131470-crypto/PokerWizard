@@ -14,6 +14,7 @@ export interface User {
   id: string;
   email: string;
   name: string;
+  username?: string;        // Nome de usuário único para login
   passwordHash?: string;
   googleId?: string;
   price?: number;
@@ -59,7 +60,8 @@ export async function createUser(
   name: string,
   password?: string,
   googleId?: string,
-  price?: number
+  price?: number,
+  username?: string
 ): Promise<User> {
   // Check if user exists
   const existing = await getUserByEmail(email);
@@ -67,10 +69,19 @@ export async function createUser(
     throw new Error('User already exists');
   }
 
+  // Check if username already exists
+  if (username) {
+    const existingUsername = await getUserByUsername(username);
+    if (existingUsername) {
+      throw new Error('Username already taken');
+    }
+  }
+
   const user: User = {
     id: uuid(),
     email,
     name,
+    username: username ? username.toLowerCase().trim() : undefined,
     passwordHash: password ? bcrypt.hashSync(password, 10) : undefined,
     googleId,
     price: typeof price === 'number' ? price : 5.9,
@@ -112,6 +123,33 @@ export async function getUserByEmail(email: string): Promise<User | undefined> {
     return user || undefined;
   }
   return memoryUsersByEmail.get(email);
+}
+
+// Buscar usuário por username
+export async function getUserByUsername(username: string): Promise<User | undefined> {
+  const normalizedUsername = username.toLowerCase().trim();
+  
+  if (dbAvailable) {
+    // Buscar no banco por username
+    const allUsers = await dbGetAllUsers();
+    return allUsers.find(u => (u as any).username?.toLowerCase() === normalizedUsername);
+  }
+  
+  // Buscar na memória
+  for (const user of memoryUsers.values()) {
+    if (user.username?.toLowerCase() === normalizedUsername) return user;
+  }
+  return undefined;
+}
+
+// Buscar usuário por email OU username (para login)
+export async function getUserByEmailOrUsername(identifier: string): Promise<User | undefined> {
+  // Primeiro tenta por email
+  const byEmail = await getUserByEmail(identifier);
+  if (byEmail) return byEmail;
+  
+  // Depois tenta por username
+  return await getUserByUsername(identifier);
 }
 
 export async function getUserByGoogleId(googleId: string): Promise<User | undefined> {

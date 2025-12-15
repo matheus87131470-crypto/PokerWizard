@@ -1,6 +1,6 @@
 import express, { Response } from 'express';
 import { generateToken, authMiddleware, AuthRequest } from '../middleware/auth';
-import { createUser, getUserByEmail, getUserById, verifyPassword, updatePassword, deductCredit, FeatureType } from '../services/userService';
+import { createUser, getUserByEmail, getUserById, verifyPassword, updatePassword, deductCredit, FeatureType, getUserByEmailOrUsername } from '../services/userService';
 import { canCreateAccount, registerAccount, getRealIP } from '../services/antiFraud';
 import { createResetToken, verifyResetCode, invalidateResetToken } from '../services/passwordResetService';
 import { sendPasswordResetEmail } from '../services/emailService';
@@ -15,13 +15,24 @@ const router = express.Router();
  */
 router.post('/register', async (req: any, res: Response) => {
   try {
-    const { email, name, password, price, deviceInfo } = req.body;
+    const { email, name, username, password, price, deviceInfo } = req.body;
 
     if (!email || !name || !password) {
       return res.status(400).json({
         error: 'invalid_request',
         message: 'Email, name, and password required'
       });
+    }
+
+    // Se username fornecido, verificar se já existe
+    if (username) {
+      const existingUsername = await getUserByEmailOrUsername(username);
+      if (existingUsername) {
+        return res.status(400).json({
+          error: 'username_taken',
+          message: 'Este nome de usuário já está em uso'
+        });
+      }
     }
 
     // Anti-fraude: verificar se pode criar conta
@@ -34,7 +45,7 @@ router.post('/register', async (req: any, res: Response) => {
       });
     }
 
-    const user = await createUser(email, name, password, undefined, price);
+    const user = await createUser(email, name, password, undefined, price, username);
     
     // Registrar conta criada para controle anti-fraude
     registerAccount(req, email, deviceInfo);
@@ -47,6 +58,7 @@ router.post('/register', async (req: any, res: Response) => {
         id: user.id,
         email: user.email,
         name: user.name,
+        username: (user as any).username,
         credits: user.credits,
         usosRestantes: (user as any).usosRestantes ?? user.credits,
         // Novos campos por funcionalidade
@@ -67,31 +79,37 @@ router.post('/register', async (req: any, res: Response) => {
 
 /**
  * POST /auth/login
+ * Aceita email OU username para login
  */
 router.post('/login', async (req: any, res: Response) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, username } = req.body;
+    
+    // Pode usar email ou username
+    const identifier = email || username;
 
-    if (!email || !password) {
+    if (!identifier || !password) {
       return res.status(400).json({
         error: 'invalid_request',
-        message: 'Email and password required'
+        message: 'Email/Username and password required'
       });
     }
 
-    const user = await getUserByEmail(email);
+    // Busca por email OU username
+    const user = await getUserByEmailOrUsername(identifier);
     if (!user) {
       return res.status(401).json({
         error: 'invalid_credentials',
-        message: 'Invalid email or password'
+        message: 'Usuário ou senha inválidos'
       });
     }
 
-    const isValid = await verifyPassword(email, password);
+    // Verifica senha usando o email do usuário encontrado
+    const isValid = await verifyPassword(user.email, password);
     if (!isValid) {
       return res.status(401).json({
         error: 'invalid_credentials',
-        message: 'Invalid email or password'
+        message: 'Usuário ou senha inválidos'
       });
     }
 
