@@ -21,9 +21,11 @@ export default function Profile() {
   }
 
   const isPremium = user.premium || (user as any).statusPlano === 'premium';
-  const usosRestantes = (user as any).usosRestantes === -1 || (user as any).usosRestantes === null 
-    ? 'Ilimitado' 
-    : (typeof (user as any).usosRestantes === 'number' ? (user as any).usosRestantes : user.credits);
+  
+  // Usos por funcionalidade
+  const usosTrainer = (user as any).usosTrainer ?? 5;
+  const usosAnalise = (user as any).usosAnalise ?? 5;
+  const usosJogadores = (user as any).usosJogadores ?? 5;
 
   return (
     <div style={{ 
@@ -166,31 +168,64 @@ export default function Profile() {
               fontSize: 13, 
               color: '#a78bfa', 
               fontWeight: 600, 
-              marginBottom: 8,
+              marginBottom: 12,
               letterSpacing: '0.5px'
             }}>
               💎 USOS RESTANTES
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            
+            {isPremium ? (
               <span style={{
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 8,
-                padding: '10px 14px',
+                padding: '10px 18px',
                 borderRadius: 12,
-                background: usosRestantes === 'Ilimitado' ? 'linear-gradient(135deg, #10b981, #34d399)' : 'linear-gradient(135deg, #0ea5e9, #60a5fa)',
+                background: 'linear-gradient(135deg, #10b981, #34d399)',
                 color: 'white',
                 fontSize: 16,
                 fontWeight: 800,
-                letterSpacing: '0.3px',
                 boxShadow: '0 6px 18px rgba(16, 185, 129, 0.35)'
               }}>
-                💎 {usosRestantes} {usosRestantes !== 'Ilimitado' ? 'usos' : 'ilimitado'}
+                ∞ Ilimitado
               </span>
-              {usosRestantes !== 'Ilimitado' && (
-                <span style={{ fontSize: 13, color: '#94a3b8' }}>Faça upgrade para ilimitado</span>
-              )}
-            </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{
+                    padding: '6px 12px',
+                    borderRadius: 8,
+                    background: usosTrainer > 0 ? 'rgba(139, 92, 246, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                    color: usosTrainer > 0 ? '#a78bfa' : '#ef4444',
+                    fontSize: 13,
+                    fontWeight: 700,
+                  }}>
+                    🎯 Trainer: {usosTrainer}/5
+                  </span>
+                  <span style={{
+                    padding: '6px 12px',
+                    borderRadius: 8,
+                    background: usosAnalise > 0 ? 'rgba(6, 182, 212, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                    color: usosAnalise > 0 ? '#22d3ee' : '#ef4444',
+                    fontSize: 13,
+                    fontWeight: 700,
+                  }}>
+                    📊 Análise: {usosAnalise}/5
+                  </span>
+                  <span style={{
+                    padding: '6px 12px',
+                    borderRadius: 8,
+                    background: usosJogadores > 0 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                    color: usosJogadores > 0 ? '#34d399' : '#ef4444',
+                    fontSize: 13,
+                    fontWeight: 700,
+                  }}>
+                    🔍 Jogadores: {usosJogadores}/5
+                  </span>
+                </div>
+                <span style={{ fontSize: 12, color: '#94a3b8' }}>Assine Premium para uso ilimitado</span>
+              </div>
+            )}
           </div>
         </div>
 
