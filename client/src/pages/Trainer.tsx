@@ -404,6 +404,162 @@ function CardDisplay({ card }: { card: string }) {
   );
 }
 
+// ===== GRÁFICO DE EVOLUÇÃO =====
+function EvolutionChart({ data }: { data: { hand: number; accuracy: number; correct: boolean }[] }) {
+  if (data.length < 2) return null;
+  
+  const width = 600;
+  const height = 200;
+  const padding = { top: 20, right: 30, bottom: 30, left: 45 };
+  const chartWidth = width - padding.left - padding.right;
+  const chartHeight = height - padding.top - padding.bottom;
+  
+  const maxHand = Math.max(...data.map(d => d.hand));
+  const minAcc = Math.max(0, Math.min(...data.map(d => d.accuracy)) - 10);
+  const maxAcc = Math.min(100, Math.max(...data.map(d => d.accuracy)) + 10);
+  
+  const xScale = (hand: number) => padding.left + (hand / maxHand) * chartWidth;
+  const yScale = (acc: number) => padding.top + chartHeight - ((acc - minAcc) / (maxAcc - minAcc)) * chartHeight;
+  
+  const linePath = data.map((d, i) => {
+    const x = xScale(d.hand);
+    const y = yScale(d.accuracy);
+    return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
+  }).join(' ');
+  
+  // Gradient para área sob a linha
+  const areaPath = linePath + ` L ${xScale(data[data.length - 1].hand)} ${padding.top + chartHeight} L ${xScale(data[0].hand)} ${padding.top + chartHeight} Z`;
+  
+  return (
+    <div className="card" style={{ marginTop: 20, padding: 20 }}>
+      <h3 style={{ margin: '0 0 16px 0', fontSize: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+        📈 Evolução da Sessão
+        <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 400 }}>
+          ({data.length} mãos jogadas)
+        </span>
+      </h3>
+      
+      <div style={{ overflowX: 'auto' }}>
+        <svg width={width} height={height} style={{ display: 'block', margin: '0 auto' }}>
+          <defs>
+            <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.05" />
+            </linearGradient>
+            <linearGradient id="lineGradient" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor="#6d28d9" />
+              <stop offset="100%" stopColor="#8b5cf6" />
+            </linearGradient>
+          </defs>
+          
+          {/* Grid horizontal */}
+          {[0, 25, 50, 75, 100].filter(v => v >= minAcc && v <= maxAcc).map(v => (
+            <g key={v}>
+              <line
+                x1={padding.left}
+                y1={yScale(v)}
+                x2={width - padding.right}
+                y2={yScale(v)}
+                stroke="var(--border)"
+                strokeDasharray="4,4"
+                opacity={0.5}
+              />
+              <text
+                x={padding.left - 8}
+                y={yScale(v)}
+                textAnchor="end"
+                alignmentBaseline="middle"
+                fontSize={11}
+                fill="var(--text-muted)"
+              >
+                {v}%
+              </text>
+            </g>
+          ))}
+          
+          {/* Área sob a linha */}
+          <path d={areaPath} fill="url(#areaGradient)" />
+          
+          {/* Linha principal */}
+          <path
+            d={linePath}
+            fill="none"
+            stroke="url(#lineGradient)"
+            strokeWidth={3}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          
+          {/* Pontos */}
+          {data.map((d, i) => (
+            <g key={i}>
+              <circle
+                cx={xScale(d.hand)}
+                cy={yScale(d.accuracy)}
+                r={6}
+                fill={d.correct ? '#10b981' : '#ef4444'}
+                stroke="#fff"
+                strokeWidth={2}
+              />
+              {/* Tooltip ao passar mouse (usando title) */}
+              <title>Mão {d.hand}: {d.accuracy}% ({d.correct ? 'Acertou' : 'Errou'})</title>
+            </g>
+          ))}
+          
+          {/* Eixo X */}
+          <line
+            x1={padding.left}
+            y1={height - padding.bottom}
+            x2={width - padding.right}
+            y2={height - padding.bottom}
+            stroke="var(--border)"
+          />
+          <text
+            x={width / 2}
+            y={height - 5}
+            textAnchor="middle"
+            fontSize={11}
+            fill="var(--text-muted)"
+          >
+            Mãos
+          </text>
+          
+          {/* Eixo Y */}
+          <text
+            x={15}
+            y={height / 2}
+            textAnchor="middle"
+            transform={`rotate(-90, 15, ${height / 2})`}
+            fontSize={11}
+            fill="var(--text-muted)"
+          >
+            Precisão
+          </text>
+        </svg>
+      </div>
+      
+      {/* Legenda */}
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        gap: 24, 
+        marginTop: 12,
+        fontSize: 12,
+        color: 'var(--text-secondary)'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#10b981' }}></div>
+          Acerto
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#ef4444' }}></div>
+          Erro
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ===== COMPONENTE PRINCIPAL =====
 export default function Trainer() {
   const auth = useAuth();
@@ -424,6 +580,7 @@ export default function Trainer() {
   const [showResult, setShowResult] = useState(false);
   const [lastResult, setLastResult] = useState<{ correct: boolean; explanation: string } | null>(null);
   const [stats, setStats] = useState<TrainingStats>({ total: 0, correct: 0, streak: 0, bestStreak: 0 });
+  const [evolutionHistory, setEvolutionHistory] = useState<{ hand: number; accuracy: number; correct: boolean }[]>([]);
   
   const usosRestantes = (auth.user as any)?.usosRestantes ?? 5;
   const isPremium = auth.user?.premium || usosRestantes === -1;
@@ -435,6 +592,8 @@ export default function Trainer() {
       return;
     }
     setIsTraining(true);
+    setEvolutionHistory([]);
+    setStats({ total: 0, correct: 0, streak: 0, bestStreak: 0 });
     generateNewHand();
   };
   
@@ -457,12 +616,22 @@ export default function Trainer() {
     });
     setShowResult(true);
     
+    const newTotal = stats.total + 1;
+    const newCorrect = stats.correct + (isCorrect ? 1 : 0);
+    const newAccuracy = Math.round((newCorrect / newTotal) * 100);
+    
     setStats(prev => ({
       total: prev.total + 1,
       correct: prev.correct + (isCorrect ? 1 : 0),
       streak: isCorrect ? prev.streak + 1 : 0,
       bestStreak: isCorrect ? Math.max(prev.bestStreak, prev.streak + 1) : prev.bestStreak,
     }));
+    
+    setEvolutionHistory(prev => [...prev, {
+      hand: newTotal,
+      accuracy: newAccuracy,
+      correct: isCorrect,
+    }]);
   };
   
   const nextHand = () => {
@@ -919,6 +1088,11 @@ export default function Trainer() {
           )}
         </div>
       </div>
+      
+      {/* Gráfico de Evolução */}
+      {evolutionHistory.length >= 2 && (
+        <EvolutionChart data={evolutionHistory} />
+      )}
       
       {/* Info Premium */}
       <div className="card" style={{ marginTop: 20, padding: 20 }}>
