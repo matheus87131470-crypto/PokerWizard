@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Link, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link, NavLink, useNavigate } from 'react-router-dom';
 import { Analytics } from '@vercel/analytics/react';
 import Rankings from './pages/Rankings';
 import Features from './pages/Features';
@@ -9,11 +9,14 @@ import Premium from './pages/Premium';
 import Profile from './pages/Profile';
 import Solutions from './pages/Solutions';
 import ForgotPassword from './pages/ForgotPassword';
+import Privacy from './pages/Privacy';
+import Terms from './pages/Terms';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 function Layout({ children }: { children: React.ReactNode }) {
   const auth = useAuth();
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -133,13 +136,26 @@ function Layout({ children }: { children: React.ReactNode }) {
           }
         `}</style>
 
-        <nav className="app-nav">
-          <Link to="/" className="nav-link">Home</Link>
-          <Link to="/rankings" className="nav-link">Rankings</Link>
-          <Link to="/analysis" className="nav-link">Análise</Link>
-          <Link to="/solutions" className="nav-link">Análise de Mãos</Link>
-          <Link to="/features" className="nav-link">Funcionalidades</Link>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+        {/* Mobile toggle */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <button
+            aria-label="Abrir menu"
+            onClick={() => setMobileNavOpen((v) => !v)}
+            className="btn btn-ghost mobile-toggle"
+            style={{ padding: '8px 12px' }}
+          >
+            ☰ Menu
+          </button>
+        </div>
+
+        <nav className={mobileNavOpen ? 'app-nav mobile-nav open' : 'app-nav mobile-nav'}>
+          {/* Destacar rota ativa com NavLink */}
+          <NavLink to="/" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'} onClick={() => setMobileNavOpen(false)}>Home</NavLink>
+          <NavLink to="/rankings" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'} onClick={() => setMobileNavOpen(false)}>Rankings</NavLink>
+          <NavLink to="/analysis" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'} onClick={() => setMobileNavOpen(false)}>Análise</NavLink>
+          <NavLink to="/solutions" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'} onClick={() => setMobileNavOpen(false)}>Análise de Mãos</NavLink>
+          <NavLink to="/features" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'} onClick={() => setMobileNavOpen(false)}>Funcionalidades</NavLink>
+            <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             {auth.user ? (
               <>
                 {/* User badge premium */}
@@ -182,19 +198,19 @@ function Layout({ children }: { children: React.ReactNode }) {
                     ⚡ Upgrade
                   </button>
                 )}
-                <button onClick={() => navigate('/premium')} className="btn btn-ghost" style={{ padding: '8px 16px', fontSize: 13 }}>
+                <button onClick={() => { navigate('/premium'); setMobileNavOpen(false); }} className="btn btn-ghost" style={{ padding: '8px 16px', fontSize: 13 }}>
                   💳 Planos
                 </button>
-                <button onClick={handleLogout} className="btn btn-ghost" style={{ padding: '8px 16px', fontSize: 13 }}>
+                <button onClick={() => { handleLogout(); setMobileNavOpen(false); }} className="btn btn-ghost" style={{ padding: '8px 16px', fontSize: 13 }}>
                   Sair
                 </button>
               </>
             ) : (
               <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                <button onClick={() => navigate('/premium')} className="btn btn-ghost" style={{ padding: '8px 16px', fontSize: 13 }}>
+                <button onClick={() => { navigate('/premium'); setMobileNavOpen(false); }} className="btn btn-ghost" style={{ padding: '8px 16px', fontSize: 13 }}>
                   💳 Planos
                 </button>
-                <button onClick={() => navigate('/login')} className="btn btn-primary" style={{ padding: '8px 20px', fontSize: 13, background: 'linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%)', border: 'none' }}>
+                <button onClick={() => { navigate('/login'); setMobileNavOpen(false); }} className="btn btn-primary" style={{ padding: '8px 20px', fontSize: 13, background: 'linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%)', border: 'none' }}>
                   Entrar
                 </button>
               </div>
@@ -341,7 +357,7 @@ function Home() {
       )}
 
       {/* Hero Section - Orientado a Ação */}
-      <div style={{ 
+      <div className="hero" style={{ 
         marginBottom: 60, 
         textAlign: 'center',
         background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%)',
@@ -477,7 +493,7 @@ function Home() {
           Cada ferramenta foi projetada para resolver um problema específico do seu jogo.
         </p>
         
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
+        <div className="features-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
           {/* Card 1 - Análise de Mãos */}
           <div className="card" style={{ 
             display: 'flex', 
@@ -609,7 +625,7 @@ function Home() {
         <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 32 }}>
           Jogadores que já evoluíram com PokerWizard
         </h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 32 }}>
+        <div className="cards-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 32 }}>
           <div>
             <div style={{ fontSize: 32, fontWeight: 800, color: 'var(--accent-primary)', marginBottom: 4 }}>
               500+
@@ -672,6 +688,9 @@ function Home() {
           <span>© 2025</span>
           <span style={{ color: 'var(--border-color)' }}>•</span>
           <span style={{ color: 'var(--accent-primary)', fontWeight: 500 }}>Powered by Pokio</span>
+          <span style={{ color: 'var(--border-color)' }}>•</span>
+          <NavLink to="/privacy" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Privacidade</NavLink>
+          <NavLink to="/terms" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Termos</NavLink>
         </div>
       </div>
     </div>
@@ -693,6 +712,8 @@ export default function App() {
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/premium" element={<Premium />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/terms" element={<Terms />} />
           
           </Routes>
         </Layout>

@@ -135,6 +135,18 @@ body {
   transform: translateX(-50%) scaleX(1);
 }
 
+/* Estado ativo da navegação */
+.nav-link.active {
+  color: var(--text-primary);
+  background: rgba(139, 92, 246, 0.18);
+  border-color: rgba(139, 92, 246, 0.35);
+  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.18);
+}
+
+.nav-link.active::before {
+  transform: translateX(-50%) scaleX(1);
+}
+
 /* Container & Layout */
 .container {
   max-width: 1200px;
@@ -198,6 +210,95 @@ body {
   font-size: 14px;
   font-family: inherit;
   transition: all 0.2s ease;
+}
+
+/* ===== Mobile tweaks ===== */
+@media (max-width: 640px) {
+  .app-header {
+    padding: 14px 16px;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  /* Compress hero/banner spacing */
+  .hero {
+    padding: 22px 12px !important;
+    border-radius: 14px !important;
+    margin-bottom: 20px !important;
+  }
+  .hero h1 { font-size: 24px !important; line-height: 1.25; margin-bottom: 6px; }
+  .hero p { font-size: 13px !important; line-height: 1.35; }
+  .brand {
+    font-size: 18px;
+  }
+  .app-nav {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .nav-link {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+  .container {
+    padding: 16px 12px;
+  }
+  .card {
+    padding: 14px;
+    border-radius: 12px;
+    margin-bottom: 12px;
+  }
+  /* Single column cards grids */
+  .features-grid,
+  .cards-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+  table {
+    width: 100%;
+    font-size: 12px;
+  }
+  th, td {
+    padding: 10px 8px;
+  }
+  /* Make tables scroll within card for narrow screens */
+  .card table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .card table tbody tr { height: 40px; }
+  /* Make header actions stack nicely */
+  .header-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .btn, .btn-primary, .btn-ghost, .btn-success {
+    min-height: 44px;
+    padding: 12px 16px;
+  }
+  /* Smaller headings on mobile */
+  h1 { font-size: 24px; }
+  h2 { font-size: 20px; }
+  h3 { font-size: 16px; }
+}
+
+/* Hide nav in mobile when collapsed */
+.mobile-nav {
+  display: none;
+}
+@media (max-width: 640px) {
+  .mobile-nav.open {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+  }
+}
+
+/* Mobile toggle button visibility */
+.mobile-toggle { display: none; }
+@media (max-width: 640px) {
+  .mobile-toggle { display: inline-flex; align-items: center; }
 }
 
 .search-input:focus {

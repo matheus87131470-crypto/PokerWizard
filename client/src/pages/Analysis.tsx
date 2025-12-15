@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import api from '../services/api';
 
 // Detectar ambiente automaticamente
 function getApiBase(): string {
@@ -108,9 +109,37 @@ export default function Analysis() {
         return;
       }
 
-      const mockResult = generateMockPlayerData(playerName);
-      setHistory([mockResult, ...history.slice(0, 9)]);
-      setResult(mockResult);
+      // Try backend SharkScope proxy first; fallback to mock if unavailable
+      try {
+        const res = await api.get(`/api/sharkscope/player/${encodeURIComponent(playerName)}`);
+        if (!res.ok) throw new Error(res.message || 'Erro');
+        const data = res.data;
+        const mapped = {
+          player: data.name || playerName,
+          site,
+          stats: {
+            vpip: 0,
+            pfr: 0,
+            aggression_factor: 0,
+            winrate: 0,
+            bb_won: 0,
+            total_hands: Number(data.games || 0),
+            roi: Number(data.roi || 0),
+            itm: Number(data.cashes || 0),
+          },
+          improvements: ['Aprimorar ranges pós-flop', 'Revisar spots de 3-bet', 'Equilibrar agressividade em turn'],
+          leaks: ['Divergência de ROI vs volume', 'Frequência de calls em 3-bet'],
+          tournaments: [],
+          analysis: `Perfil: jogos=${data.games ?? '?'} • ROI=${data.roi ?? '?'} • cashes=${data.cashes ?? '?'}`,
+          remaining: (auth.user as any)?.usosRestantes ?? 5,
+        };
+        setHistory([mapped, ...history.slice(0, 9)]);
+        setResult(mapped);
+      } catch {
+        const mockResult = generateMockPlayerData(playerName);
+        setHistory([mockResult, ...history.slice(0, 9)]);
+        setResult(mockResult);
+      }
     } catch (err: any) {
       setError(err?.message || 'Erro na busca');
     } finally {
@@ -135,13 +164,21 @@ export default function Analysis() {
   return (
     <div>
       <h1>🔍 Análise de Jogadores</h1>
+      <div className="card" style={{ marginBottom: 16, padding: 12, background: 'rgba(255, 255, 255, 0.04)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 16 }}>ℹ️</span>
+          <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
+            Pesquisa fictícia por enquanto — em breve integraremos dados reais.
+          </div>
+        </div>
+      </div>
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 20, marginBottom: 20 }}>
         <div className="card">
           <form onSubmit={handleSearch} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <label style={{ fontSize: 13, fontWeight: 700 }}>Buscar Jogador</label>
             <input
               type="text"
-              placeholder="Ex: Matheusac7"
+              placeholder="Ex: jogador_exemplo"
               value={playerName}
               onChange={(e) => { setPlayerName(e.target.value); setError(null); }}
               className="search-input"
@@ -204,7 +241,10 @@ export default function Analysis() {
       {result && (
         <div className="card">
           <div style={{ marginBottom: 20 }}>
-            <h2 style={{ marginBottom: 4 }}>{result.player}</h2>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+              <h2 style={{ marginBottom: 4 }}>{result.player}</h2>
+              <span style={{ fontSize: 12, color: 'var(--text-muted)', background: 'rgba(255,255,255,0.06)', border: '1px solid var(--border-color)', borderRadius: 999, padding: '4px 8px' }}>Modo Demo</span>
+            </div>
             <p style={{ color: 'var(--text-secondary)', fontSize: 13 }}>
               {result.site === 'pokerstars' ? 'PokerStars' : result.site} • Visualizações: Inscreva-se
             </p>
@@ -223,19 +263,20 @@ export default function Analysis() {
           {activeTab === 'graficos' && (
             <div>
               <h3>Estatísticas Principais</h3>
+              <div style={{ padding: 12, background: 'rgba(255, 255, 255, 0.04)', borderRadius: 8, marginBottom: 16 }}>
+                <SimpleBars
+                  data={[
+                    { label: 'VPIP', value: Number(result.stats?.vpip ?? 0), color: '#8b5cf6' },
+                    { label: 'PFR', value: Number(result.stats?.pfr ?? 0), color: '#06b6d4' },
+                    { label: 'AF', value: Number(result.stats?.aggression_factor ?? 0) * 100, color: '#10b981' },
+                  ]}
+                  max={100}
+                />
+              </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 12, marginBottom: 20 }}>
-                <div style={{ padding: 12, background: 'rgba(124, 58, 237, 0.1)', borderRadius: 8 }}>
-                  <div style={{ color: 'var(--text-secondary)', fontSize: 12 }}>VPIP</div>
-                  <div style={{ fontSize: 22, fontWeight: 800 }}>{result.stats?.vpip ?? 0}%</div>
-                </div>
-                <div style={{ padding: 12, background: 'rgba(6, 182, 212, 0.1)', borderRadius: 8 }}>
-                  <div style={{ color: 'var(--text-secondary)', fontSize: 12 }}>PFR</div>
-                  <div style={{ fontSize: 22, fontWeight: 800 }}>{result.stats?.pfr ?? 0}%</div>
-                </div>
-                <div style={{ padding: 12, background: 'rgba(16, 185, 129, 0.1)', borderRadius: 8 }}>
-                  <div style={{ color: 'var(--text-secondary)', fontSize: 12 }}>AF</div>
-                  <div style={{ fontSize: 22, fontWeight: 800 }}>{result.stats?.aggression_factor ?? 0}</div>
-                </div>
+                <StatCard title="VPIP" value={`${result.stats?.vpip ?? 0}%`} bg="rgba(124, 58, 237, 0.1)" />
+                <StatCard title="PFR" value={`${result.stats?.pfr ?? 0}%`} bg="rgba(6, 182, 212, 0.1)" />
+                <StatCard title="AF" value={`${result.stats?.aggression_factor ?? 0}`} bg="rgba(16, 185, 129, 0.1)" />
               </div>
               <div style={{ padding: 16, background: 'rgba(255, 255, 255, 0.05)', borderRadius: 8 }}>
                 <h4>Análise da IA</h4>
@@ -260,6 +301,18 @@ export default function Analysis() {
                   <div style={{ color: 'var(--text-secondary)', fontSize: 12, marginBottom: 4 }}>Lucro Total</div>
                   <div style={{ fontSize: 24, fontWeight: 800 }}>R$ {result.stats?.bb_won ?? 0}</div>
                 </div>
+              </div>
+              <div style={{ padding: 16, background: 'rgba(255, 255, 255, 0.05)', borderRadius: 8, marginBottom: 16 }}>
+                <h4 style={{ marginBottom: 8 }}>Tendência ROI / ITM</h4>
+                <LineChart
+                  series={[
+                    { name: 'ROI', color: '#8b5cf6', values: (result.tournaments || []).map((t: any) => Number(t.roi || 0)) },
+                    { name: 'ITM', color: '#06b6d4', values: (result.tournaments || []).map((t: any) => Number(t.itm || 0)) },
+                  ]}
+                  labels={(result.tournaments || []).map((t: any) => String(t.name || 'Torneio'))}
+                  height={180}
+                  max={100}
+                />
               </div>
               <div style={{ padding: 16, background: 'rgba(255, 255, 255, 0.05)', borderRadius: 8 }}>
                 <h4 style={{ marginBottom: 12 }}>Torneios Recentes</h4>
@@ -395,6 +448,90 @@ export default function Analysis() {
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+/**
+ * SimpleBars: gráfico de barras SVG leve, sem dependências.
+ */
+function SimpleBars({ data, max = 100, height = 160 }: { data: { label: string; value: number; color?: string }[]; max?: number; height?: number }) {
+  const width = 520;
+  const padding = 24;
+  const barGap = 10;
+  const barWidth = Math.max(20, Math.floor((width - padding * 2 - barGap * (data.length - 1)) / data.length));
+  const scale = (v: number) => Math.max(0, Math.min(1, v / max)) * (height - 30);
+  return (
+    <div style={{ overflowX: 'auto' }}>
+      <svg width={width} height={height} style={{ maxWidth: '100%' }}>
+        {data.map((d, i) => {
+          const h = scale(isFinite(d.value) ? d.value : 0);
+          const x = padding + i * (barWidth + barGap);
+          const y = height - h - 20;
+          return (
+            <g key={i}>
+              <rect x={x} y={y} width={barWidth} height={h} rx={6} fill={d.color || 'rgba(124, 58, 237, 0.8)'} />
+              <text x={x + barWidth / 2} y={height - 6} textAnchor="middle" fontSize="12" fill="var(--text-secondary)">{d.label}</text>
+              <text x={x + barWidth / 2} y={y - 6} textAnchor="middle" fontSize="12" fill="var(--text-primary)" fontWeight={700}>
+                {isFinite(d.value) ? (Math.round(d.value * 10) / 10) : 0}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+  );
+}
+
+function StatCard({ title, value, bg }: { title: string; value: string; bg: string }) {
+  return (
+    <div style={{ padding: 12, background: bg, borderRadius: 8 }}>
+      <div style={{ color: 'var(--text-secondary)', fontSize: 12 }}>{title}</div>
+      <div style={{ fontSize: 22, fontWeight: 800 }}>{value}</div>
+    </div>
+  );
+}
+
+/**
+ * LineChart: gráfico de linhas SVG para múltiplas séries (ROI/ITM).
+ */
+function LineChart({ series, labels, height = 180, max = 100 }: {
+  series: { name: string; color: string; values: number[] }[];
+  labels: string[];
+  height?: number;
+  max?: number;
+}) {
+  const width = Math.max(520, labels.length * 120);
+  const padding = 28;
+  const chartW = width - padding * 2;
+  const chartH = height - padding * 2;
+  const xStep = labels.length > 1 ? chartW / (labels.length - 1) : chartW;
+  const scaleY = (v: number) => chartH - Math.max(0, Math.min(1, v / max)) * chartH;
+  return (
+    <div style={{ overflowX: 'auto' }}>
+      <svg width={width} height={height} style={{ maxWidth: '100%' }}>
+        {/* Eixos */}
+        <g transform={`translate(${padding}, ${padding})`}>
+          <line x1={0} y1={chartH} x2={chartW} y2={chartH} stroke="rgba(255,255,255,0.2)" />
+          {/* Labels no eixo X */}
+          {labels.map((lab, i) => (
+            <text key={i} x={i * xStep} y={chartH + 16} fontSize="11" fill="var(--text-muted)" textAnchor="middle">{lab}</text>
+          ))}
+          {/* Séries */}
+          {series.map((s, si) => {
+            const points = s.values.map((v, i) => ({ x: i * xStep, y: scaleY(isFinite(v) ? v : 0) }));
+            const path = points.map((p, i) => (i === 0 ? `M ${p.x},${p.y}` : `L ${p.x},${p.y}`)).join(' ');
+            return (
+              <g key={si}>
+                <path d={path} fill="none" stroke={s.color} strokeWidth={2} />
+                {points.map((p, i) => (
+                  <circle key={i} cx={p.x} cy={p.y} r={3} fill={s.color} />
+                ))}
+              </g>
+            );
+          })}
+        </g>
+      </svg>
     </div>
   );
 }

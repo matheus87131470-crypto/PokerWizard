@@ -17,6 +17,9 @@ import sharkscopeRouter from './routes/sharkscope';
 import pokerRouter from './routes/poker';
 import gtoRouter from './routes/gto';
 import { initUserService } from './services/userService';
+import db from './services/database';
+import leaderboardRouter from './routes/leaderboard';
+import healthRouter from './routes/health';
 
 const app = express();
 
@@ -57,6 +60,8 @@ app.use('/api/ai', aiRouter);
 app.use('/api/sharkscope', sharkscopeRouter);
 app.use('/api/poker', pokerRouter);
 app.use('/api/gto', gtoRouter);
+app.use('/api/leaderboard', leaderboardRouter);
+app.use('/api/health', healthRouter);
 
 /* ------------ INICIAR SERVIDOR ------------ */
 
@@ -92,6 +97,53 @@ async function startServer() {
       } catch (err) {
         console.error('Failed to start PIX auto-confirmation', err);
       }
+
+      // Leaderboard auto-refresh every 30 minutes
+      setInterval(async () => {
+        try {
+          await db.dbRecalculateLeaderboard();
+          console.log('[index] Leaderboard cache refreshed');
+        } catch (err) {
+          console.error('[index] Leaderboard refresh failed:', err);
+        }
+      }, 30 * 60 * 1000);
+
+      // Warm leaderboard route cache every 2 minutes for common queries
+      setInterval(async () => {
+        try {
+          const base = process.env.BASE_URL || `http://localhost:${port}`;
+          const metrics = ['lucro','roi','volume','wl'];
+          for (const m of metrics) {
+            const url = `${base}/api/leaderboard?metric=${m}&limit=100`;
+            const resp = await fetch(url);
+            if (!resp.ok) throw new Error(`warm failed: ${m} status ${resp.status}`);
+          }
+          console.log('[index] Warmed leaderboard cache for metrics: lucro, roi, volume, wl');
+        } catch (err) {
+          console.error('[index] Warm leaderboard cache failed:', err);
+        }
+      }, 2 * 60 * 1000);
+
+      // Health strict logger every 5 minutes
+      const baseUrl = process.env.BASE_URL || `http://localhost:${port}`;
+      setInterval(async () => {
+        try {
+          const resp = await fetch(`${baseUrl}/api/health/strict`);
+          const json = await resp.json().catch(() => ({}));
+          const ok = !!json.ok;
+          const dbOk = json?.results?.db?.ok;
+          const lbOk = json?.results?.leaderboard?.ok;
+          const ssOk = json?.results?.sharkscope?.ok;
+          const summary = `health(strict): ok=${ok} db=${dbOk} lb=${lbOk} ss=${ssOk}`;
+          if (ok) {
+            console.log(`[index] ✅ ${summary}`);
+          } else {
+            console.error(`[index] ❌ ${summary}`);
+          }
+        } catch (err) {
+          console.error('[index] ❌ health(strict) failed:', err);
+        }
+      }, 5 * 60 * 1000);
     });
   } catch (err) {
     console.error('[server] Failed to start:', err);

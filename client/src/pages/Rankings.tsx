@@ -22,11 +22,24 @@ export default function Rankings() {
     let cancelled = false;
     async function load() {
       try {
-        const res = await fetch(`${API_BASE}/api/players/rankings?by=${rankingType}&limit=20`);
+        const metric = rankingType === 'profit' ? 'lucro' : (rankingType === 'winrate' ? 'wl' : rankingType);
+        const res = await fetch(`${API_BASE}/api/leaderboard?metric=${metric}&limit=20`);
         const json = await res.json();
-        if (!cancelled) setItems(json.results || []);
+        const rows = json.rows || [];
+        const mapped: RankingPlayer[] = rows.map((r: any, idx: number) => ({
+          rank: idx + 1,
+          nickname: r.name,
+          totalProfit: Number(r.lucro || 0),
+          roi: Number(r.roi || 0),
+          gamesPlayed: Number(r.jogos || r.volume || 0),
+          winRate: Number(r.wlPercent || 0),
+          country: r.country || '-',
+          room: r.platform || '-',
+        }));
+        if (!cancelled) setItems(mapped);
       } catch (err) {
         console.error(err);
+        if (!cancelled) setItems([]);
       }
     }
     load();
@@ -125,6 +138,13 @@ export default function Rankings() {
             </tr>
           </thead>
           <tbody>
+            {items.length === 0 && (
+              <tr>
+                <td colSpan={7} style={{ padding: 16, textAlign: 'center', color: 'var(--text-secondary)' }}>
+                  Sem dados no momento.
+                </td>
+              </tr>
+            )}
             {items.map((player) => (
               <tr key={`${player.nickname}-${player.rank}`}>
                 <td style={{ fontWeight: 700, fontSize: 16 }}>
