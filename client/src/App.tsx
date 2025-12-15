@@ -12,6 +12,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 import Trainer from './pages/Trainer';
+import CookieConsent from './components/CookieConsent';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 function Layout({ children }: { children: React.ReactNode }) {
@@ -816,6 +817,7 @@ export default function App() {
           
           </Routes>
         </Layout>
+        <CookieConsent />
         <Analytics />
       </BrowserRouter>
     </AuthProvider>
