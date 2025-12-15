@@ -164,11 +164,48 @@ export default function Analysis() {
   return (
     <div>
       <h1>🔍 Análise de Jogadores</h1>
-      <div className="card" style={{ marginBottom: 16, padding: 12, background: 'rgba(255, 255, 255, 0.04)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 16 }}>ℹ️</span>
-          <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
-            Pesquisa fictícia por enquanto — em breve integraremos dados reais.
+      <div className="card" style={{ 
+        marginBottom: 20, 
+        padding: 16, 
+        background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.15) 0%, rgba(79, 70, 229, 0.1) 100%)',
+        border: '1px solid rgba(124, 58, 237, 0.3)',
+        borderRadius: 12
+      }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+          <div style={{ 
+            background: 'rgba(124, 58, 237, 0.3)', 
+            borderRadius: 10, 
+            padding: '8px 10px',
+            fontSize: 20
+          }}>🚀</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ 
+              fontSize: 14, 
+              fontWeight: 700, 
+              color: 'var(--accent-primary)', 
+              marginBottom: 4 
+            }}>
+              Funcionalidade em Desenvolvimento
+            </div>
+            <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+              Esta é uma <strong>demonstração</strong> com dados simulados. Em breve integraremos APIs reais 
+              como SharkScope e PokerStars para trazer estatísticas verdadeiras dos jogadores. 
+              Fique atento às atualizações!
+            </div>
+            <div style={{ 
+              display: 'inline-flex', 
+              alignItems: 'center', 
+              gap: 6, 
+              marginTop: 10,
+              padding: '4px 10px',
+              background: 'rgba(16, 185, 129, 0.2)',
+              borderRadius: 20,
+              fontSize: 11,
+              color: '#10b981',
+              fontWeight: 600
+            }}>
+              <span>✨</span> Em breve: Dados Reais
+            </div>
           </div>
         </div>
       </div>
@@ -262,7 +299,39 @@ export default function Analysis() {
 
           {activeTab === 'graficos' && (
             <div>
-              <h3>Estatísticas Principais</h3>
+              <h3>📊 Evolução de Performance</h3>
+              
+              {/* Gráfico de Evolução de Lucro */}
+              <div style={{ padding: 16, background: 'rgba(255, 255, 255, 0.04)', borderRadius: 12, marginBottom: 20 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                  <h4 style={{ margin: 0, fontSize: 14 }}>💰 Evolução de Lucro (últimos 6 meses)</h4>
+                  <span style={{ fontSize: 11, color: 'var(--text-muted)', background: 'rgba(255,255,255,0.06)', padding: '4px 8px', borderRadius: 4 }}>Dados Demo</span>
+                </div>
+                <PerformanceChart 
+                  data={[
+                    { month: 'Jan', profit: 850, sessions: 12 },
+                    { month: 'Fev', profit: 1200, sessions: 15 },
+                    { month: 'Mar', profit: 980, sessions: 10 },
+                    { month: 'Abr', profit: 1850, sessions: 18 },
+                    { month: 'Mai', profit: 1420, sessions: 14 },
+                    { month: 'Jun', profit: 2100, sessions: 20 },
+                  ]}
+                  height={200}
+                />
+                <div style={{ display: 'flex', justifyContent: 'center', gap: 20, marginTop: 12 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--text-secondary)' }}>
+                    <div style={{ width: 12, height: 3, background: '#8b5cf6', borderRadius: 2 }}></div>
+                    Lucro (R$)
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--text-secondary)' }}>
+                    <div style={{ width: 12, height: 3, background: '#06b6d4', borderRadius: 2 }}></div>
+                    Sessões
+                  </div>
+                </div>
+              </div>
+
+              {/* Gráfico de Barras - Stats */}
+              <h4 style={{ marginBottom: 12 }}>📈 Estatísticas Principais</h4>
               <div style={{ padding: 12, background: 'rgba(255, 255, 255, 0.04)', borderRadius: 8, marginBottom: 16 }}>
                 <SimpleBars
                   data={[
@@ -488,6 +557,114 @@ function StatCard({ title, value, bg }: { title: string; value: string; bg: stri
     <div style={{ padding: 12, background: bg, borderRadius: 8 }}>
       <div style={{ color: 'var(--text-secondary)', fontSize: 12 }}>{title}</div>
       <div style={{ fontSize: 22, fontWeight: 800 }}>{value}</div>
+    </div>
+  );
+}
+
+/**
+ * PerformanceChart: gráfico de área/linha profissional para evolução de lucro.
+ */
+function PerformanceChart({ data, height = 200 }: { 
+  data: { month: string; profit: number; sessions: number }[]; 
+  height?: number 
+}) {
+  const width = 520;
+  const padding = { top: 20, right: 40, bottom: 30, left: 50 };
+  const chartW = width - padding.left - padding.right;
+  const chartH = height - padding.top - padding.bottom;
+  
+  const maxProfit = Math.max(...data.map(d => d.profit)) * 1.1;
+  const maxSessions = Math.max(...data.map(d => d.sessions)) * 1.1;
+  
+  const xStep = chartW / (data.length - 1);
+  
+  const scaleProfit = (v: number) => chartH - (v / maxProfit) * chartH;
+  const scaleSessions = (v: number) => chartH - (v / maxSessions) * chartH;
+  
+  // Criar path para área de lucro
+  const profitPoints = data.map((d, i) => ({ x: i * xStep, y: scaleProfit(d.profit) }));
+  const areaPath = `M 0,${chartH} ` + 
+    profitPoints.map(p => `L ${p.x},${p.y}`).join(' ') + 
+    ` L ${chartW},${chartH} Z`;
+  const linePath = profitPoints.map((p, i) => (i === 0 ? `M ${p.x},${p.y}` : `L ${p.x},${p.y}`)).join(' ');
+  
+  // Criar path para linha de sessões
+  const sessionPoints = data.map((d, i) => ({ x: i * xStep, y: scaleSessions(d.sessions) }));
+  const sessionPath = sessionPoints.map((p, i) => (i === 0 ? `M ${p.x},${p.y}` : `L ${p.x},${p.y}`)).join(' ');
+  
+  return (
+    <div style={{ overflowX: 'auto' }}>
+      <svg width={width} height={height} style={{ maxWidth: '100%' }}>
+        <defs>
+          <linearGradient id="profitGradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.05" />
+          </linearGradient>
+        </defs>
+        
+        <g transform={`translate(${padding.left}, ${padding.top})`}>
+          {/* Grid horizontal */}
+          {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => (
+            <g key={i}>
+              <line 
+                x1={0} 
+                y1={chartH * ratio} 
+                x2={chartW} 
+                y2={chartH * ratio} 
+                stroke="rgba(255,255,255,0.08)" 
+                strokeDasharray="4,4"
+              />
+              <text 
+                x={-8} 
+                y={chartH * ratio + 4} 
+                fontSize="10" 
+                fill="var(--text-muted)" 
+                textAnchor="end"
+              >
+                R${Math.round(maxProfit * (1 - ratio))}
+              </text>
+            </g>
+          ))}
+          
+          {/* Área de lucro */}
+          <path d={areaPath} fill="url(#profitGradient)" />
+          
+          {/* Linha de lucro */}
+          <path d={linePath} fill="none" stroke="#8b5cf6" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
+          
+          {/* Linha de sessões */}
+          <path d={sessionPath} fill="none" stroke="#06b6d4" strokeWidth={2} strokeDasharray="6,4" strokeLinecap="round" />
+          
+          {/* Pontos de lucro */}
+          {profitPoints.map((p, i) => (
+            <g key={i}>
+              <circle cx={p.x} cy={p.y} r={5} fill="#8b5cf6" stroke="#1a1a2e" strokeWidth={2} />
+              <text x={p.x} y={p.y - 10} fontSize="10" fill="var(--text-primary)" textAnchor="middle" fontWeight={600}>
+                R${data[i].profit}
+              </text>
+            </g>
+          ))}
+          
+          {/* Pontos de sessões */}
+          {sessionPoints.map((p, i) => (
+            <circle key={i} cx={p.x} cy={p.y} r={3} fill="#06b6d4" />
+          ))}
+          
+          {/* Labels no eixo X */}
+          {data.map((d, i) => (
+            <text 
+              key={i} 
+              x={i * xStep} 
+              y={chartH + 18} 
+              fontSize="11" 
+              fill="var(--text-secondary)" 
+              textAnchor="middle"
+            >
+              {d.month}
+            </text>
+          ))}
+        </g>
+      </svg>
     </div>
   );
 }
