@@ -781,13 +781,12 @@ export default function Trainer() {
         {!isPremium && usosTrainer > 0 && (
           <div style={{
             padding: '8px 16px',
-            background: 'rgba(139, 92, 246, 0.1)',
-            border: '1px solid rgba(139, 92, 246, 0.3)',
+            background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(6, 182, 212, 0.1))',
+            border: '1px solid rgba(139, 92, 246, 0.4)',
             borderRadius: 8,
             fontSize: 13,
           }}>
-            <span style={{ color: 'var(--text-secondary)' }}>Treinos restantes: </span>
-            <span style={{ color: '#a78bfa', fontWeight: 700 }}>{usosTrainer}/5</span>
+            <span style={{ color: '#a78bfa', fontWeight: 700 }}>🎯 {usosTrainer}/5 treinos</span>
           </div>
         )}
         
@@ -804,6 +803,7 @@ export default function Trainer() {
               fontWeight: 800,
               cursor: 'pointer',
               boxShadow: '0 4px 20px rgba(251, 191, 36, 0.4)',
+              animation: 'pulse 2s infinite',
             }}
           >
             👑 Assinar Premium
@@ -818,7 +818,7 @@ export default function Trainer() {
             borderRadius: 8,
             fontSize: 13,
           }}>
-            <span style={{ color: '#34d399', fontWeight: 700 }}>💎 Premium • Ilimitado</span>
+            <span style={{ color: '#34d399', fontWeight: 700 }}>💎 Premium • ∞</span>
           </div>
         )}
       </div>
