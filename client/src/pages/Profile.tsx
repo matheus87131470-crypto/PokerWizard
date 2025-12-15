@@ -195,7 +195,7 @@ export default function Profile() {
         </div>
 
         {/* BOTÕES DE AÇÃO */}
-        <div style={{ display: 'flex', gap: 16 }}>
+        <div style={{ display: 'flex', gap: 16, marginBottom: 24 }}>
           {!isPremium && (
             <button 
               onClick={() => window.location.assign('/premium')}
@@ -254,6 +254,53 @@ export default function Profile() {
           >
             🚪 Sair
           </button>
+        </div>
+
+        {/* APOIAR O PROJETO */}
+        <div style={{
+          background: 'linear-gradient(135deg, rgba(192, 132, 252, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%)',
+          borderRadius: 16,
+          padding: 24,
+          border: '1px solid rgba(192, 132, 252, 0.3)',
+          boxShadow: '0 4px 20px rgba(192, 132, 252, 0.1)',
+          textAlign: 'center'
+        }}>
+          <div style={{ 
+            fontSize: 15, 
+            color: '#e9d5ff', 
+            marginBottom: 12,
+            fontWeight: 500
+          }}>
+            💜 Gostou do PokerWizard? Apoie o projeto!
+          </div>
+          <a 
+            href="https://mpago.la/2soAEN3" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              padding: '12px 24px',
+              borderRadius: 12,
+              background: 'linear-gradient(135deg, #c084fc 0%, #a855f7 100%)',
+              color: 'white',
+              fontSize: 15,
+              fontWeight: 700,
+              textDecoration: 'none',
+              boxShadow: '0 6px 20px rgba(192, 132, 252, 0.4)',
+              transition: 'all 0.3s',
+            }}
+          >
+            💜 Doar R$ 0,50
+          </a>
+          <p style={{ 
+            marginTop: 12, 
+            fontSize: 12, 
+            color: '#94a3b8' 
+          }}>
+            Sua contribuição ajuda a manter o projeto ativo!
+          </p>
         </div>
       </div>
 
