@@ -177,47 +177,7 @@ function Layout({ children }: { children: React.ReactNode }) {
                       }}>
                         👑 PREMIUM
                       </span>
-                    ) : (
-                      /* Mostrar contador baseado na página atual */
-                      <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                        <span style={{
-                          padding: '4px 8px',
-                          borderRadius: 6,
-                          background: ((auth.user as any)?.usosTrainer ?? 5) > 0 
-                            ? 'rgba(139, 92, 246, 0.2)' 
-                            : 'linear-gradient(135deg, #fbbf24, #f59e0b)',
-                          color: ((auth.user as any)?.usosTrainer ?? 5) > 0 ? '#a78bfa' : '#000',
-                          fontSize: 10,
-                          fontWeight: 700,
-                        }}>
-                          🎯 {((auth.user as any)?.usosTrainer ?? 5) > 0 ? (auth.user as any)?.usosTrainer ?? 5 : '💎'}
-                        </span>
-                        <span style={{
-                          padding: '4px 8px',
-                          borderRadius: 6,
-                          background: ((auth.user as any)?.usosAnalise ?? 5) > 0 
-                            ? 'rgba(6, 182, 212, 0.2)' 
-                            : 'linear-gradient(135deg, #fbbf24, #f59e0b)',
-                          color: ((auth.user as any)?.usosAnalise ?? 5) > 0 ? '#22d3ee' : '#000',
-                          fontSize: 10,
-                          fontWeight: 700,
-                        }}>
-                          📊 {((auth.user as any)?.usosAnalise ?? 5) > 0 ? (auth.user as any)?.usosAnalise ?? 5 : '💎'}
-                        </span>
-                        <span style={{
-                          padding: '4px 8px',
-                          borderRadius: 6,
-                          background: ((auth.user as any)?.usosJogadores ?? 5) > 0 
-                            ? 'rgba(16, 185, 129, 0.2)' 
-                            : 'linear-gradient(135deg, #fbbf24, #f59e0b)',
-                          color: ((auth.user as any)?.usosJogadores ?? 5) > 0 ? '#34d399' : '#000',
-                          fontSize: 10,
-                          fontWeight: 700,
-                        }}>
-                          🔍 {((auth.user as any)?.usosJogadores ?? 5) > 0 ? (auth.user as any)?.usosJogadores ?? 5 : '💎'}
-                        </span>
-                      </div>
-                    )}
+                    ) : null}
                   </div>
                 </Link>
                 {/* Botão Assina Premium dourado quando zerou algum */}
