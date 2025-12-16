@@ -216,7 +216,7 @@ export default function Solutions() {
 
     // Verificar se pode usar
     if (!canUse) {
-      setAiAnalysis('💎 Você atingiu o limite de 5 análises gratuitas.\n\nAssine o Premium para análises ilimitadas!');
+      setAiAnalysis('PAYWALL_LIMIT_REACHED');
       return;
     }
 
@@ -249,7 +249,7 @@ export default function Solutions() {
       
       // Verificar se acabaram os usos
       if (data.error === 'no_credits') {
-        setAiAnalysis('💎 Você atingiu o limite de 5 análises gratuitas.\n\nAssine o Premium para análises ilimitadas!');
+        setAiAnalysis('PAYWALL_LIMIT_REACHED');
         if (refreshUser) await refreshUser();
         return;
       }
@@ -307,31 +307,160 @@ export default function Solutions() {
     }
   };
 
-  // Tela de bloqueio quando acabam os usos
+  // Tela de bloqueio quando acabam os usos - Agora com Paywall Premium atrativo
   if (user && !canUse) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-6 flex items-center justify-center">
-        <div className="max-w-md w-full bg-gray-800/80 border border-purple-500/30 rounded-2xl p-10 text-center backdrop-blur-xl">
-          <div className="text-6xl mb-6">💎</div>
-          <h2 className="text-2xl font-bold text-white mb-4">Trial Finalizado</h2>
-          <p className="text-gray-400 mb-2">
-            Você utilizou suas <strong className="text-white">5 análises gratuitas</strong>.
-          </p>
-          <p className="text-gray-500 text-sm mb-8">
-            Para continuar analisando suas mãos com IA, assine o plano Premium.
-          </p>
-          <div className="bg-purple-500/10 border border-purple-500/20 rounded-xl p-5 mb-6">
-            <div className="text-3xl font-bold text-purple-400 mb-1">
-              R$ 5,90<span className="text-sm font-normal">/mês</span>
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-6">
+        <div className="max-w-7xl mx-auto">
+          {/* Header mantido */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h1 className="text-3xl font-bold text-white flex items-center gap-3 mb-2">
+                  📊 Análise de Mãos
+                </h1>
+                <p className="text-gray-400 text-sm">
+                  Analise ranges por posição ou cole uma mão para análise completa
+                </p>
+              </div>
             </div>
-            <div className="text-xs text-gray-500">Análises ilimitadas • Cancele quando quiser</div>
           </div>
-          <button
-            onClick={() => navigate('/premium')}
-            className="w-full py-4 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl text-white font-bold text-lg hover:opacity-90 transition-all"
-          >
-            ⚡ Desbloquear Acesso Premium
-          </button>
+
+          {/* Paywall Premium Card */}
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(236, 72, 153, 0.1) 100%)',
+            border: '2px solid rgba(139, 92, 246, 0.4)',
+            borderRadius: 20,
+            padding: 40,
+            textAlign: 'center',
+            maxWidth: 600,
+            margin: '0 auto',
+            boxShadow: '0 20px 60px rgba(139, 92, 246, 0.2)',
+          }}>
+            {/* Ícone Premium */}
+            <div style={{
+              width: 80,
+              height: 80,
+              background: 'linear-gradient(135deg, #8b5cf6, #ec4899)',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 24px',
+              fontSize: 36,
+              boxShadow: '0 8px 32px rgba(139, 92, 246, 0.4)',
+            }}>
+              🔒
+            </div>
+
+            <h2 style={{ fontSize: 28, fontWeight: 800, color: 'white', marginBottom: 12 }}>
+              Desbloqueie Análises Ilimitadas
+            </h2>
+            
+            <p style={{ fontSize: 16, color: '#94a3b8', marginBottom: 32, lineHeight: 1.6 }}>
+              Você aproveitou suas <strong style={{ color: '#a78bfa' }}>5 análises gratuitas</strong>.<br />
+              Continue evoluindo seu jogo com o Plano Premium.
+            </p>
+
+            {/* Benefícios */}
+            <div style={{
+              background: 'rgba(0, 0, 0, 0.3)',
+              borderRadius: 16,
+              padding: 24,
+              marginBottom: 32,
+              textAlign: 'left',
+            }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <span style={{ fontSize: 20 }}>✅</span>
+                  <span style={{ color: 'white', fontSize: 15 }}>Análises de mãos <strong>ilimitadas</strong></span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <span style={{ fontSize: 20 }}>✅</span>
+                  <span style={{ color: 'white', fontSize: 15 }}>Trainer GTO completo</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <span style={{ fontSize: 20 }}>✅</span>
+                  <span style={{ color: 'white', fontSize: 15 }}>Análise de jogadores (SharkScope)</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <span style={{ fontSize: 20 }}>✅</span>
+                  <span style={{ color: 'white', fontSize: 15 }}>Suporte prioritário</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Preço */}
+            <div style={{
+              background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(236, 72, 153, 0.15))',
+              border: '1px solid rgba(139, 92, 246, 0.3)',
+              borderRadius: 12,
+              padding: '16px 24px',
+              marginBottom: 24,
+              display: 'inline-block',
+            }}>
+              <span style={{ fontSize: 32, fontWeight: 800, color: '#a78bfa' }}>R$ 5,90</span>
+              <span style={{ fontSize: 14, color: '#94a3b8' }}>/mês</span>
+            </div>
+
+            {/* CTAs */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <button
+                onClick={() => navigate('/premium')}
+                style={{
+                  width: '100%',
+                  padding: '18px 32px',
+                  background: 'linear-gradient(135deg, #8b5cf6, #ec4899)',
+                  border: 'none',
+                  borderRadius: 14,
+                  color: 'white',
+                  fontSize: 17,
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  boxShadow: '0 8px 32px rgba(139, 92, 246, 0.4)',
+                  transition: 'all 0.3s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 12px 40px rgba(139, 92, 246, 0.5)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 8px 32px rgba(139, 92, 246, 0.4)';
+                }}
+              >
+                ⭐ Assinar Premium
+              </button>
+              
+              <button
+                onClick={() => navigate('/premium')}
+                style={{
+                  width: '100%',
+                  padding: '14px 32px',
+                  background: 'transparent',
+                  border: '1px solid rgba(139, 92, 246, 0.4)',
+                  borderRadius: 12,
+                  color: '#a78bfa',
+                  fontSize: 15,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(139, 92, 246, 0.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'transparent';
+                }}
+              >
+                Ver Todos os Planos
+              </button>
+            </div>
+
+            <p style={{ fontSize: 12, color: '#64748b', marginTop: 16 }}>
+              Cancele quando quiser • Sem fidelidade
+            </p>
+          </div>
         </div>
       </div>
     );
@@ -419,11 +548,11 @@ export default function Solutions() {
               {/* Botão Principal - Estilo GTO Wizard */}
               <button
                 onClick={handleAIAnalysis}
-                disabled={loadingAI || !handHistory.trim()}
+                disabled={loadingAI || !handHistory.trim() || !canUse}
                 className="group relative flex-1 overflow-hidden"
                 style={{
                   padding: '16px 28px',
-                  background: loadingAI || !handHistory.trim()
+                  background: loadingAI || !handHistory.trim() || !canUse
                     ? 'linear-gradient(135deg, #4b5563, #374151)'
                     : 'linear-gradient(135deg, #8b5cf6, #ec4899)',
                   color: 'white',
@@ -432,22 +561,22 @@ export default function Solutions() {
                   letterSpacing: '0.3px',
                   borderRadius: '14px',
                   border: 'none',
-                  cursor: loadingAI || !handHistory.trim() ? 'not-allowed' : 'pointer',
-                  boxShadow: loadingAI || !handHistory.trim()
+                  cursor: loadingAI || !handHistory.trim() || !canUse ? 'not-allowed' : 'pointer',
+                  boxShadow: loadingAI || !handHistory.trim() || !canUse
                     ? 'none'
                     : '0 4px 20px rgba(139, 92, 246, 0.35)',
                   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                   transform: 'scale(1)',
                 }}
                 onMouseEnter={(e) => {
-                  if (!loadingAI && handHistory.trim()) {
+                  if (!loadingAI && handHistory.trim() && canUse) {
                     e.currentTarget.style.transform = 'translateY(-2px) scale(1.01)';
                     e.currentTarget.style.boxShadow = '0 8px 30px rgba(139, 92, 246, 0.5)';
                   }
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = 'scale(1)';
-                  e.currentTarget.style.boxShadow = loadingAI || !handHistory.trim()
+                  e.currentTarget.style.boxShadow = loadingAI || !handHistory.trim() || !canUse
                     ? 'none'
                     : '0 4px 20px rgba(139, 92, 246, 0.35)';
                 }}
@@ -460,6 +589,11 @@ export default function Solutions() {
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
                       Analisando...
+                    </>
+                  ) : !canUse ? (
+                    <>
+                      <span className="text-lg">🔒</span>
+                      Limite Atingido
                     </>
                   ) : (
                     <>
@@ -485,13 +619,103 @@ export default function Solutions() {
             </div>
 
             {/* Resultado da Análise */}
-            {aiAnalysis && (
+            {aiAnalysis && aiAnalysis !== 'PAYWALL_LIMIT_REACHED' && (
               <div className="mt-6 bg-gradient-to-br from-gray-800/80 to-gray-900/80 border border-gray-700/50 rounded-xl p-5 backdrop-blur-sm">
                 <div className="flex items-center gap-2 mb-3">
                   <span className="text-lg">💡</span>
                   <span className="text-sm font-semibold text-gray-300">Resultado</span>
                 </div>
                 <div className="text-sm text-gray-200 leading-relaxed whitespace-pre-wrap">{aiAnalysis}</div>
+              </div>
+            )}
+
+            {/* Paywall Card - Quando limite atingido */}
+            {aiAnalysis === 'PAYWALL_LIMIT_REACHED' && (
+              <div style={{
+                marginTop: 24,
+                background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.12) 0%, rgba(236, 72, 153, 0.08) 100%)',
+                border: '2px solid rgba(139, 92, 246, 0.35)',
+                borderRadius: 16,
+                padding: 28,
+                textAlign: 'center',
+              }}>
+                <div style={{
+                  width: 56,
+                  height: 56,
+                  background: 'linear-gradient(135deg, #8b5cf6, #ec4899)',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 16px',
+                  fontSize: 24,
+                }}>
+                  🔒
+                </div>
+                
+                <h3 style={{ fontSize: 20, fontWeight: 700, color: 'white', marginBottom: 8 }}>
+                  Plano Premium
+                </h3>
+                
+                <p style={{ fontSize: 14, color: '#94a3b8', marginBottom: 20, lineHeight: 1.5 }}>
+                  Desbloqueie análises ilimitadas com o Premium
+                </p>
+
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 10,
+                  marginBottom: 20,
+                  textAlign: 'left',
+                  padding: '0 20px',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span style={{ color: '#10b981' }}>✔</span>
+                    <span style={{ color: '#e2e8f0', fontSize: 14 }}>Análises ilimitadas</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span style={{ color: '#10b981' }}>✔</span>
+                    <span style={{ color: '#e2e8f0', fontSize: 14 }}>Trainer GTO</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span style={{ color: '#10b981' }}>✔</span>
+                    <span style={{ color: '#e2e8f0', fontSize: 14 }}>Análise de Jogadores</span>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+                  <button
+                    onClick={() => navigate('/premium')}
+                    style={{
+                      padding: '12px 24px',
+                      background: 'linear-gradient(135deg, #8b5cf6, #ec4899)',
+                      border: 'none',
+                      borderRadius: 10,
+                      color: 'white',
+                      fontSize: 14,
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      boxShadow: '0 4px 20px rgba(139, 92, 246, 0.35)',
+                    }}
+                  >
+                    ⭐ Assinar Premium
+                  </button>
+                  <button
+                    onClick={() => navigate('/premium')}
+                    style={{
+                      padding: '12px 24px',
+                      background: 'transparent',
+                      border: '1px solid rgba(139, 92, 246, 0.4)',
+                      borderRadius: 10,
+                      color: '#a78bfa',
+                      fontSize: 14,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Ver Planos
+                  </button>
+                </div>
               </div>
             )}
           </div>
