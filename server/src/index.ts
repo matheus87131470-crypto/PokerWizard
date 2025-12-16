@@ -12,7 +12,6 @@ import aiRouter from './routes/ai';
 import authRouter from './routes/auth';
 import paymentsRouter from './routes/payments';
 import dashboardRouter from './routes/dashboard';
-import { startAutoConfirmation } from './services/pixService';
 import sharkscopeRouter from './routes/sharkscope';
 import pokerRouter from './routes/poker';
 import gtoRouter from './routes/gto';
@@ -77,26 +76,7 @@ async function startServer() {
     app.listen(port, () => {
       console.log(`\n🚀 PokerWizard API running on http://localhost:${port}`);
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-
-      try {
-        const intervalMs = process.env.PIX_AUTO_CONFIRM_INTERVAL_MS ? Number(process.env.PIX_AUTO_CONFIRM_INTERVAL_MS) : undefined;
-        const thresholdMs = process.env.PIX_AUTO_CONFIRM_THRESHOLD_MS ? Number(process.env.PIX_AUTO_CONFIRM_THRESHOLD_MS) : undefined;
-
-        if (intervalMs && thresholdMs) {
-          console.log(`[index] Starting PIX auto-confirmation (interval=${intervalMs}ms, threshold=${thresholdMs}ms)`);
-          startAutoConfirmation(intervalMs, thresholdMs);
-        } else if (intervalMs) {
-          console.log(`[index] Starting PIX auto-confirmation (interval=${intervalMs}ms, threshold=default)`);
-          startAutoConfirmation(intervalMs);
-        } else if (thresholdMs) {
-          console.log(`[index] Starting PIX auto-confirmation (interval=default, threshold=${thresholdMs}ms)`);
-          startAutoConfirmation(undefined, thresholdMs);
-        } else {
-          startAutoConfirmation();
-        }
-      } catch (err) {
-        console.error('Failed to start PIX auto-confirmation', err);
-      }
+      console.log('[index] Mercado Pago webhook configurado em /api/payments/webhook/mercadopago');
 
       // Leaderboard auto-refresh every 30 minutes
       setInterval(async () => {
