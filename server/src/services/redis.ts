@@ -1,47 +1,17 @@
-import { createClient } from 'redis';
+// Redis mock - desabilitado para simplificar deploy
+// Se precisar de Redis no futuro, instale: npm install redis
 
-let client: ReturnType<typeof createClient> | null = null;
-let initTried = false;
-
-export function getRedis() {
-  if (client) return client;
-  if (initTried) return null;
-  initTried = true;
-  const url = process.env.REDIS_URL;
-  if (!url) return null;
-  try {
-    client = createClient({ url });
-    client.on('error', (err) => {
-      console.error('[redis] Client error:', err);
-    });
-    client.connect().catch((err) => {
-      console.error('[redis] Failed to connect:', err);
-      client = null;
-    });
-    return client;
-  } catch (err) {
-    console.error('[redis] init error:', err);
-    client = null;
-    return null;
-  }
+export function getRedis(): null {
+  // Redis desabilitado - retorna null
+  // Para habilitar: npm install redis e descomentar codigo original
+  return null;
 }
 
-// Fixed-window rate limit using Redis INCR + EXPIRE
-export async function allowRateLimit(redis: ReturnType<typeof createClient> | null, key: string, limit: number, windowMs: number) {
+// Fixed-window rate limit - Redis desabilitado, usa apenas fallback em memória
+export async function allowRateLimit(redis: any, key: string, limit: number, windowMs: number) {
   const now = Date.now();
   const windowKey = `${key}:${Math.floor(now / windowMs)}`;
-  if (redis) {
-    try {
-      const count = await redis.incr(windowKey);
-      if (count === 1) {
-        await redis.pExpire(windowKey, windowMs);
-      }
-      return count <= limit;
-    } catch (err) {
-      console.error('[redis] allowRateLimit error, falling back:', err);
-    }
-  }
-  // Fallback in-memory
+  // Redis desabilitado - sempre usa fallback em memória
   const mem = inMemoryAllow(windowKey, limit, windowMs);
   return mem;
 }

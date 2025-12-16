@@ -11,7 +11,7 @@ router.post('/importar-maos', authMiddleware, async (req: AuthRequest, res) => {
     if (!req.userId) return res.status(401).json({ ok: false, message: 'unauthorized' });
 
     // Deduct a usage for importing (business rule)
-    const allowed = await deductCredit(req.userId as string, 'poker.import');
+    const allowed = await deductCredit(req.userId as string, 'analise');
     if (!allowed) {
       const u = await getUserById(req.userId);
       return res.status(403).json({ ok: false, error: 'no_credits', message: 'Você atingiu o limite de usos gratuitos. Faça upgrade para premium.', remaining: u?.usosRestantes ?? u?.credits ?? 0 });
@@ -37,7 +37,7 @@ router.post('/analise', authMiddleware, async (req: AuthRequest, res) => {
     const { hand } = req.body || {};
     if (!hand || typeof hand !== 'string') return res.status(400).json({ ok: false, message: 'hand required' });
 
-    const allowed = await deductCredit(req.userId as string, 'poker.analyze');
+    const allowed = await deductCredit(req.userId as string, 'analise');
     if (!allowed) {
       const u = await getUserById(req.userId);
       return res.status(403).json({ ok: false, error: 'no_credits', message: 'Você atingiu o limite de usos gratuitos. Faça upgrade para premium.', remaining: u?.usosRestantes ?? u?.credits ?? 0 });

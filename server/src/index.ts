@@ -109,7 +109,7 @@ async function startServer() {
       setInterval(async () => {
         try {
           const resp = await fetch(`${baseUrl}/api/health/strict`);
-          const json = await resp.json().catch(() => ({}));
+          const json: any = await resp.json().catch(() => ({}));
           const ok = !!json.ok;
           const dbOk = json?.results?.db?.ok;
           const lbOk = json?.results?.leaderboard?.ok;
