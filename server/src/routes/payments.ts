@@ -41,49 +41,17 @@ router.post('/create-pix', authMiddleware, async (req: AuthRequest, res: Respons
 
 /**
  * POST /payments/confirm
- * Confirm payment (manual verification)
+ * DESABILITADO - Confirmação manual removida por segurança
+ * Premium só pode ser ativado via admin ou webhook
  */
 router.post('/confirm', authMiddleware, async (req: AuthRequest, res: Response) => {
-  try {
-    if (!req.userId) {
-      return res.status(401).json({ error: 'unauthorized' });
-    }
-
-    const { paymentId } = req.body;
-
-    if (!paymentId) {
-      return res.status(400).json({ error: 'invalid_request', message: 'Payment ID required' });
-    }
-
-    const payment = await confirmPixPayment(paymentId);
-    if (!payment) {
-      return res.status(404).json({ error: 'payment_not_found' });
-    }
-
-    if (payment.userId !== req.userId) {
-      return res.status(403).json({ error: 'forbidden' });
-    }
-
-    // Activate premium for 30 days
-    await setPremium(req.userId, 30);
-
-    const user = await getUserById(req.userId);
-
-    return res.json({
-      ok: true,
-      message: 'Premium ativado por 30 dias!',
-      user: {
-        id: user?.id,
-        email: user?.email,
-        name: user?.name,
-        premium: user?.premium,
-        premiumUntil: user?.premiumUntil,
-        credits: user?.credits,
-      },
-    });
-  } catch (err: any) {
-    return res.status(500).json({ error: 'confirm_failed', message: err.message });
-  }
+  // SEGURANÇA: Usuários NÃO podem confirmar pagamentos manualmente
+  // Apenas admin ou webhook podem confirmar
+  return res.status(403).json({ 
+    ok: false,
+    error: 'forbidden', 
+    message: 'Confirmação manual desabilitada. Aguarde a confirmação automática do pagamento.' 
+  });
 });
 
 /**
@@ -107,16 +75,8 @@ router.get('/status/:paymentId', authMiddleware, async (req: AuthRequest, res: R
       return res.status(403).json({ error: 'forbidden' });
     }
 
-    // If payment is confirmed, activate premium and return confirmed status
-    if (payment.status === 'completed' && !payment.confirmedAt) {
-      // Auto-confirm if status is already completed but not confirmed in DB
-      await confirmPixPayment(paymentId);
-      try {
-        await setPremium(req.userId, 30);
-      } catch (err) {
-        console.error('Failed to set premium after status check', err);
-      }
-    }
+    // SEGURANÇA: NÃO auto-confirmar pagamentos
+    // Premium só é ativado via admin ou webhook com verificação real
 
     return res.json({
       ok: true,
@@ -188,63 +148,42 @@ router.post('/admin/confirm', async (req: any, res: Response) => {
 });
 
 /**
- * Webhook simulation endpoint (public)
  * POST /payments/webhook
- * Body: { paymentId: string, status?: 'completed' | 'pending' | 'expired' }
- * This endpoint is for testing and will mark the payment accordingly.
+ * Webhook endpoint PROTEGIDO para confirmar pagamentos
+ * REQUER: x-webhook-secret header OU ADMIN_SECRET
+ * Body: { paymentId: string }
  */
 router.post('/webhook', async (req: any, res: Response) => {
   try {
-    const { paymentId, status } = req.body;
+    // SEGURANÇA: Verificar webhook secret ou admin secret
+    const webhookSecret = process.env.WEBHOOK_SECRET || process.env.ADMIN_SECRET;
+    const providedSecret = (req.headers['x-webhook-secret'] || req.headers['x-admin-secret'] || '') as string;
+    
+    if (!webhookSecret || providedSecret !== webhookSecret) {
+      console.warn('[SECURITY] Unauthorized webhook attempt from', req.ip);
+      return res.status(403).json({ 
+        ok: false,
+        error: 'forbidden', 
+        message: 'Webhook secret inválido ou não fornecido' 
+      });
+    }
+
+    const { paymentId } = req.body;
     if (!paymentId) return res.status(400).json({ error: 'invalid_request', message: 'paymentId required' });
 
     const payment = await getPaymentStatus(paymentId);
     if (!payment) return res.status(404).json({ error: 'payment_not_found' });
 
-    // If status is completed (or omitted), confirm the payment
-    if (!status || status === 'completed') {
-      const confirmed = await confirmPixPayment(paymentId);
-      if (!confirmed) return res.status(500).json({ error: 'confirm_failed' });
+    // Confirmar pagamento
+    const confirmed = await confirmPixPayment(paymentId);
+    if (!confirmed) return res.status(500).json({ error: 'confirm_failed' });
 
-      // Activate premium for the user (best-effort)
-      try {
-        await setPremium(confirmed.userId, 30);
-      } catch (err) {
-        console.error('Webhook: failed to set premium', err);
-      }
-
-      return res.json({ ok: true, payment: confirmed });
-    }
-
-    // Otherwise just set the status (for testing)
-    (payment as any).status = status;
-    return res.json({ ok: true, payment });
-  } catch (err: any) {
-    return res.status(500).json({ error: 'webhook_failed', message: err.message });
-  }
-});
-
-/**
- * POST /payments/webhook
- * Simulated webhook for testing: body { paymentId }
- * This endpoint does NOT require admin secret and is intended for local testing only.
- */
-router.post('/webhook', async (req: any, res: Response) => {
-  try {
-    const { paymentId } = req.body;
-    if (!paymentId) return res.status(400).json({ error: 'invalid_request', message: 'paymentId required' });
-
-    const payment = await confirmPixPayment(paymentId);
-    if (!payment) return res.status(404).json({ error: 'payment_not_found' });
-
+    // Ativar premium
     try {
-      await setPremium(payment.userId, 30);
+      await setPremium(confirmed.userId, 30);
+      console.log(`[WEBHOOK] Premium ativado para usuário ${confirmed.userId}`);
     } catch (err) {
-      console.error('Webhook: failed to set premium for user', payment.userId, err);
+      console.error('Webhook: failed to set premium', err);
     }
 
-    return res.json({ ok: true, message: 'webhook processed', payment });
-  } catch (err: any) {
-    return res.status(500).json({ error: 'webhook_failed', message: err.message });
-  }
-});
+    return res.json({ ok: true, payment: confirmed });

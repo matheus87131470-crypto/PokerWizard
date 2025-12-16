@@ -107,39 +107,8 @@ export default function Premium() {
     }
   }
 
-  async function confirmManually() {
-    if (!payment) return;
-    setLoading(true);
-    try {
-      const res = await fetch(`${API_BASE}/api/payments/confirm`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${auth.token}` },
-        body: JSON.stringify({ paymentId: payment.id }),
-      });
-      
-      let j: any = null;
-      const ct = res.headers.get('content-type') || '';
-      if (ct.includes('application/json')) {
-        j = await res.json();
-      } else {
-        const text = await res.text();
-        throw new Error(text || 'Erro ao confirmar');
-      }
-      
-      if (!j.ok) throw new Error(j.error || 'Falha ao confirmar pagamento');
-      
-      // Update local stored user info
-      try { if (j.user) { localStorage.setItem('pokerwizard_user', JSON.stringify(j.user)); } } catch (e) {}
-      
-      alert('✅ Pagamento confirmado! Premium ativado!');
-      setPayment(null);
-      navigate('/');
-    } catch (err: any) {
-      setError(err?.message || 'Erro ao confirmar pagamento');
-    } finally {
-      setLoading(false);
-    }
-  }
+  // REMOVIDO: confirmManually() - Usuários NÃO podem confirmar pagamentos manualmente
+  // Premium só é ativado via webhook ou admin após verificação real do pagamento
 
   function copyToClipboard() {
     navigator.clipboard.writeText(STATIC_PIX_BR_CODE);
@@ -364,41 +333,44 @@ export default function Premium() {
               <p style={{ margin: '8px 0 0 0' }}>🔄 Permaneça nesta página — você será <strong>redirecionado automaticamente</strong> após o pagamento.</p>
             </div>
 
-            {/* Botões de Ação */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-              <button
-                onClick={confirmManually}
-                disabled={loading}
-                className="btn btn-success"
-                style={{ 
-                  padding: 12, 
-                  fontSize: 14, 
-                  fontWeight: 600,
-                  transition: 'all 0.2s'
-                }}
-                onMouseEnter={(e) => !loading && (e.currentTarget.style.transform = 'translateY(-2px)')}
-                onMouseLeave={(e) => (e.currentTarget.style.transform = 'translateY(0)')}
-              >
-                {loading ? (
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center' }}>
-                    <span className="spinner" style={{ width: 14, height: 14, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: 'white' }}></span>
-                    Verificando...
-                  </span>
-                ) : (
-                  '✅ Já Paguei'
-                )}
-              </button>
-              <button
-                onClick={() => { setPayment(null); setError(null); }}
-                className="btn btn-ghost"
-                style={{ padding: 12, fontSize: 14 }}
-              >
-                Cancelar
-              </button>
+            {/* Status de Aguardando */}
+            <div style={{ 
+              padding: 16, 
+              background: 'rgba(124, 58, 237, 0.1)', 
+              borderRadius: 12, 
+              marginBottom: 16,
+              border: '2px solid var(--accent-primary)',
+              textAlign: 'center'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
+                <div className="spinner" style={{ 
+                  width: 20, 
+                  height: 20, 
+                  border: '3px solid rgba(124, 58, 237, 0.3)', 
+                  borderTopColor: 'var(--accent-primary)',
+                  borderRadius: '50%',
+                  animation: 'spin 1s linear infinite'
+                }}></div>
+                <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                  Aguardando confirmação do pagamento...
+                </span>
+              </div>
+              <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 8, marginBottom: 0 }}>
+                Verificando a cada segundo • {pollCount > 0 && `Verificações: ${pollCount}`}
+              </p>
             </div>
 
-            <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 16 }}>
-              Status: Aguardando pagamento • {pollCount > 0 && `Verificações: ${pollCount}`}
+            {/* Botão Cancelar */}
+            <button
+              onClick={() => { setPayment(null); setError(null); }}
+              className="btn btn-ghost"
+              style={{ width: '100%', padding: 12, fontSize: 14 }}
+            >
+              Cancelar
+            </button>
+
+            <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 16, textAlign: 'center' }}>
+              ⚠️ O Premium será ativado automaticamente após a confirmação do pagamento
             </p>
           </div>
         )}
