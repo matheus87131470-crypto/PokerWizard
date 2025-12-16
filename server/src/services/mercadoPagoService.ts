@@ -9,10 +9,11 @@ import { MercadoPagoConfig, Payment } from 'mercadopago';
 import storage from './storage';
 import crypto from 'crypto';
 
-// ===== CONFIGURAÇÃO =====
+// ===== CONFIGURAÇÃO (tudo via process.env) =====
 const MP_ACCESS_TOKEN = process.env.MP_ACCESS_TOKEN || '';
 const MP_WEBHOOK_SECRET = process.env.MP_WEBHOOK_SECRET || '';
-const PAYMENT_AMOUNT = 3.50; // R$ 3,50
+const PAYMENT_AMOUNT = parseFloat(process.env.PREMIUM_PRICE || '3.5'); // R$ do env
+const PREMIUM_DURATION_DAYS = parseInt(process.env.PREMIUM_DAYS || '30', 10);
 
 // Inicializa cliente do Mercado Pago
 let mpClient: MercadoPagoConfig | null = null;
@@ -266,6 +267,6 @@ export function getAllPayments(): MPPayment[] {
   return Array.from(payments.values());
 }
 
-// ===== CONSTANTES EXPORTADAS =====
+// ===== CONSTANTES EXPORTADAS (lidas do process.env) =====
 export const PREMIUM_PRICE = PAYMENT_AMOUNT;
-export const PREMIUM_DAYS = 30;
+export const PREMIUM_DAYS = PREMIUM_DURATION_DAYS;
