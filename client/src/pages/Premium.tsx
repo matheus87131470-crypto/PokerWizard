@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
+// Código PIX estático - Nubank Matheus
+const STATIC_PIX_BR_CODE = '00020126360014BR.GOV.BCB.PIX0114+553198538845952040000530398654043.505802BR5922Matheus Alves Cordeiro6009SAO PAULO621405100krGV1ZgSD6304E001';
+
 export default function Premium() {
   const auth = useAuth();
   const navigate = useNavigate();
@@ -139,8 +142,7 @@ export default function Premium() {
   }
 
   function copyToClipboard() {
-    if (!payment?.brCode) return;
-    navigator.clipboard.writeText(payment.brCode);
+    navigator.clipboard.writeText(STATIC_PIX_BR_CODE);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
@@ -305,7 +307,7 @@ export default function Premium() {
               <div style={{ padding: 16, background: 'white', borderRadius: 12 }}>
                 <img
                   alt="QR Code PIX"
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(payment.brCode || '')}`}
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(STATIC_PIX_BR_CODE)}`}
                   style={{ width: 250, height: 250, borderRadius: 8 }}
                   onError={(e) => {
                     console.error('QR Code failed to load');
@@ -334,7 +336,7 @@ export default function Premium() {
                   userSelect: 'all',
                 }}
               >
-                {payment.brCode}
+                {STATIC_PIX_BR_CODE}
               </div>
               <button
                 onClick={copyToClipboard}
