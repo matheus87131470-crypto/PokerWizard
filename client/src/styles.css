@@ -548,3 +548,28 @@ h3 {
     padding: 16px;
   }
 }
+
+/* ===== TRAINER MOBILE - SCROLL HORIZONTAL DA MESA ===== */
+@media (max-width: 640px) {
+  .poker-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(124, 58, 237, 0.5) transparent;
+    margin: 0 -16px; /* Estende até a borda do card */
+    padding: 0 16px;
+  }
+  
+  .poker-table-wrapper::-webkit-scrollbar {
+    height: 6px;
+  }
+  
+  .poker-table-wrapper::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .poker-table-wrapper::-webkit-scrollbar-thumb {
+    background: rgba(124, 58, 237, 0.5);
+    border-radius: 3px;
+  }
+}

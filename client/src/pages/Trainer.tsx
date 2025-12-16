@@ -249,17 +249,28 @@ function PokerTableVisual({
   };
   
   return (
-    <div style={{
-      position: 'relative',
-      width: '100%',
-      maxWidth: 600,
-      height: 300,
-      margin: '0 auto',
-      background: 'radial-gradient(ellipse at center, #1a472a 0%, #0d2818 70%, #061510 100%)',
-      borderRadius: '50%/40%',
-      border: '8px solid #2d1810',
-      boxShadow: 'inset 0 0 60px rgba(0,0,0,0.5), 0 10px 40px rgba(0,0,0,0.5)',
-    }}>
+    // Wrapper para scroll horizontal no mobile
+    <div 
+      className="poker-table-wrapper"
+      style={{
+        width: '100%',
+        overflowX: 'auto',
+        WebkitOverflowScrolling: 'touch',
+        paddingBottom: 8,
+      }}
+    >
+      <div style={{
+        position: 'relative',
+        width: '100%',
+        minWidth: 500, // Tamanho mínimo para garantir scroll no mobile
+        maxWidth: 600,
+        height: 300,
+        margin: '0 auto',
+        background: 'radial-gradient(ellipse at center, #1a472a 0%, #0d2818 70%, #061510 100%)',
+        borderRadius: '50%/40%',
+        border: '8px solid #2d1810',
+        boxShadow: 'inset 0 0 60px rgba(0,0,0,0.5), 0 10px 40px rgba(0,0,0,0.5)',
+      }}>
       {/* Linha da mesa */}
       <div style={{
         position: 'absolute',
@@ -356,6 +367,7 @@ function PokerTableVisual({
         }}>
           D
         </div>
+      </div>
       </div>
     </div>
   );
