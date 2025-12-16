@@ -39,84 +39,18 @@ async function loadPayments() {
 
 loadPayments().catch((e) => console.error('[pixService] failed to load payments', e));
 
-const PIX_KEY = 'ae927522-3cf8-44b1-9e65-1797ca2ce670';
+// PIX BR Code estático - R$ 3,50
+const PIX_BR_CODE = '00020126360014BR.GOV.BCB.PIX0114+553198538845952040000530398654043.505802BR5922Matheus Alves Cordeiro6009SAO PAULO621405100krGV1ZgSD6304E001';
+const PIX_KEY = '+5531985388459';
 const PIX_NAME = 'Matheus Alves Cordeiro';
-const PIX_CITY = 'BRAZIL';
 const PIX_AMOUNT = 350; // R$ 3,50 in cents
 
 /**
- * Generate BR Code (PIX payload) for the given amount
- * This generates a valid EMV QR Code for PIX payments
+ * Returns the static PIX BR Code
  */
 export function generateBrCode(amountInCents: number = PIX_AMOUNT): string {
-  // EMV format for PIX BR Code
-  const amount = (amountInCents / 100).toFixed(2);
-  
-  // Build EMV payload
-  const pixKey = PIX_KEY;
-  const merchantName = PIX_NAME.toUpperCase().substring(0, 25);
-  const city = PIX_CITY.toUpperCase().substring(0, 15);
-  const txid = `POKERWIZARD${Date.now()}`.substring(0, 25);
-  
-  // Payload Format Indicator
-  const pfi = '000201';
-  
-  // Merchant Account Information
-  const gui = '0014br.gov.bcb.pix';
-  const key = `01${String(pixKey.length).padStart(2, '0')}${pixKey}`;
-  const merchantAccount = `26${String(gui.length + key.length).padStart(2, '0')}${gui}${key}`;
-  
-  // Merchant Category Code
-  const mcc = '52040000';
-  
-  // Transaction Currency (BRL = 986)
-  const currency = '5303986';
-  
-  // Transaction Amount
-  const amountField = `54${String(amount.length).padStart(2, '0')}${amount}`;
-  
-  // Country Code
-  const countryCode = '5802BR';
-  
-  // Merchant Name
-  const nameField = `59${String(merchantName.length).padStart(2, '0')}${merchantName}`;
-  
-  // Merchant City
-  const cityField = `60${String(city.length).padStart(2, '0')}${city}`;
-  
-  // Additional Data Field (txid)
-  const txidField = `05${String(txid.length).padStart(2, '0')}${txid}`;
-  const additionalData = `62${String(txidField.length).padStart(2, '0')}${txidField}`;
-  
-  // Build full payload without CRC
-  const payloadWithoutCrc = pfi + merchantAccount + mcc + currency + amountField + countryCode + nameField + cityField + additionalData + '6304';
-  
-  // Calculate CRC16-CCITT
-  const crc = calculateCRC16(payloadWithoutCrc);
-  
-  return payloadWithoutCrc + crc;
-}
-
-/**
- * Calculate CRC16-CCITT for BR Code
- */
-function calculateCRC16(payload: string): string {
-  let crc = 0xFFFF;
-  
-  for (let i = 0; i < payload.length; i++) {
-    crc ^= payload.charCodeAt(i) << 8;
-    
-    for (let j = 0; j < 8; j++) {
-      if ((crc & 0x8000) !== 0) {
-        crc = (crc << 1) ^ 0x1021;
-      } else {
-        crc = crc << 1;
-      }
-    }
-  }
-  
-  crc = crc & 0xFFFF;
-  return crc.toString(16).toUpperCase().padStart(4, '0');
+  // Retorna o código BR Code estático
+  return PIX_BR_CODE;
 }
 
 /**

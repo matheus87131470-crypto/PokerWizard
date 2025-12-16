@@ -29,7 +29,7 @@ router.post('/create-pix', authMiddleware, async (req: AuthRequest, res: Respons
         id: payment.id,
         amount: payment.amount,
         brCode: payment.brCode,
-        pixKey: 'ae927522-3cf8-44b1-9e65-1797ca2ce670',
+        pixKey: '+5531985388459',
         pixName: 'Matheus Alves Cordeiro',
         expiresIn: payment.expiresIn,
       },
