@@ -399,7 +399,7 @@ export default function Solutions() {
               marginBottom: 24,
               display: 'inline-block',
             }}>
-              <span style={{ fontSize: 32, fontWeight: 800, color: '#a78bfa' }}>R$ 5,90</span>
+              <span style={{ fontSize: 32, fontWeight: 800, color: '#a78bfa' }}>R$ 3,50</span>
               <span style={{ fontSize: 14, color: '#94a3b8' }}>/mês</span>
             </div>
 

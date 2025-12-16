@@ -30,7 +30,7 @@ export default function Features() {
       icon: '👑',
       title: 'Premium',
       desc: 'Acesso ilimitado a todas as ferramentas',
-      badge: 'R$5,90/mês',
+      badge: 'R$3,50/mês',
       action: () => navigate('/premium')
     }
   ];

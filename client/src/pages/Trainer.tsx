@@ -754,7 +754,7 @@ export default function Trainer() {
             marginBottom: 24,
           }}>
             <div style={{ fontSize: 28, fontWeight: 800, color: '#a78bfa', marginBottom: 4 }}>
-              R$ 5,90<span style={{ fontSize: 14, fontWeight: 400 }}>/mês</span>
+              R$ 3,50<span style={{ fontSize: 14, fontWeight: 400 }}>/mês</span>
             </div>
             <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
               Treinos ilimitados • Cancele quando quiser

@@ -215,7 +215,7 @@ export default function Profile() {
                 e.currentTarget.style.boxShadow = '0 8px 24px rgba(251, 191, 36, 0.4)';
               }}
             >
-              ⭐ Assinar Premium - R$ 5,90
+              ⭐ Assinar Premium - R$ 3,50
             </button>
           )}
           

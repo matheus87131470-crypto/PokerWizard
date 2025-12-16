@@ -799,7 +799,7 @@ function Home() {
                 Treinos ilimitados, análise avançada da IA e relatórios completos de evolução.
               </p>
               <p style={{ fontSize: 13, color: '#fbbf24', fontWeight: 600 }}>
-                R$ 5,90/mês • Cancele quando quiser
+                R$ 3,50/mês • Cancele quando quiser
               </p>
             </div>
             <button 

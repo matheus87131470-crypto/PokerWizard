@@ -175,7 +175,7 @@ export default function Premium() {
             <h1 style={{ fontSize: 32, marginBottom: 8 }}>🚀 Ative Premium</h1>
             <p style={{ color: 'var(--text-muted)', fontSize: 12, marginBottom: 12 }}>PokerWizard by Pokio</p>
             <p style={{ color: 'var(--text-secondary)', marginBottom: 8 }}>Análises ilimitadas, histórico completo e prioridade na IA</p>
-            <p style={{ fontSize: 28, fontWeight: 800, color: 'var(--accent-primary)', marginBottom: 24 }}>R$ 5,90/mês</p>
+            <p style={{ fontSize: 28, fontWeight: 800, color: 'var(--accent-primary)', marginBottom: 24 }}>R$ 3,50/mês</p>
             
             <div style={{ padding: 16, background: 'rgba(124, 58, 237, 0.1)', borderRadius: 12, marginBottom: 24 }}>
               <ul style={{ textAlign: 'left', color: 'var(--text-secondary)', lineHeight: 2 }}>
@@ -288,7 +288,7 @@ export default function Premium() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
                 <div>
                   <div style={{ color: 'var(--text-muted)', fontSize: 12, marginBottom: 4 }}>Valor a Pagar</div>
-                  <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--accent-primary)' }}>R$ 5,90</div>
+                  <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--accent-primary)' }}>R$ 3,50</div>
                 </div>
                 <div>
                   <div style={{ color: 'var(--text-muted)', fontSize: 12, marginBottom: 4 }}>Prazo</div>
@@ -352,7 +352,7 @@ export default function Premium() {
                 <li>Abra o aplicativo do seu banco</li>
                 <li><strong>Opção 1:</strong> Aponte a câmera para o QR Code acima</li>
                 <li><strong>Opção 2:</strong> Clique no botão "Copiar Código PIX" e cole no app do banco</li>
-                <li>Confirme o pagamento de R$ 5,90</li>
+                <li>Confirme o pagamento de R$ 3,50</li>
               </ol>
             </div>
 
