@@ -216,7 +216,7 @@ export default function Solutions() {
 
     // Verificar se pode usar
     if (!canUse) {
-      setAiAnalysis('💎 Você atingiu o limite de 10 análises gratuitas.\n\nAssine o Premium para análises ilimitadas!');
+      setAiAnalysis('💎 Você atingiu o limite de 5 análises gratuitas.\n\nAssine o Premium para análises ilimitadas!');
       return;
     }
 
@@ -249,7 +249,7 @@ export default function Solutions() {
       
       // Verificar se acabaram os usos
       if (data.error === 'no_credits') {
-        setAiAnalysis('💎 Você atingiu o limite de 10 análises gratuitas.\n\nAssine o Premium para análises ilimitadas!');
+        setAiAnalysis('💎 Você atingiu o limite de 5 análises gratuitas.\n\nAssine o Premium para análises ilimitadas!');
         if (refreshUser) await refreshUser();
         return;
       }
@@ -352,13 +352,6 @@ export default function Solutions() {
               </p>
             </div>
             <div className="flex items-center gap-4">
-              {/* Indicador de usos */}
-              {user && !isPremium && usosAnalise > 0 && (
-                <div className="px-4 py-2 bg-purple-500/10 border border-purple-500/30 rounded-lg">
-                  <span className="text-xs text-gray-400">Análises: </span>
-                  <span className="text-purple-400 font-bold">{usosAnalise}/5</span>
-                </div>
-              )}
               {user && !isPremium && usosAnalise <= 0 && (
                 <button
                   onClick={() => navigate('/premium')}

@@ -790,18 +790,6 @@ export default function Trainer() {
       }}>
         <h1 style={{ margin: 0 }}>🎯 Trainer GTO</h1>
         
-        {!isPremium && usosTrainer > 0 && (
-          <div style={{
-            padding: '8px 16px',
-            background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(6, 182, 212, 0.1))',
-            border: '1px solid rgba(139, 92, 246, 0.4)',
-            borderRadius: 8,
-            fontSize: 13,
-          }}>
-            <span style={{ color: '#a78bfa', fontWeight: 700 }}>🎯 {usosTrainer}/5 treinos</span>
-          </div>
-        )}
-        
         {!isPremium && usosTrainer <= 0 && (
           <button
             onClick={() => navigate('/premium')}
