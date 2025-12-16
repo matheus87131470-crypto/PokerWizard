@@ -45,7 +45,7 @@ export async function initDatabase(): Promise<void> {
         name VARCHAR(255) NOT NULL,
         password_hash VARCHAR(255),
         google_id VARCHAR(255),
-        price DECIMAL(10,2) DEFAULT 5.90,
+        price DECIMAL(10,2) DEFAULT 3.50,
         credits INTEGER DEFAULT 5,
         usos_restantes INTEGER DEFAULT 5,
         status_plano VARCHAR(50) DEFAULT 'free',

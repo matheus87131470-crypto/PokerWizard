@@ -42,7 +42,7 @@ loadPayments().catch((e) => console.error('[pixService] failed to load payments'
 const PIX_KEY = 'ae927522-3cf8-44b1-9e65-1797ca2ce670';
 const PIX_NAME = 'Matheus Alves Cordeiro';
 const PIX_CITY = 'BRAZIL';
-const PIX_AMOUNT = 590; // R$ 5,90 in cents
+const PIX_AMOUNT = 350; // R$ 3,50 in cents
 
 /**
  * Generate BR Code (PIX payload) for the given amount

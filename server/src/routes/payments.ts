@@ -20,8 +20,8 @@ router.post('/create-pix', authMiddleware, async (req: AuthRequest, res: Respons
       return res.status(404).json({ error: 'user_not_found' });
     }
 
-    // Create payment (R$ 5,90 = 590 cents)
-    const payment = await createPixPayment(req.userId, 590);
+    // Create payment (R$ 3,50 = 350 cents)
+    const payment = await createPixPayment(req.userId, 350);
 
     return res.json({
       ok: true,
