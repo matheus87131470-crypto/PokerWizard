@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import PremiumPaywallModal from '../components/PremiumPaywallModal';
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://pokerwizard-api.onrender.com';
 
@@ -584,13 +585,14 @@ export default function Trainer() {
   const [stats, setStats] = useState<TrainingStats>({ total: 0, correct: 0, streak: 0, bestStreak: 0 });
   const [evolutionHistory, setEvolutionHistory] = useState<{ hand: number; accuracy: number; correct: boolean }[]>([]);
   const [loadingUse, setLoadingUse] = useState(false);
+  const [showPaywall, setShowPaywall] = useState(false);
   
-  // Usa campo específico do Trainer (5 usos)
+  // Usa campo específico do Trainer (5 usos) - atualizado do servidor
   const usosTrainer = (auth.user as any)?.usosTrainer ?? 5;
   const isPremium = auth.user?.premium || (auth.user as any)?.statusPlano === 'premium';
   const canUse = isPremium || usosTrainer > 0;
   
-  // Função para consumir um uso via API
+  // Função para consumir um uso via API - OBRIGATÓRIA para cada treino
   const consumeUse = async (): Promise<boolean> => {
     if (isPremium) return true; // Premium não consome
     
@@ -612,11 +614,19 @@ export default function Trainer() {
       
       const data = await res.json();
       
-      if (!res.ok || data.error === 'no_credits') {
+      // ⚠️ BLOQUEIO: Se retornou 403 ou no_credits, mostrar paywall
+      if (res.status === 403 || data.error === 'no_credits') {
+        console.log('[Trainer] Limite atingido! Mostrando paywall...');
+        setShowPaywall(true);
         // Atualiza o usuário para refletir que acabaram os usos
         if (auth.refreshUser) {
           await auth.refreshUser();
         }
+        return false;
+      }
+      
+      if (!res.ok) {
+        console.error('[Trainer] Erro na API:', data);
         return false;
       }
       
@@ -628,25 +638,27 @@ export default function Trainer() {
       return true;
     } catch (err) {
       console.error('Erro ao consumir uso:', err);
-      return true; // Em caso de erro, permite continuar (fallback)
+      // Em caso de erro de rede, NÃO permitir continuar (segurança)
+      return false;
     }
   };
   
   const startTraining = async () => {
+    // ⚠️ BLOQUEIO: Se não pode usar, mostrar paywall
     if (!canUse && !isPremium) {
-      navigate('/premium');
+      setShowPaywall(true);
       return;
     }
     
     setLoadingUse(true);
     
-    // Consome um uso antes de começar
+    // Consome um uso antes de começar - OBRIGATÓRIO
     const allowed = await consumeUse();
     
     setLoadingUse(false);
     
     if (!allowed) {
-      navigate('/premium');
+      // Paywall já foi mostrado no consumeUse
       return;
     }
     
@@ -1216,6 +1228,22 @@ export default function Trainer() {
           )}
         </div>
       </div>
+      
+      {/* Modal Paywall Premium */}
+      <PremiumPaywallModal
+        isOpen={showPaywall}
+        onClose={() => setShowPaywall(false)}
+        feature="Trainer GTO"
+        remaining={usosTrainer}
+        onUpgrade={() => {
+          setShowPaywall(false);
+          navigate('/premium');
+        }}
+        onViewPlans={() => {
+          setShowPaywall(false);
+          navigate('/planos');
+        }}
+      />
     </div>
   );
 }

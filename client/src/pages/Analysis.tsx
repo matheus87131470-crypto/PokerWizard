@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import PremiumPaywallModal from '../components/PremiumPaywallModal';
 
 // Detectar ambiente automaticamente
 function getApiBase(): string {
@@ -25,14 +26,15 @@ export default function Analysis() {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('graficos');
   const [history, setHistory] = useState<any[]>([]);
+  const [showPaywall, setShowPaywall] = useState(false);
 
   useEffect(() => {
     const usos = (auth.user as any)?.usosJogadores;
     const noUsos = typeof usos === 'number' ? (usos <= 0 && usos !== -1) : (typeof auth.user?.credits === 'number' && auth.user!.credits <= 0 && !auth.user!.premium);
     if (auth.user && !auth.user.premium && noUsos) {
-      navigate('/premium');
+      setShowPaywall(true);
     }
-  }, [auth.user, navigate]);
+  }, [auth.user]);
 
   function generateMockPlayerData(name: string) {
     const mockStats = {
@@ -105,7 +107,7 @@ export default function Analysis() {
       if (auth.user && !auth.user.premium && noUsos) {
         setError('Seus créditos acabaram. Assine para continuar.');
         setLoading(false);
-        navigate('/premium');
+        setShowPaywall(true);
         return;
       }
 
@@ -114,14 +116,25 @@ export default function Analysis() {
         try {
           const deductRes = await api.post('/api/auth/deduct-credit', { feature: 'jogadores' });
           if (!deductRes.ok) {
+            // Verificar se é erro de créditos esgotados (403)
+            if (deductRes.error === 'no_credits' || deductRes.message?.includes('créditos')) {
+              setShowPaywall(true);
+              setLoading(false);
+              return;
+            }
             setError(deductRes.message || 'Créditos esgotados.');
             setLoading(false);
-            navigate('/premium');
             return;
           }
           // Atualizar dados do usuário
           if (auth.refreshUser) await auth.refreshUser();
         } catch (deductErr: any) {
+          // Se for 403, mostrar paywall
+          if (deductErr?.status === 403 || deductErr?.error === 'no_credits') {
+            setShowPaywall(true);
+            setLoading(false);
+            return;
+          }
           setError('Erro ao verificar créditos.');
           setLoading(false);
           return;
@@ -536,6 +549,13 @@ export default function Analysis() {
           )}
         </div>
       )}
+
+      {/* Modal Premium Paywall */}
+      <PremiumPaywallModal
+        isOpen={showPaywall}
+        onClose={() => setShowPaywall(false)}
+        featureName="Análise de Jogadores"
+      />
     </div>
   );
 }

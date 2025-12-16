@@ -4,6 +4,7 @@ import { createUser, getUserByEmail, getUserById, verifyPassword, updatePassword
 import { canCreateAccount, registerAccount, getRealIP } from '../services/antiFraud';
 import { createResetToken, verifyResetCode, invalidateResetToken } from '../services/passwordResetService';
 import { sendPasswordResetEmail } from '../services/emailService';
+import { getUsageStatus } from '../middleware/usageGuard';
 import passport from 'passport';
 
 const router = express.Router();
@@ -177,6 +178,12 @@ router.get('/me', authMiddleware, async (req: AuthRequest, res: Response) => {
     return res.status(500).json({ error: 'me_failed', message: err.message });
   }
 });
+
+/**
+ * GET /auth/usage-status
+ * Retorna o status de usos de todas as funcionalidades
+ */
+router.get('/usage-status', authMiddleware, getUsageStatus);
 
 /**
  * GOOGLE LOGIN REDIRECT
