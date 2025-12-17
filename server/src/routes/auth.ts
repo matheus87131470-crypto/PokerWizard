@@ -186,14 +186,43 @@ router.get('/me', authMiddleware, async (req: AuthRequest, res: Response) => {
 router.get('/usage-status', authMiddleware, getUsageStatus);
 
 /**
+ * DEBUG: Verificar configuração do Google OAuth
+ * /api/auth/google-debug
+ */
+router.get('/google-debug', (_req, res: Response) => {
+  const hasClientId = !!process.env.GOOGLE_CLIENT_ID;
+  const hasClientSecret = !!process.env.GOOGLE_CLIENT_SECRET;
+  const callbackUrl = process.env.GOOGLE_CALLBACK_URL || 'NÃO DEFINIDO';
+  const clientUrl = process.env.CLIENT_URL || 'NÃO DEFINIDO';
+  
+  res.json({
+    googleOAuth: {
+      clientIdConfigured: hasClientId,
+      clientSecretConfigured: hasClientSecret,
+      callbackUrl: callbackUrl,
+      clientUrl: clientUrl,
+      ready: hasClientId && hasClientSecret
+    }
+  });
+});
+
+/**
  * GOOGLE LOGIN REDIRECT
  * /api/auth/google
  */
-router.get('/google',
+router.get('/google', (req, res, next) => {
+  // Verificar se o Google OAuth está configurado
+  if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+    return res.status(500).json({
+      error: 'Google OAuth não configurado',
+      message: 'As variáveis GOOGLE_CLIENT_ID e GOOGLE_CLIENT_SECRET não estão definidas no servidor.'
+    });
+  }
+  
   passport.authenticate('google', {
     scope: ['profile', 'email']
-  })
-);
+  })(req, res, next);
+});
 
 /**
  * GOOGLE CALLBACK
