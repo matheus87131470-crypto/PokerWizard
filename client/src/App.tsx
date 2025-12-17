@@ -14,6 +14,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 import Trainer from './pages/Trainer';
+import GoogleSuccess from './pages/GoogleSuccess';
 import CookieConsent from './components/CookieConsent';
 import CreditCounter from './components/CreditCounter';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -1135,6 +1136,7 @@ export default function App() {
             <Route path="/features" element={<Features />} />
             <Route path="/solutions" element={<Solutions />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/google-success" element={<GoogleSuccess />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/premium" element={<Premium />} />
             <Route path="/profile" element={<Profile />} />

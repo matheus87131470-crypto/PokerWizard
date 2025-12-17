@@ -14,6 +14,7 @@ interface AuthContextType {
   token: string | null;
   login: (identifier: string, password: string) => Promise<void>;
   register: (email: string, name: string, password: string, username?: string) => Promise<void>;
+  loginWithToken: (token: string) => Promise<void>;
   logout: () => void;
   refreshUser: () => Promise<void>;
   loading: boolean;
@@ -170,8 +171,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  // Login com token (usado no callback do Google OAuth)
+  async function loginWithToken(authToken: string) {
+    setLoading(true);
+    setError(null);
+    try {
+      // Salvar token
+      setToken(authToken);
+      localStorage.setItem('pokerwizard_token', authToken);
+      
+      // Buscar dados do usuário
+      await fetchUserInfo(authToken);
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
-    <AuthContext.Provider value={{ user, token, login, register, logout, refreshUser, loading, error }}>
+    <AuthContext.Provider value={{ user, token, login, register, loginWithToken, logout, refreshUser, loading, error }}>
       {children}
     </AuthContext.Provider>
   );
