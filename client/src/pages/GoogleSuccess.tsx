@@ -14,16 +14,13 @@ export default function GoogleSuccess() {
   const auth = useAuth();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [errorMsg, setErrorMsg] = useState('');
-
-  // Debug
-  console.log('GoogleSuccess: URL params:', window.location.search);
-  console.log('GoogleSuccess: Token:', searchParams.get('token'));
+  const [debugInfo, setDebugInfo] = useState('Iniciando...');
 
   useEffect(() => {
     const processGoogleLogin = async () => {
       const token = searchParams.get('token');
       
-      console.log('GoogleSuccess: Processando token:', token ? 'recebido' : 'NÃO RECEBIDO');
+      setDebugInfo(`Token: ${token ? 'Recebido (' + token.substring(0, 20) + '...)' : 'NÃO RECEBIDO'}`);
       
       if (!token) {
         setStatus('error');
@@ -32,20 +29,20 @@ export default function GoogleSuccess() {
       }
 
       try {
-        // Salvar o token e buscar dados do usuário
-        console.log('GoogleSuccess: Chamando loginWithToken...');
+        setDebugInfo('Salvando token e buscando usuário...');
         await auth.loginWithToken(token);
-        console.log('GoogleSuccess: Login com sucesso!');
+        setDebugInfo('Login realizado com sucesso!');
         setStatus('success');
         
-        // Redirecionar para home após 1.5s
+        // Redirecionar para home após 2s
         setTimeout(() => {
           navigate('/');
-        }, 1500);
+        }, 2000);
       } catch (err: any) {
         console.error('GoogleSuccess: Erro:', err);
         setStatus('error');
         setErrorMsg(err.message || 'Erro ao processar login com Google');
+        setDebugInfo(`Erro: ${err.message}`);
       }
     };
 
@@ -59,22 +56,27 @@ export default function GoogleSuccess() {
       alignItems: 'center',
       justifyContent: 'center',
       padding: 20,
+      background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)',
     }}>
-      <div className="card" style={{ 
+      <div style={{ 
         maxWidth: 420, 
         width: '100%', 
         textAlign: 'center',
         padding: 40,
+        background: 'rgba(30, 41, 59, 0.8)',
+        borderRadius: 16,
+        border: '1px solid rgba(139, 92, 246, 0.3)',
+        boxShadow: '0 0 40px rgba(139, 92, 246, 0.2)',
       }}>
         {status === 'loading' && (
           <>
-            <div style={{ fontSize: 48, marginBottom: 20, animation: 'pulse 1.5s infinite' }}>
-              🔄
+            <div style={{ fontSize: 48, marginBottom: 20 }}>
+              ⏳
             </div>
-            <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 12 }}>
+            <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 12, color: '#fff' }}>
               Conectando com Google...
             </h2>
-            <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>
+            <p style={{ color: '#94a3b8', fontSize: 14 }}>
               Aguarde enquanto processamos seu login
             </p>
           </>
@@ -88,7 +90,7 @@ export default function GoogleSuccess() {
             <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 12, color: '#22c55e' }}>
               Login realizado!
             </h2>
-            <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>
+            <p style={{ color: '#94a3b8', fontSize: 14 }}>
               Redirecionando para a página inicial...
             </p>
           </>
@@ -102,26 +104,36 @@ export default function GoogleSuccess() {
             <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 12, color: '#ef4444' }}>
               Erro no login
             </h2>
-            <p style={{ color: 'var(--text-secondary)', fontSize: 14, marginBottom: 20 }}>
+            <p style={{ color: '#94a3b8', fontSize: 14, marginBottom: 20 }}>
               {errorMsg}
             </p>
             <button
               onClick={() => navigate('/login')}
-              className="btn btn-primary"
-              style={{ padding: '12px 24px' }}
+              style={{ 
+                padding: '12px 24px',
+                background: 'linear-gradient(135deg, #8b5cf6, #a855f7)',
+                border: 'none',
+                borderRadius: 8,
+                color: '#fff',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
             >
               Voltar ao Login
             </button>
           </>
         )}
-      </div>
 
-      <style>{`
-        @keyframes pulse {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.1); }
-        }
-      `}</style>
+        {/* Debug info */}
+        <p style={{ 
+          marginTop: 24, 
+          fontSize: 11, 
+          color: '#64748b',
+          fontFamily: 'monospace',
+        }}>
+          {debugInfo}
+        </p>
+      </div>
     </div>
   );
 }
