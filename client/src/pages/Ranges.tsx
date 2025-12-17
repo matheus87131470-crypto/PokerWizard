@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import HandMatrix, { HandData, HandAction } from '../components/HandMatrix';
 import PositionTabs, { Position } from '../components/PositionTabs';
 import RangeBar, { RangeSegment } from '../components/RangeBar';
+import PremiumPaywallModal from '../components/PremiumPaywallModal';
 import { useAuth } from '../contexts/AuthContext';
 
 // Gerar dados de range por posição
@@ -97,6 +98,10 @@ export default function Ranges() {
   const [activePosition, setActivePosition] = useState<Position>('BTN');
   const [hands, setHands] = useState<HandData[]>([]);
   const [scenario, setScenario] = useState<'RFI' | '3bet' | 'vs3bet'>('RFI');
+  const [showPaywall, setShowPaywall] = useState(false);
+
+  // Verificar status premium
+  const isPremium = user?.premium || (user as any)?.statusPlano === 'premium';
 
   // Carregar range quando posição mudar
   useEffect(() => {
@@ -126,6 +131,21 @@ export default function Ranges() {
 
   return (
     <div className="ranges-page" style={{ maxWidth: 1100, margin: '0 auto' }}>
+      {/* Paywall Modal - para explicação com IA */}
+      <PremiumPaywallModal
+        isOpen={showPaywall}
+        onClose={() => setShowPaywall(false)}
+        paywallType="ranges"
+        onUpgrade={() => {
+          setShowPaywall(false);
+          navigate('/premium');
+        }}
+        onViewPlans={() => {
+          setShowPaywall(false);
+          navigate('/planos');
+        }}
+      />
+
       {/* Header */}
       <div style={{
         display: 'flex',
@@ -258,6 +278,66 @@ export default function Ranges() {
               <LegendItem color="#3b82f6" label="Call" description="Call ou flat" />
               <LegendItem color="#6b7280" label="Fold" description="Fold" />
             </div>
+          </div>
+
+          {/* Botão de Explicação com IA */}
+          <div className="card" style={{ padding: 20, marginTop: 20 }}>
+            <h3 style={{ margin: '0 0 12px', fontSize: 16, fontWeight: 700 }}>🧠 Explicação com IA</h3>
+            <p style={{ 
+              margin: '0 0 16px', 
+              fontSize: 13, 
+              color: 'var(--text-secondary)',
+              lineHeight: 1.5 
+            }}>
+              Entenda o porquê de cada decisão no range de {activePosition}
+            </p>
+            
+            {isPremium ? (
+              <button
+                onClick={() => {
+                  // TODO: Implementar explicação com IA
+                  alert('🧠 Funcionalidade em desenvolvimento! Em breve você terá explicações detalhadas com IA.');
+                }}
+                style={{
+                  width: '100%',
+                  padding: '14px 20px',
+                  background: 'linear-gradient(135deg, #8b5cf6, #6d28d9)',
+                  border: 'none',
+                  borderRadius: 10,
+                  color: 'white',
+                  fontSize: 14,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                }}
+              >
+                🤖 Explicar este Range
+              </button>
+            ) : (
+              <button
+                onClick={() => setShowPaywall(true)}
+                style={{
+                  width: '100%',
+                  padding: '14px 20px',
+                  background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(139, 92, 246, 0.1))',
+                  border: '1px solid rgba(139, 92, 246, 0.3)',
+                  borderRadius: 10,
+                  color: '#a78bfa',
+                  fontSize: 14,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                }}
+              >
+                🔒 Explicação Premium
+              </button>
+            )}
           </div>
         </div>
       </div>

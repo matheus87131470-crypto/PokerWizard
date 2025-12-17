@@ -9,6 +9,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import PremiumPaywallModal from '../components/PremiumPaywallModal';
+import CreditWarningBanner from '../components/CreditWarningBanner';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'https://pokerwizard.onrender.com';
 
@@ -134,8 +135,23 @@ Hero?`
       <PremiumPaywallModal
         isOpen={showPaywall}
         onClose={() => setShowPaywall(false)}
-        feature="Análise de Mãos"
-        remainingUses={0}
+        paywallType="analyze"
+        remaining={freeCredits}
+        onUpgrade={() => {
+          setShowPaywall(false);
+          navigate('/premium');
+        }}
+        onViewPlans={() => {
+          setShowPaywall(false);
+          navigate('/planos');
+        }}
+      />
+
+      {/* Banner de Créditos Baixos */}
+      <CreditWarningBanner 
+        credits={freeCredits}
+        isPremium={isPremium}
+        onUpgrade={() => navigate('/premium')}
       />
 
       {/* Header */}

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import PremiumPaywallModal from '../components/PremiumPaywallModal';
+import CreditWarningBanner from '../components/CreditWarningBanner';
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://pokerwizard-api.onrender.com';
 
@@ -784,6 +785,13 @@ export default function Trainer() {
   
   return (
     <div className="trainer-page">
+      {/* Banner de Créditos Baixos */}
+      <CreditWarningBanner 
+        credits={usosTrainer}
+        isPremium={isPremium}
+        onUpgrade={() => navigate('/premium')}
+      />
+      
       {/* Header */}
       <div style={{ 
         display: 'flex', 
@@ -1226,7 +1234,7 @@ export default function Trainer() {
       <PremiumPaywallModal
         isOpen={showPaywall}
         onClose={() => setShowPaywall(false)}
-        feature="Trainer GTO"
+        paywallType="trainer"
         remaining={usosTrainer}
         onUpgrade={() => {
           setShowPaywall(false);
