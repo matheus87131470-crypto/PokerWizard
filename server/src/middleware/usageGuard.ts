@@ -1,15 +1,23 @@
 /**
  * Middleware de Validação de Usos - Paywall Premium
  * 
- * Este middleware verifica se o usuário tem usos disponíveis
- * para a funcionalidade específica antes de permitir o acesso.
+ * NOVO MODELO: 7 créditos GLOBAIS compartilhados entre TODAS as features
+ * 
+ * - Trainer GTO
+ * - Análise de Mãos
+ * - Análise de Jogadores
+ * 
+ * Todos consomem do mesmo contador: freeCredits
  * 
  * Retorna HTTP 403 se o usuário excedeu o limite gratuito.
  */
 
 import { Response, NextFunction } from 'express';
 import { AuthRequest } from './auth';
-import { getUserById, getFeatureUsage, FeatureType } from '../services/userService';
+import { getUserById, canUseFeature, getFreeCredits, FeatureType } from '../services/userService';
+
+// Limite de créditos gratuitos
+const FREE_CREDITS_LIMIT = 7;
 
 interface UsageCheckResult {
   allowed: boolean;
@@ -22,6 +30,8 @@ interface UsageCheckResult {
 /**
  * Verifica se o usuário pode usar uma funcionalidade
  * Não consome créditos, apenas verifica
+ * 
+ * NOTA: Agora usa contador GLOBAL (freeCredits)
  */
 export async function checkUsage(userId: string, feature: FeatureType): Promise<UsageCheckResult> {
   const user = await getUserById(userId);
@@ -47,8 +57,8 @@ export async function checkUsage(userId: string, feature: FeatureType): Promise<
     };
   }
   
-  // Verificar usos restantes
-  const remaining = await getFeatureUsage(userId, feature);
+  // Verificar créditos GLOBAIS restantes
+  const remaining = user.freeCredits ?? user.usosRestantes ?? FREE_CREDITS_LIMIT;
   
   return {
     allowed: remaining > 0,
@@ -56,7 +66,7 @@ export async function checkUsage(userId: string, feature: FeatureType): Promise<
     isPremium: false,
     feature,
     message: remaining <= 0 
-      ? `Você atingiu o limite de usos gratuitos para ${getFeatureName(feature)}. Assine o Premium para continuar.`
+      ? `Você atingiu o limite de ${FREE_CREDITS_LIMIT} análises gratuitas. Assine o Premium para continuar.`
       : undefined
   };
 }
@@ -128,7 +138,8 @@ export function requireUsage(feature: FeatureType) {
 
 /**
  * Endpoint para verificar status de usos do usuário
- * Retorna informações sobre todas as funcionalidades
+ * 
+ * NOVO MODELO: Retorna contador GLOBAL compartilhado (7 créditos)
  */
 export async function getUsageStatus(req: AuthRequest, res: Response) {
   try {
@@ -145,48 +156,29 @@ export async function getUsageStatus(req: AuthRequest, res: Response) {
     
     const isPremium = user.statusPlano === 'premium' || user.premium === true;
     
+    // Créditos globais únicos
+    const freeCredits = user.freeCredits ?? user.usosRestantes ?? FREE_CREDITS_LIMIT;
+    
     const status = {
       ok: true,
       isPremium,
       statusPlano: user.statusPlano,
-      features: {
-        trainer: {
-          name: 'Trainer GTO',
-          remaining: isPremium ? -1 : (user.usosTrainer ?? 5),
-          limit: 5,
-          blocked: !isPremium && (user.usosTrainer ?? 5) <= 0
-        },
-        analise: {
-          name: 'Análise de Mãos',
-          remaining: isPremium ? -1 : (user.usosAnalise ?? 5),
-          limit: 5,
-          blocked: !isPremium && (user.usosAnalise ?? 5) <= 0
-        },
-        jogadores: {
-          name: 'Análise de Jogadores',
-          remaining: isPremium ? -1 : (user.usosJogadores ?? 5),
-          limit: 5,
-          blocked: !isPremium && (user.usosJogadores ?? 5) <= 0
-        }
-      },
-      // Total de usos restantes (soma de todas as features)
-      totalRemaining: isPremium ? -1 : (
-        (user.usosTrainer ?? 5) + 
-        (user.usosAnalise ?? 5) + 
-        (user.usosJogadores ?? 5)
-      ),
-      // Se alguma feature está bloqueada
-      anyBlocked: !isPremium && (
-        (user.usosTrainer ?? 5) <= 0 ||
-        (user.usosAnalise ?? 5) <= 0 ||
-        (user.usosJogadores ?? 5) <= 0
-      ),
-      // Todas bloqueadas
-      allBlocked: !isPremium && (
-        (user.usosTrainer ?? 5) <= 0 &&
-        (user.usosAnalise ?? 5) <= 0 &&
-        (user.usosJogadores ?? 5) <= 0
-      )
+      // NOVO: Contador único global
+      freeCredits: isPremium ? -1 : freeCredits,
+      freeCreditsLimit: FREE_CREDITS_LIMIT,
+      blocked: !isPremium && freeCredits <= 0,
+      // Mensagem amigável
+      message: isPremium 
+        ? '👑 Acesso Premium Ilimitado' 
+        : freeCredits > 0
+          ? `Você tem ${freeCredits} de ${FREE_CREDITS_LIMIT} análises grátis restantes`
+          : `Você usou suas ${FREE_CREDITS_LIMIT} análises gratuitas. Assine o Premium!`,
+      // Features que consomem do mesmo contador
+      features: ['trainer', 'analise', 'jogadores'],
+      // Para compatibilidade com frontend antigo
+      totalRemaining: isPremium ? -1 : freeCredits,
+      anyBlocked: !isPremium && freeCredits <= 0,
+      allBlocked: !isPremium && freeCredits <= 0
     };
     
     return res.json(status);

@@ -13,12 +13,24 @@ import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 import Trainer from './pages/Trainer';
 import CookieConsent from './components/CookieConsent';
+import CreditCounter from './components/CreditCounter';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { usePaywall } from './hooks/usePaywall';
 
 function Layout({ children }: { children: React.ReactNode }) {
   const auth = useAuth();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const navigate = useNavigate();
+  
+  // Hook para obter créditos do usuário (freeCredits global)
+  const { freeCredits, freeCreditsLimit, isPremium, refreshUsage } = usePaywall(auth.token);
+  
+  // Atualizar créditos quando usuário mudar
+  useEffect(() => {
+    if (auth.token) {
+      refreshUsage();
+    }
+  }, [auth.token, refreshUsage]);
 
   const handleLogout = () => {
     auth.logout();
@@ -147,7 +159,14 @@ function Layout({ children }: { children: React.ReactNode }) {
             <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             {auth.user ? (
               <>
-                {/* User badge premium */}
+                {/* Contador de créditos global */}
+                <CreditCounter
+                  freeCredits={freeCredits}
+                  freeCreditsLimit={freeCreditsLimit}
+                  isPremium={isPremium}
+                />
+                
+                {/* User badge */}
                 <Link to="/profile" style={{ textDecoration: 'none' }}>
                   <div style={{
                     display: 'flex',
@@ -161,28 +180,10 @@ function Layout({ children }: { children: React.ReactNode }) {
                     transition: 'all 0.2s',
                   }}>
                     <span style={{ fontSize: 14, color: '#e9d5ff', fontWeight: 700 }}>👤 {auth.user.name}</span>
-                    {/* Mostrar status Premium ou contador de usos */}
-                    {(auth.user as any)?.statusPlano === 'premium' || auth.user.premium ? (
-                      <span style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: 4,
-                        padding: '6px 12px',
-                        borderRadius: 10,
-                        background: 'linear-gradient(135deg, #10b981, #34d399)',
-                        color: 'white',
-                        fontSize: 12,
-                        fontWeight: 800,
-                        boxShadow: '0 4px 16px rgba(16, 185, 129, 0.3)',
-                      }}>
-                        👑 PREMIUM
-                      </span>
-                    ) : null}
                   </div>
                 </Link>
-                {/* Botão Assina Premium dourado quando zerou algum */}
-                {!auth.user.premium && (
-                  ((auth.user as any)?.usosTrainer <= 0 || (auth.user as any)?.usosAnalise <= 0 || (auth.user as any)?.usosJogadores <= 0) && (
+                {/* Botão Assina Premium quando zerou */}
+                {!isPremium && freeCredits <= 0 && (
                     <button 
                       onClick={() => navigate('/premium')} 
                       style={{ 
@@ -200,7 +201,6 @@ function Layout({ children }: { children: React.ReactNode }) {
                     >
                       👑 Assinar Premium
                     </button>
-                  )
                 )}
                 <button onClick={handleLogout} className="btn btn-ghost" style={{ padding: '8px 16px', fontSize: 13 }}>
                   Sair

@@ -46,14 +46,22 @@ export async function initDatabase(): Promise<void> {
         password_hash VARCHAR(255),
         google_id VARCHAR(255),
         price DECIMAL(10,2) DEFAULT 3.50,
-        credits INTEGER DEFAULT 5,
-        usos_restantes INTEGER DEFAULT 5,
+        credits INTEGER DEFAULT 7,
+        usos_restantes INTEGER DEFAULT 7,
+        free_credits INTEGER DEFAULT 7,
         status_plano VARCHAR(50) DEFAULT 'free',
         premium BOOLEAN DEFAULT false,
         premium_until TIMESTAMP,
         created_at TIMESTAMP DEFAULT NOW()
       )
     `);
+    
+    // Add free_credits column to existing tables (migration)
+    await db.query(`
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS free_credits INTEGER DEFAULT 7
+    `).catch(() => {
+      // Column might already exist, ignore error
+    });
     
     // Create payments table
     await db.query(`
@@ -202,6 +210,7 @@ export async function dbGetUserByGoogleId(googleId: string): Promise<any | null>
 export async function dbUpdateUser(id: string, updates: Partial<{
   credits: number;
   usosRestantes: number | null;
+  freeCredits: number;
   statusPlano: string;
   premium: boolean;
   premiumUntil: Date | null;
@@ -219,6 +228,10 @@ export async function dbUpdateUser(id: string, updates: Partial<{
   if (updates.usosRestantes !== undefined) {
     setClauses.push(`usos_restantes = $${paramIndex++}`);
     values.push(updates.usosRestantes);
+  }
+  if (updates.freeCredits !== undefined) {
+    setClauses.push(`free_credits = $${paramIndex++}`);
+    values.push(updates.freeCredits);
   }
   if (updates.statusPlano !== undefined) {
     setClauses.push(`status_plano = $${paramIndex++}`);
@@ -404,6 +417,8 @@ function mapUserFromDb(row: any): any {
     price: parseFloat(row.price),
     credits: row.credits,
     usosRestantes: row.usos_restantes,
+    // Novo campo global de créditos (fallback para usosRestantes se não existir)
+    freeCredits: row.free_credits ?? row.usos_restantes ?? 7,
     statusPlano: row.status_plano,
     premium: row.premium,
     premiumUntil: row.premium_until ? new Date(row.premium_until) : null,

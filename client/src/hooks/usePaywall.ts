@@ -1,5 +1,7 @@
 /**
  * Hook para gerenciar estado de usos e paywall premium
+ * 
+ * NOVO MODELO: 7 créditos GLOBAIS compartilhados entre TODAS as features
  */
 
 import { useState, useCallback, useEffect } from 'react';
@@ -7,21 +9,19 @@ import { useNavigate } from 'react-router-dom';
 
 const API_URL = import.meta.env.VITE_API_URL || '';
 
-interface FeatureUsage {
-  name: string;
-  remaining: number;
-  limit: number;
-  blocked: boolean;
-}
+// Limite de créditos gratuitos
+const FREE_CREDITS_LIMIT = 7;
 
 interface UsageStatus {
   isPremium: boolean;
   statusPlano: 'free' | 'premium';
-  features: {
-    trainer: FeatureUsage;
-    analise: FeatureUsage;
-    jogadores: FeatureUsage;
-  };
+  // NOVO: contador global único
+  freeCredits: number;  // -1 = ilimitado (premium)
+  freeCreditsLimit: number;
+  blocked: boolean;
+  message: string;
+  features: string[];
+  // Compatibilidade
   totalRemaining: number;
   anyBlocked: boolean;
   allBlocked: boolean;
@@ -33,6 +33,9 @@ interface UsePaywallReturn {
   error: string | null;
   showPaywall: boolean;
   blockedFeature: string | null;
+  freeCredits: number;           // Contador de créditos para exibir
+  freeCreditsLimit: number;      // Limite total
+  isPremium: boolean;            // Se é premium
   checkAndProceed: (feature: 'trainer' | 'analise' | 'jogadores', action: () => void) => Promise<void>;
   closePaywall: () => void;
   refreshUsage: () => Promise<void>;
@@ -100,10 +103,9 @@ export function usePaywall(token: string | null): UsePaywallReturn {
       return;
     }
 
-    // Verificar se a feature está bloqueada
-    const featureInfo = usageStatus.features[feature];
-    if (featureInfo.blocked || featureInfo.remaining <= 0) {
-      setBlockedFeature(featureInfo.name);
+    // Verificar créditos GLOBAIS
+    if (usageStatus.blocked || usageStatus.freeCredits <= 0) {
+      setBlockedFeature('Análises');
       setShowPaywall(true);
       return;
     }
@@ -130,12 +132,19 @@ export function usePaywall(token: string | null): UsePaywallReturn {
     navigate('/planos');
   }, [navigate, closePaywall]);
 
+  // Valores derivados para fácil acesso
+  const freeCredits = usageStatus?.freeCredits ?? FREE_CREDITS_LIMIT;
+  const isPremium = usageStatus?.isPremium ?? false;
+
   return {
     usageStatus,
     loading,
     error,
     showPaywall,
     blockedFeature,
+    freeCredits,
+    freeCreditsLimit: FREE_CREDITS_LIMIT,
+    isPremium,
     checkAndProceed,
     closePaywall,
     refreshUsage,

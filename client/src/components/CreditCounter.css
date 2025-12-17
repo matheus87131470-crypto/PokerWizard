@@ -1,0 +1,161 @@
+/**
+ * Estilos do contador de créditos global
+ */
+
+.credit-counter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 14px;
+}
+
+.credit-counter:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Versão compacta (mobile) */
+.credit-counter.compact {
+  padding: 6px 10px;
+  gap: 4px;
+  font-size: 12px;
+}
+
+/* Icon */
+.credit-icon {
+  font-size: 16px;
+}
+
+.credit-counter.compact .credit-icon {
+  font-size: 14px;
+}
+
+/* Text */
+.credit-text {
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 500;
+}
+
+/* Badge */
+.credit-badge {
+  background: linear-gradient(135deg, #00bcd4 0%, #00a0b8 100%);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 12px;
+  min-width: 40px;
+  text-align: center;
+}
+
+.credit-counter.compact .credit-badge {
+  padding: 2px 6px;
+  font-size: 11px;
+  min-width: 30px;
+}
+
+/* Badge estados */
+.credit-badge.low {
+  background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+  animation: pulse-warning 2s infinite;
+}
+
+.credit-badge.empty {
+  background: linear-gradient(135deg, #e53935 0%, #c62828 100%);
+  animation: pulse-danger 1.5s infinite;
+}
+
+.credit-badge.unlimited {
+  background: linear-gradient(135deg, #ffd700 0%, #ffb300 100%);
+  color: #1a1a2e;
+  font-size: 16px;
+  padding: 2px 10px;
+}
+
+/* Contador Premium */
+.credit-counter.premium {
+  background: linear-gradient(135deg, #1a1a2e 0%, #2d1f3d 100%);
+  border-color: rgba(255, 215, 0, 0.3);
+  cursor: default;
+}
+
+.credit-counter.premium:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.credit-counter.premium .credit-text {
+  color: #ffd700;
+  font-weight: 600;
+}
+
+/* Contador Free (normal) */
+.credit-counter.free {
+  /* Cursor pointer para indicar que é clicável */
+}
+
+.credit-counter.free:hover {
+  border-color: #00bcd4;
+}
+
+/* Estado low (poucos créditos) */
+.credit-counter.low {
+  border-color: rgba(255, 152, 0, 0.4);
+}
+
+.credit-counter.low .credit-text {
+  color: #ff9800;
+}
+
+/* Estado empty (sem créditos) */
+.credit-counter.empty {
+  border-color: rgba(229, 57, 53, 0.4);
+}
+
+.credit-counter.empty .credit-text {
+  color: #e53935;
+}
+
+/* Animações */
+@keyframes pulse-warning {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(255, 152, 0, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(255, 152, 0, 0);
+  }
+}
+
+@keyframes pulse-danger {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(229, 57, 53, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(229, 57, 53, 0);
+  }
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+  .credit-counter {
+    padding: 6px 10px;
+    gap: 6px;
+    font-size: 12px;
+  }
+  
+  .credit-text {
+    display: none; /* Esconde texto no mobile */
+  }
+  
+  .credit-badge {
+    font-size: 11px;
+    padding: 2px 6px;
+  }
+}
