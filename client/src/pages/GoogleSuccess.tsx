@@ -15,9 +15,15 @@ export default function GoogleSuccess() {
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [errorMsg, setErrorMsg] = useState('');
 
+  // Debug
+  console.log('GoogleSuccess: URL params:', window.location.search);
+  console.log('GoogleSuccess: Token:', searchParams.get('token'));
+
   useEffect(() => {
     const processGoogleLogin = async () => {
       const token = searchParams.get('token');
+      
+      console.log('GoogleSuccess: Processando token:', token ? 'recebido' : 'NÃO RECEBIDO');
       
       if (!token) {
         setStatus('error');
@@ -27,7 +33,9 @@ export default function GoogleSuccess() {
 
       try {
         // Salvar o token e buscar dados do usuário
+        console.log('GoogleSuccess: Chamando loginWithToken...');
         await auth.loginWithToken(token);
+        console.log('GoogleSuccess: Login com sucesso!');
         setStatus('success');
         
         // Redirecionar para home após 1.5s
@@ -35,6 +43,7 @@ export default function GoogleSuccess() {
           navigate('/');
         }, 1500);
       } catch (err: any) {
+        console.error('GoogleSuccess: Erro:', err);
         setStatus('error');
         setErrorMsg(err.message || 'Erro ao processar login com Google');
       }
