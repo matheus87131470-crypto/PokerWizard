@@ -34,6 +34,21 @@ const MOCK_PLAYER_DATA = {
     'Agressividade bem calibrada',
     'Bom controle de tilt',
   ],
+  // Dados do gráfico de ganhos (fictício)
+  profitHistory: [
+    { month: 'Jul', profit: 2500 },
+    { month: 'Ago', profit: 1800 },
+    { month: 'Set', profit: 4200 },
+    { month: 'Out', profit: 3100 },
+    { month: 'Nov', profit: 6800 },
+    { month: 'Dez', profit: 5400 },
+    { month: 'Jan', profit: 8900 },
+    { month: 'Fev', profit: 7200 },
+    { month: 'Mar', profit: 12500 },
+    { month: 'Abr', profit: 15800 },
+    { month: 'Mai', profit: 18200 },
+    { month: 'Jun', profit: 21500 },
+  ],
 };
 
 export default function PlayerAnalysis() {
@@ -241,6 +256,243 @@ export default function PlayerAnalysis() {
             <StatCard label="Avg Profit" value={`${MOCK_PLAYER_DATA.avgProfit}%`} icon="📊" />
           </div>
 
+          {/* Gráfico de Ganhos Neon - Estilo Futurista */}
+          <div className="card" style={{ 
+            padding: 24, 
+            marginBottom: 20,
+            background: 'linear-gradient(145deg, rgba(5, 8, 22, 0.98), rgba(10, 15, 36, 0.95))',
+            border: '1px solid rgba(168, 85, 247, 0.4)',
+            boxShadow: '0 0 60px rgba(168, 85, 247, 0.15), inset 0 0 80px rgba(236, 72, 153, 0.05)',
+            position: 'relative',
+            overflow: 'hidden'
+          }}>
+            {/* Background Glow Effects */}
+            <div style={{
+              position: 'absolute',
+              top: '50%',
+              left: '30%',
+              width: 300,
+              height: 300,
+              background: 'radial-gradient(circle, rgba(236, 72, 153, 0.15) 0%, transparent 70%)',
+              transform: 'translate(-50%, -50%)',
+              pointerEvents: 'none',
+            }} />
+            <div style={{
+              position: 'absolute',
+              top: '60%',
+              right: '20%',
+              width: 250,
+              height: 250,
+              background: 'radial-gradient(circle, rgba(168, 85, 247, 0.12) 0%, transparent 70%)',
+              transform: 'translate(50%, -50%)',
+              pointerEvents: 'none',
+            }} />
+            
+            <div style={{ position: 'relative', zIndex: 1 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                <h3 style={{ 
+                  margin: 0, 
+                  fontSize: 18, 
+                  fontWeight: 700,
+                  background: 'linear-gradient(135deg, #f8fafc, #c084fc)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                }}>
+                  📈 Evolução de Ganhos
+                </h3>
+                <div style={{ display: 'flex', gap: 16 }}>
+                  <span style={{ 
+                    fontSize: 13, 
+                    color: '#c084fc',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6
+                  }}>
+                    <span style={{ width: 12, height: 3, background: 'linear-gradient(90deg, #a855f7, #ec4899)', borderRadius: 2 }}></span>
+                    Profit Acumulado
+                  </span>
+                </div>
+              </div>
+
+              {/* SVG Gráfico Neon */}
+              <div style={{ position: 'relative', height: 280 }}>
+                <svg width="100%" height="100%" viewBox="0 0 800 280" preserveAspectRatio="none">
+                  <defs>
+                    {/* Gradiente da Linha Principal */}
+                    <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#a855f7" />
+                      <stop offset="50%" stopColor="#ec4899" />
+                      <stop offset="100%" stopColor="#f472b6" />
+                    </linearGradient>
+                    
+                    {/* Gradiente da Área sob a linha */}
+                    <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#ec4899" stopOpacity="0.3" />
+                      <stop offset="50%" stopColor="#a855f7" stopOpacity="0.1" />
+                      <stop offset="100%" stopColor="#a855f7" stopOpacity="0" />
+                    </linearGradient>
+                    
+                    {/* Filtro de Glow */}
+                    <filter id="neonGlow" x="-50%" y="-50%" width="200%" height="200%">
+                      <feGaussianBlur stdDeviation="4" result="blur" />
+                      <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+                    
+                    {/* Gradiente para pontos */}
+                    <radialGradient id="pointGradient" cx="50%" cy="50%" r="50%">
+                      <stop offset="0%" stopColor="#fff" />
+                      <stop offset="40%" stopColor="#f472b6" />
+                      <stop offset="100%" stopColor="#ec4899" stopOpacity="0" />
+                    </radialGradient>
+                  </defs>
+                  
+                  {/* Grid Lines Verticais */}
+                  {[...Array(12)].map((_, i) => (
+                    <line 
+                      key={`v-${i}`}
+                      x1={60 + i * 62} 
+                      y1="20" 
+                      x2={60 + i * 62} 
+                      y2="240" 
+                      stroke="rgba(168, 85, 247, 0.15)" 
+                      strokeWidth="1"
+                      strokeDasharray="4,4"
+                    />
+                  ))}
+                  
+                  {/* Grid Lines Horizontais */}
+                  {[...Array(5)].map((_, i) => (
+                    <line 
+                      key={`h-${i}`}
+                      x1="40" 
+                      y1={20 + i * 55} 
+                      x2="780" 
+                      y2={20 + i * 55} 
+                      stroke="rgba(168, 85, 247, 0.1)" 
+                      strokeWidth="1"
+                    />
+                  ))}
+                  
+                  {/* Área preenchida sob a linha */}
+                  <path
+                    d="M 60 220 L 120 200 L 180 210 L 240 180 L 300 190 L 360 140 L 420 160 L 480 100 L 540 120 L 600 70 L 660 50 L 720 30 L 720 240 L 60 240 Z"
+                    fill="url(#areaGradient)"
+                    style={{ animation: 'fadeInArea 1s ease-out' }}
+                  />
+                  
+                  {/* Linha Principal Neon */}
+                  <path
+                    d="M 60 220 L 120 200 L 180 210 L 240 180 L 300 190 L 360 140 L 420 160 L 480 100 L 540 120 L 600 70 L 660 50 L 720 30"
+                    stroke="url(#lineGradient)"
+                    strokeWidth="4"
+                    fill="none"
+                    filter="url(#neonGlow)"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    style={{
+                      strokeDasharray: 1000,
+                      strokeDashoffset: 1000,
+                      animation: 'drawLine 2s ease-out forwards'
+                    }}
+                  />
+                  
+                  {/* Pontos de Dados com Glow */}
+                  {[[60, 220], [120, 200], [180, 210], [240, 180], [300, 190], [360, 140], [420, 160], [480, 100], [540, 120], [600, 70], [660, 50], [720, 30]].map(([x, y], i) => (
+                    <g key={i} style={{ animation: `fadeInPoint 0.3s ease-out ${0.15 * i}s forwards`, opacity: 0 }}>
+                      {/* Glow externo */}
+                      <circle cx={x} cy={y} r="16" fill="url(#pointGradient)" opacity="0.6" />
+                      {/* Ponto principal */}
+                      <circle cx={x} cy={y} r="6" fill="#ec4899" filter="url(#neonGlow)" />
+                      {/* Centro brilhante */}
+                      <circle cx={x} cy={y} r="3" fill="white" />
+                    </g>
+                  ))}
+                  
+                  {/* Labels dos Meses */}
+                  {MOCK_PLAYER_DATA.profitHistory.map((data, i) => (
+                    <text 
+                      key={i}
+                      x={60 + i * 60} 
+                      y="265" 
+                      fill="#7c3aed" 
+                      fontSize="11" 
+                      textAnchor="middle"
+                      fontWeight="600"
+                    >
+                      {data.month}
+                    </text>
+                  ))}
+                  
+                  {/* Labels dos Valores Y */}
+                  {['$25k', '$20k', '$15k', '$10k', '$5k', '$0'].map((label, i) => (
+                    <text 
+                      key={i}
+                      x="30" 
+                      y={25 + i * 44} 
+                      fill="#64748b" 
+                      fontSize="10" 
+                      textAnchor="end"
+                    >
+                      {label}
+                    </text>
+                  ))}
+                </svg>
+                
+                {/* Valor Atual Destacado */}
+                <div style={{
+                  position: 'absolute',
+                  top: 10,
+                  right: 20,
+                  background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(236, 72, 153, 0.15))',
+                  border: '1px solid rgba(236, 72, 153, 0.4)',
+                  borderRadius: 12,
+                  padding: '12px 20px',
+                  boxShadow: '0 0 30px rgba(236, 72, 153, 0.2)',
+                }}>
+                  <div style={{ fontSize: 12, color: '#f472b6', marginBottom: 4 }}>Profit Total</div>
+                  <div style={{ 
+                    fontSize: 24, 
+                    fontWeight: 800,
+                    background: 'linear-gradient(135deg, #f472b6, #c084fc)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                  }}>
+                    +${MOCK_PLAYER_DATA.totalProfit.toLocaleString()}
+                  </div>
+                </div>
+              </div>
+              
+              {/* Legenda de Performance */}
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'center', 
+                gap: 24, 
+                marginTop: 16,
+                paddingTop: 16,
+                borderTop: '1px solid rgba(168, 85, 247, 0.2)'
+              }}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: 18, fontWeight: 800, color: '#22c55e' }}>+147%</div>
+                  <div style={{ fontSize: 11, color: '#64748b' }}>Crescimento Anual</div>
+                </div>
+                <div style={{ width: 1, background: 'rgba(168, 85, 247, 0.3)' }} />
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: 18, fontWeight: 800, color: '#f472b6' }}>12</div>
+                  <div style={{ fontSize: 11, color: '#64748b' }}>Meses Positivos</div>
+                </div>
+                <div style={{ width: 1, background: 'rgba(168, 85, 247, 0.3)' }} />
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: 18, fontWeight: 800, color: '#c084fc' }}>$1.8k</div>
+                  <div style={{ fontSize: 11, color: '#64748b' }}>Média Mensal</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Estatísticas de Jogo */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
             <div className="card" style={{ padding: 20 }}>
@@ -356,6 +608,21 @@ export default function PlayerAnalysis() {
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(10px); }
           to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes drawLine {
+          to { stroke-dashoffset: 0; }
+        }
+        @keyframes fadeInPoint {
+          from { opacity: 0; transform: scale(0); }
+          to { opacity: 1; transform: scale(1); }
+        }
+        @keyframes fadeInArea {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes pulseGlow {
+          0%, 100% { filter: drop-shadow(0 0 8px rgba(236, 72, 153, 0.6)); }
+          50% { filter: drop-shadow(0 0 20px rgba(236, 72, 153, 0.9)); }
         }
       `}</style>
     </div>
