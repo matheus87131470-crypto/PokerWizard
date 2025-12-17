@@ -549,63 +549,38 @@ h3 {
   }
 }
 
-/* ===== TRAINER MOBILE - SCROLL HORIZONTAL NATIVO DA PÁGINA ===== */
+/* ===== TRAINER MOBILE - MESA GRANDE COM SCROLL NO CONTAINER ===== */
 @media (max-width: 768px) {
-  /* Permitir scroll horizontal na página inteira */
+  /* Body NÃO deve scrollar horizontalmente - apenas o container do Trainer */
   html, body, #root {
+    overflow-x: hidden;
+  }
+  
+  /* Container do Trainer - AQUI é onde o scroll acontece */
+  .trainer-page {
     overflow-x: auto;
+    overflow-y: visible;
     -webkit-overflow-scrolling: touch;
   }
   
-  /* Container principal - não bloquear overflow */
-  .container {
-    overflow-x: visible;
-    max-width: none;
-  }
-  
-  /* Container do Trainer - não esconder overflow */
-  .trainer-page,
-  .trainer-container {
-    overflow-x: visible !important;
-    min-width: fit-content;
-  }
-  
-  /* Wrapper da mesa - scroll horizontal nativo */
+  /* Wrapper da mesa - largura GRANDE para forçar scroll real */
   .poker-table-wrapper {
-    overflow-x: visible !important;
-    -webkit-overflow-scrolling: touch;
-    min-width: 520px; /* Força scroll quando viewport < 520px */
-    width: 100%;
-    padding: 8px 0;
+    min-width: 1000px; /* Mesa grande = scroll obrigatório */
+    width: 1000px;
+    padding: 16px 0;
   }
   
-  /* Mesa do poker - tamanho mínimo garantido */
+  /* Mesa do poker - tamanho fixo grande */
   .poker-table-wrapper > div {
-    min-width: 500px !important;
-  }
-  
-  /* Scrollbar customizada para a página */
-  body::-webkit-scrollbar {
-    height: 8px;
-  }
-  
-  body::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.2);
-  }
-  
-  body::-webkit-scrollbar-thumb {
-    background: linear-gradient(135deg, #7c3aed 0%, #06b6d4 100%);
-    border-radius: 4px;
-  }
-  
-  body::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(135deg, #8b5cf6 0%, #22d3ee 100%);
+    min-width: 900px !important;
+    max-width: 900px !important;
   }
 }
 
-/* Mobile pequeno (< 480px) - garantir scroll horizontal */
+/* Mobile pequeno (< 480px) - mesa ainda maior para compensar */
 @media (max-width: 480px) {
   .poker-table-wrapper {
-    min-width: 540px; /* Garante scroll em telas muito pequenas */
+    min-width: 1100px;
+    width: 1100px;
   }
 }

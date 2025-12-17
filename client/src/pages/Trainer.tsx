@@ -249,20 +249,15 @@ function PokerTableVisual({
   };
   
   return (
-    // Wrapper para scroll horizontal nativo no mobile
+    // Wrapper da mesa - CSS controla min-width no mobile (1000px)
     <div 
       className="poker-table-wrapper"
-      style={{
-        width: '100%',
-        minWidth: 520, // Garante scroll horizontal em telas < 520px
-      }}
     >
       <div style={{
         position: 'relative',
         width: '100%',
-        minWidth: 500, // Tamanho mínimo da mesa
-        maxWidth: 600,
-        height: 300,
+        maxWidth: 900,
+        height: 320,
         margin: '0 auto',
         background: 'radial-gradient(ellipse at center, #1a472a 0%, #0d2818 70%, #061510 100%)',
         borderRadius: '50%/40%',
@@ -788,7 +783,7 @@ export default function Trainer() {
   }
   
   return (
-    <div>
+    <div className="trainer-page">
       {/* Header */}
       <div style={{ 
         display: 'flex', 
