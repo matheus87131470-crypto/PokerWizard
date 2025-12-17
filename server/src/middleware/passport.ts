@@ -2,24 +2,20 @@ import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import { getUserByEmail, createUser } from '../services/userService';
 
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
-const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-const GOOGLE_CALLBACK_URL = process.env.GOOGLE_CALLBACK_URL || 'http://localhost:3000/api/auth/google/callback';
-
 // Log para debug
 console.log('🔐 Google OAuth Config:');
-console.log('  - CLIENT_ID:', GOOGLE_CLIENT_ID ? `${GOOGLE_CLIENT_ID.substring(0, 20)}...` : '❌ NÃO DEFINIDO');
-console.log('  - CLIENT_SECRET:', GOOGLE_CLIENT_SECRET ? '✅ Definido' : '❌ NÃO DEFINIDO');
-console.log('  - CALLBACK_URL:', GOOGLE_CALLBACK_URL);
+console.log('  - CLIENT_ID:', process.env.GOOGLE_CLIENT_ID ? `${process.env.GOOGLE_CLIENT_ID.substring(0, 20)}...` : '❌ NÃO DEFINIDO');
+console.log('  - CLIENT_SECRET:', process.env.GOOGLE_CLIENT_SECRET ? '✅ Definido' : '❌ NÃO DEFINIDO');
+console.log('  - CALLBACK_URL:', process.env.GOOGLE_CALLBACK_URL || '❌ NÃO DEFINIDO');
 
 // Só configura o Google Strategy se as credenciais existirem
-if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET && process.env.GOOGLE_CALLBACK_URL) {
   passport.use(
     new GoogleStrategy(
       {
-        clientID: GOOGLE_CLIENT_ID,
-        clientSecret: GOOGLE_CLIENT_SECRET,
-        callbackURL: GOOGLE_CALLBACK_URL,
+        clientID: process.env.GOOGLE_CLIENT_ID!,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+        callbackURL: process.env.GOOGLE_CALLBACK_URL!,
       },
       async (_accessToken, _refreshToken, profile, done) => {
         try {
