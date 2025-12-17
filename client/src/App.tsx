@@ -293,30 +293,111 @@ function Home() {
   const auth = useAuth();
   
   return (
-    <div style={{ paddingTop: 20 }}>
+    <div style={{ 
+      paddingTop: 20,
+      position: 'relative',
+    }}>
+      {/* Background Neon Graph Effect - Inspirado na imagem de referência */}
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: '50%',
+        transform: 'translateX(-50%)',
+        width: '100%',
+        maxWidth: 1200,
+        height: 400,
+        overflow: 'hidden',
+        pointerEvents: 'none',
+        zIndex: 0,
+        opacity: 0.6,
+      }}>
+        <svg width="100%" height="100%" viewBox="0 0 1200 400" preserveAspectRatio="xMidYMid slice">
+          <defs>
+            <linearGradient id="neonLineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#a855f7" />
+              <stop offset="50%" stopColor="#ec4899" />
+              <stop offset="100%" stopColor="#a855f7" />
+            </linearGradient>
+            <filter id="glow">
+              <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+              <feMerge>
+                <feMergeNode in="coloredBlur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+            <radialGradient id="pointGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#f472b6" stopOpacity="1"/>
+              <stop offset="100%" stopColor="#f472b6" stopOpacity="0"/>
+            </radialGradient>
+          </defs>
+          
+          {/* Grid Lines */}
+          {[...Array(20)].map((_, i) => (
+            <line key={`v-${i}`} x1={i * 60} y1="0" x2={i * 60} y2="400" stroke="rgba(168, 85, 247, 0.1)" strokeWidth="1" />
+          ))}
+          {[...Array(10)].map((_, i) => (
+            <line key={`h-${i}`} x1="0" y1={i * 40} x2="1200" y2={i * 40} stroke="rgba(168, 85, 247, 0.1)" strokeWidth="1" />
+          ))}
+          
+          {/* Main Neon Line - Growth Chart */}
+          <path 
+            d="M 0 350 Q 100 340 200 300 T 400 250 T 600 200 T 800 150 T 1000 80 T 1200 50"
+            stroke="url(#neonLineGradient)"
+            strokeWidth="3"
+            fill="none"
+            filter="url(#glow)"
+            style={{ 
+              animation: 'lineGlow 2s ease-in-out infinite',
+            }}
+          />
+          
+          {/* Glow Area Under Line */}
+          <path 
+            d="M 0 350 Q 100 340 200 300 T 400 250 T 600 200 T 800 150 T 1000 80 T 1200 50 L 1200 400 L 0 400 Z"
+            fill="url(#neonLineGradient)"
+            opacity="0.08"
+          />
+          
+          {/* Data Points */}
+          {[[200, 300], [400, 250], [600, 200], [800, 150], [1000, 80]].map(([x, y], i) => (
+            <g key={i}>
+              <circle cx={x} cy={y} r="12" fill="url(#pointGlow)" opacity="0.5" />
+              <circle cx={x} cy={y} r="6" fill="#f472b6" filter="url(#glow)" />
+              <circle cx={x} cy={y} r="3" fill="white" />
+            </g>
+          ))}
+        </svg>
+      </div>
+      
       {/* Welcome Banner para usuários não logados */}
       {!auth.user && (
         <div style={{
           marginBottom: 40,
-          background: 'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)',
+          background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.9) 0%, rgba(236, 72, 153, 0.9) 100%)',
           borderRadius: 20,
           padding: '32px 40px',
-          boxShadow: '0 8px 32px rgba(139, 92, 246, 0.4)',
+          boxShadow: '0 8px 40px rgba(168, 85, 247, 0.4), 0 0 60px rgba(168, 85, 247, 0.2)',
           textAlign: 'center',
           position: 'relative',
           overflow: 'hidden',
+          zIndex: 1,
         }}>
+          {/* Animated Grid Pattern */}
           <div style={{
             position: 'absolute',
             top: 0,
             left: 0,
             right: 0,
             bottom: 0,
-            background: 'url("data:image/svg+xml,%3Csvg width="60" height="60" xmlns="http://www.w3.org/2000/svg"%3E%3Cpath d="M0 0h60v60H0z" fill="none"/%3E%3Cpath d="M30 0v60M0 30h60" stroke="rgba(255,255,255,0.1)" stroke-width="1"/%3E%3C/svg%3E")',
-            opacity: 0.3,
+            backgroundImage: `
+              linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)
+            `,
+            backgroundSize: '30px 30px',
+            animation: 'gridMove 15s linear infinite',
           }}></div>
           <div style={{ position: 'relative', zIndex: 1 }}>
-            <h2 style={{ fontSize: 28, fontWeight: 800, color: 'white', marginBottom: 12 }}>
+            <h2 style={{ fontSize: 28, fontWeight: 800, color: 'white', marginBottom: 12, textShadow: '0 0 30px rgba(255,255,255,0.3)' }}>
               👋 Bem-vindo ao PokerWizard
             </h2>
             <p style={{ fontSize: 16, color: 'rgba(255, 255, 255, 0.9)', marginBottom: 24, maxWidth: 600, margin: '0 auto 24px' }}>
@@ -378,45 +459,81 @@ function Home() {
         </div>
       )}
 
-      {/* Hero Section - Orientado a Ação */}
+      {/* Hero Section - Futuristic Neon Style */}
       <div className="hero" style={{ 
         marginBottom: 60, 
         textAlign: 'center',
-        background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%)',
+        background: 'linear-gradient(145deg, rgba(10, 15, 36, 0.95) 0%, rgba(5, 8, 22, 0.9) 100%)',
         borderRadius: 24,
         padding: '60px 24px',
-        border: '1px solid rgba(139, 92, 246, 0.2)'
+        border: '1px solid rgba(168, 85, 247, 0.3)',
+        boxShadow: '0 0 60px rgba(168, 85, 247, 0.1), inset 0 1px 0 rgba(168, 85, 247, 0.2)',
+        position: 'relative',
+        overflow: 'hidden',
+        zIndex: 1,
       }}>
-        <div style={{ fontSize: 56, marginBottom: 20 }}>🎯</div>
-        <h1 style={{ fontSize: 42, marginBottom: 12, fontWeight: 900, lineHeight: 1.2 }}>
+        {/* Decorative Glow Orbs */}
+        <div style={{
+          position: 'absolute',
+          top: -100,
+          left: -100,
+          width: 300,
+          height: 300,
+          background: 'radial-gradient(circle, rgba(168, 85, 247, 0.15) 0%, transparent 70%)',
+          pointerEvents: 'none',
+        }} />
+        <div style={{
+          position: 'absolute',
+          bottom: -100,
+          right: -100,
+          width: 300,
+          height: 300,
+          background: 'radial-gradient(circle, rgba(236, 72, 153, 0.12) 0%, transparent 70%)',
+          pointerEvents: 'none',
+        }} />
+        
+        <div style={{ fontSize: 56, marginBottom: 20, filter: 'drop-shadow(0 0 20px rgba(168, 85, 247, 0.5))' }}>🎯</div>
+        <h1 style={{ 
+          fontSize: 42, 
+          marginBottom: 12, 
+          fontWeight: 900, 
+          lineHeight: 1.2,
+          background: 'linear-gradient(135deg, #f8fafc 0%, #c084fc 50%, #f472b6 100%)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          textShadow: 'none',
+        }}>
           PokerWizard
           <span style={{ 
             display: 'block',
             fontSize: 24,
             fontWeight: 600,
-            color: 'var(--text-secondary)',
+            background: 'linear-gradient(90deg, #c084fc, #38bdf8)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
             marginTop: 8
           }}>
             AI Poker Trainer by Pokio
           </span>
         </h1>
-        <p style={{ fontSize: 18, color: 'var(--text-secondary)', maxWidth: 550, margin: '0 auto 32px', lineHeight: 1.6 }}>
+        <p style={{ fontSize: 18, color: '#c4b5fd', maxWidth: 550, margin: '0 auto 32px', lineHeight: 1.6 }}>
           Receba feedback imediato, descubra leaks ocultos e evolua seu jogo em minutos — não em meses.
         </p>
         
-        {/* CTA Principal */}
+        {/* CTA Principal - Neon Style */}
         <div style={{ 
-          background: 'rgba(16, 185, 129, 0.1)', 
-          border: '1px solid rgba(16, 185, 129, 0.3)',
+          background: 'linear-gradient(145deg, rgba(16, 185, 129, 0.15), rgba(6, 182, 212, 0.1))', 
+          border: '1px solid rgba(16, 185, 129, 0.4)',
           borderRadius: 16,
           padding: '20px 24px',
           maxWidth: 500,
-          margin: '0 auto 24px'
+          margin: '0 auto 24px',
+          boxShadow: '0 0 30px rgba(16, 185, 129, 0.1), inset 0 1px 0 rgba(16, 185, 129, 0.2)',
         }}>
-          <p style={{ fontSize: 14, color: '#10b981', fontWeight: 600, marginBottom: 12 }}>
+          <p style={{ fontSize: 14, color: '#10b981', fontWeight: 600, marginBottom: 12, textShadow: '0 0 20px rgba(16, 185, 129, 0.5)' }}>
             🎯 COMECE POR AQUI
           </p>
-          <p style={{ fontSize: 15, color: 'var(--text-secondary)', marginBottom: 16 }}>
+          <p style={{ fontSize: 15, color: '#c4b5fd', marginBottom: 16 }}>
             Analise suas mãos de poker com IA em menos de 1 minuto.
           </p>
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -437,7 +554,7 @@ function Home() {
           </div>
         </div>
         
-        <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+        <p style={{ fontSize: 13, color: '#a78bfa' }}>
           ✓ 5 análises grátis • ✓ Sem cartão de crédito • ✓ Resultado imediato
         </p>
 
@@ -535,45 +652,65 @@ function Home() {
         )}
       </div>
 
-      {/* Feature Principal Destacada */}
-      <div style={{ marginBottom: 40 }}>
+      {/* Feature Principal Destacada - Futuristic Neon */}
+      <div style={{ marginBottom: 40, position: 'relative', zIndex: 1 }}>
         <div style={{
-          background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+          background: 'linear-gradient(145deg, rgba(10, 15, 36, 0.98) 0%, rgba(5, 8, 22, 0.95) 100%)',
           borderRadius: 20,
           padding: 32,
-          border: '2px solid rgba(139, 92, 246, 0.3)',
-          boxShadow: '0 20px 60px rgba(139, 92, 246, 0.15)',
+          border: '1px solid rgba(168, 85, 247, 0.4)',
+          boxShadow: '0 0 60px rgba(168, 85, 247, 0.15), 0 0 100px rgba(236, 72, 153, 0.08), inset 0 1px 0 rgba(168, 85, 247, 0.2)',
           position: 'relative',
           overflow: 'hidden'
         }}>
-          {/* Badge Destaque */}
+          {/* Decorative Corner Glows */}
+          <div style={{
+            position: 'absolute',
+            top: -50,
+            right: -50,
+            width: 200,
+            height: 200,
+            background: 'radial-gradient(circle, rgba(168, 85, 247, 0.2) 0%, transparent 70%)',
+            pointerEvents: 'none',
+          }} />
+          
+          {/* Badge Destaque - Neon Style */}
           <div style={{
             position: 'absolute',
             top: 16,
             right: 16,
-            background: 'linear-gradient(135deg, #a78bfa, #8b5cf6)',
+            background: 'linear-gradient(135deg, #c084fc, #a855f7)',
             padding: '6px 14px',
             borderRadius: 20,
             fontSize: 12,
             fontWeight: 700,
-            color: 'white'
+            color: 'white',
+            boxShadow: '0 0 20px rgba(168, 85, 247, 0.5)',
+            zIndex: 2,
           }}>
             ⭐ MAIS USADO
           </div>
           
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32, alignItems: 'center' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32, alignItems: 'center', position: 'relative', zIndex: 1 }}>
             <div>
-              <div style={{ fontSize: 48, marginBottom: 16 }}>🎯</div>
-              <h2 style={{ fontSize: 28, fontWeight: 800, marginBottom: 12, color: 'white' }}>
+              <div style={{ fontSize: 48, marginBottom: 16, filter: 'drop-shadow(0 0 20px rgba(168, 85, 247, 0.5))' }}>🎯</div>
+              <h2 style={{ 
+                fontSize: 28, 
+                fontWeight: 800, 
+                marginBottom: 12, 
+                background: 'linear-gradient(135deg, #f8fafc, #c084fc)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+              }}>
                 Trainer GTO Premium
               </h2>
-              <p style={{ fontSize: 16, color: '#94a3b8', lineHeight: 1.7, marginBottom: 20 }}>
-                <strong style={{ color: '#10b981' }}>Treine como os profissionais.</strong> Pratique situações reais de poker com feedback instantâneo baseado em ranges GTO.
+              <p style={{ fontSize: 16, color: '#c4b5fd', lineHeight: 1.7, marginBottom: 20 }}>
+                <strong style={{ color: '#10b981', textShadow: '0 0 15px rgba(16, 185, 129, 0.5)' }}>Treine como os profissionais.</strong> Pratique situações reais de poker com feedback instantâneo baseado em ranges GTO.
               </p>
               <ul style={{ listStyle: 'none', padding: 0, marginBottom: 24 }}>
                 {['Ranges GTO por posição', 'Feedback visual instantâneo', 'Gráfico de evolução em tempo real'].map((item, i) => (
-                  <li key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10, color: '#cbd5e1', fontSize: 14 }}>
-                    <span style={{ color: '#10b981' }}>✓</span> {item}
+                  <li key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10, color: '#c4b5fd', fontSize: 14 }}>
+                    <span style={{ color: '#10b981', textShadow: '0 0 10px rgba(16, 185, 129, 0.5)' }}>✓</span> {item}
                   </li>
                 ))}
               </ul>
@@ -586,55 +723,66 @@ function Home() {
               </button>
             </div>
             <div style={{ 
-              background: 'rgba(139, 92, 246, 0.1)', 
+              background: 'linear-gradient(145deg, rgba(168, 85, 247, 0.15), rgba(236, 72, 153, 0.08))', 
               borderRadius: 16, 
               padding: 24,
-              border: '1px solid rgba(139, 92, 246, 0.2)',
-              textAlign: 'center'
+              border: '1px solid rgba(168, 85, 247, 0.3)',
+              textAlign: 'center',
+              boxShadow: 'inset 0 0 30px rgba(168, 85, 247, 0.1)',
             }}>
-              <div style={{ fontSize: 64, marginBottom: 12 }}>🃏</div>
-              <p style={{ color: '#a78bfa', fontSize: 14, fontWeight: 600 }}>Treinamento GTO profissional</p>
+              <div style={{ fontSize: 64, marginBottom: 12, filter: 'drop-shadow(0 0 15px rgba(168, 85, 247, 0.5))' }}>🃏</div>
+              <p style={{ color: '#c084fc', fontSize: 14, fontWeight: 600 }}>Treinamento GTO profissional</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Features Secundárias */}
-      <div style={{ marginBottom: 60 }}>
-        <h2 style={{ textAlign: 'center', marginBottom: 12, fontSize: 28, fontWeight: 700 }}>
+      {/* Features Secundárias - Neon Cards */}
+      <div style={{ marginBottom: 60, position: 'relative', zIndex: 1 }}>
+        <h2 style={{ 
+          textAlign: 'center', 
+          marginBottom: 12, 
+          fontSize: 28, 
+          fontWeight: 700,
+          background: 'linear-gradient(135deg, #f8fafc, #c084fc)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+        }}>
           Ferramentas para evoluir seu jogo
         </h2>
-        <p style={{ textAlign: 'center', marginBottom: 32, color: 'var(--text-secondary)', fontSize: 15 }}>
+        <p style={{ textAlign: 'center', marginBottom: 32, color: '#c4b5fd', fontSize: 15 }}>
           Cada ferramenta foi projetada para resolver um problema específico do seu jogo.
         </p>
         
         <div className="features-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 }}>
-          {/* Card 1 - Practice (Trainer) */}
+          {/* Card 1 - Practice (Trainer) - Neon Purple */}
           <div className="card" style={{ 
             display: 'flex', 
             flexDirection: 'column', 
             padding: 24,
             minHeight: 280,
             justifyContent: 'space-between',
-            background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(109, 40, 217, 0.08))',
-            border: '1px solid rgba(139, 92, 246, 0.4)'
+            background: 'linear-gradient(145deg, rgba(168, 85, 247, 0.12), rgba(10, 15, 36, 0.95))',
+            border: '1px solid rgba(168, 85, 247, 0.4)',
+            boxShadow: '0 0 40px rgba(168, 85, 247, 0.1), inset 0 1px 0 rgba(168, 85, 247, 0.2)',
           }}>
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
-                <div style={{ fontSize: 36 }}>🎯</div>
+                <div style={{ fontSize: 36, filter: 'drop-shadow(0 0 10px rgba(168, 85, 247, 0.5))' }}>🎯</div>
                 <span style={{ 
-                  background: 'linear-gradient(135deg, #8b5cf6, #6d28d9)', 
+                  background: 'linear-gradient(135deg, #a855f7, #c084fc)', 
                   color: '#fff', 
                   padding: '4px 10px', 
                   borderRadius: 6, 
                   fontSize: 11, 
-                  fontWeight: 700 
+                  fontWeight: 700,
+                  boxShadow: '0 0 15px rgba(168, 85, 247, 0.4)',
                 }}>
                   PRACTICE
                 </span>
               </div>
-              <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Practice</h3>
-              <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 16 }}>
+              <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8, color: '#f8fafc' }}>Practice</h3>
+              <p style={{ fontSize: 14, color: '#c4b5fd', lineHeight: 1.6, marginBottom: 16 }}>
                 Treine decisões pré-flop com cenários GTO. Tome decisões e receba feedback instantâneo.
               </p>
             </div>
@@ -644,41 +792,44 @@ function Home() {
               style={{ 
                 width: '100%', 
                 padding: '12px',
-                background: 'linear-gradient(135deg, #8b5cf6, #6d28d9)',
+                background: 'linear-gradient(135deg, #a855f7, #c084fc)',
                 color: '#fff',
-                fontWeight: 600
+                fontWeight: 600,
+                boxShadow: '0 0 20px rgba(168, 85, 247, 0.3)',
               }}
             >
               Treinar Agora →
             </button>
           </div>
 
-          {/* Card 2 - Analyze */}
+          {/* Card 2 - Analyze - Neon Pink */}
           <div className="card" style={{ 
             display: 'flex', 
             flexDirection: 'column', 
             padding: 24,
             minHeight: 280,
             justifyContent: 'space-between',
-            background: 'linear-gradient(135deg, rgba(236, 72, 153, 0.12), rgba(139, 92, 246, 0.08))',
-            border: '1px solid rgba(236, 72, 153, 0.3)'
+            background: 'linear-gradient(145deg, rgba(236, 72, 153, 0.12), rgba(10, 15, 36, 0.95))',
+            border: '1px solid rgba(236, 72, 153, 0.4)',
+            boxShadow: '0 0 40px rgba(236, 72, 153, 0.1), inset 0 1px 0 rgba(236, 72, 153, 0.2)',
           }}>
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
-                <div style={{ fontSize: 36 }}>🔍</div>
+                <div style={{ fontSize: 36, filter: 'drop-shadow(0 0 10px rgba(236, 72, 153, 0.5))' }}>🔍</div>
                 <span style={{ 
                   background: 'linear-gradient(135deg, #ec4899, #f472b6)', 
                   color: '#fff', 
                   padding: '4px 10px', 
                   borderRadius: 6, 
                   fontSize: 11, 
-                  fontWeight: 700 
+                  fontWeight: 700,
+                  boxShadow: '0 0 15px rgba(236, 72, 153, 0.4)',
                 }}>
                   ANALYZE
                 </span>
               </div>
-              <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Analyze</h3>
-              <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 16 }}>
+              <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8, color: '#f8fafc' }}>Analyze</h3>
+              <p style={{ fontSize: 14, color: '#f9a8d4', lineHeight: 1.6, marginBottom: 16 }}>
                 Cole o histórico de uma mão e receba análise GTO completa com IA.
               </p>
             </div>
@@ -688,41 +839,44 @@ function Home() {
               style={{ 
                 width: '100%', 
                 padding: '12px',
-                background: 'linear-gradient(135deg, #ec4899, #db2777)',
+                background: 'linear-gradient(135deg, #ec4899, #f472b6)',
                 color: '#fff',
-                fontWeight: 600
+                fontWeight: 600,
+                boxShadow: '0 0 20px rgba(236, 72, 153, 0.3)',
               }}
             >
               Analisar Mão →
             </button>
           </div>
 
-          {/* Card 3 - Ranges */}
+          {/* Card 3 - Ranges - Neon Cyan/Green */}
           <div className="card" style={{ 
             display: 'flex', 
             flexDirection: 'column', 
             padding: 24,
             minHeight: 280,
             justifyContent: 'space-between',
-            background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.12), rgba(16, 185, 129, 0.08))',
-            border: '1px solid rgba(34, 197, 94, 0.3)'
+            background: 'linear-gradient(145deg, rgba(16, 185, 129, 0.12), rgba(10, 15, 36, 0.95))',
+            border: '1px solid rgba(16, 185, 129, 0.4)',
+            boxShadow: '0 0 40px rgba(16, 185, 129, 0.1), inset 0 1px 0 rgba(16, 185, 129, 0.2)',
           }}>
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
-                <div style={{ fontSize: 36 }}>📊</div>
+                <div style={{ fontSize: 36, filter: 'drop-shadow(0 0 10px rgba(16, 185, 129, 0.5))' }}>📊</div>
                 <span style={{ 
-                  background: 'linear-gradient(135deg, #22c55e, #16a34a)', 
+                  background: 'linear-gradient(135deg, #10b981, #06b6d4)', 
                   color: '#fff', 
                   padding: '4px 10px', 
                   borderRadius: 6, 
                   fontSize: 11, 
-                  fontWeight: 700 
+                  fontWeight: 700,
+                  boxShadow: '0 0 15px rgba(16, 185, 129, 0.4)',
                 }}>
                   STUDY
                 </span>
               </div>
-              <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Ranges</h3>
-              <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 16 }}>
+              <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8, color: '#f8fafc' }}>Ranges</h3>
+              <p style={{ fontSize: 14, color: '#6ee7b7', lineHeight: 1.6, marginBottom: 16 }}>
                 Estude ranges de abertura GTO por posição. Visualize e memorize os ranges corretos.
               </p>
             </div>
@@ -732,16 +886,17 @@ function Home() {
               style={{ 
                 width: '100%', 
                 padding: '12px',
-                background: 'linear-gradient(135deg, #22c55e, #16a34a)',
+                background: 'linear-gradient(135deg, #10b981, #06b6d4)',
                 color: '#fff',
-                fontWeight: 600
+                fontWeight: 600,
+                boxShadow: '0 0 20px rgba(16, 185, 129, 0.3)',
               }}
             >
               Estudar Ranges →
             </button>
           </div>
 
-          {/* Card 4 - Análise de Jogadores - EM BREVE */}
+          {/* Card 4 - Análise de Jogadores - EM BREVE - Neon Cyan */}
           <div 
             className="card" 
             onClick={() => navigate('/player-analysis')}
@@ -751,45 +906,47 @@ function Home() {
               padding: 24,
               minHeight: 280,
               justifyContent: 'space-between',
-              background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.08), rgba(14, 165, 233, 0.05))',
-              border: '1px solid rgba(6, 182, 212, 0.25)',
+              background: 'linear-gradient(145deg, rgba(6, 182, 212, 0.12), rgba(10, 15, 36, 0.95))',
+              border: '1px solid rgba(6, 182, 212, 0.4)',
+              boxShadow: '0 0 40px rgba(6, 182, 212, 0.1), inset 0 1px 0 rgba(6, 182, 212, 0.2)',
               position: 'relative',
               overflow: 'hidden',
               cursor: 'pointer',
-              transition: 'all 0.2s'
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
             }}
           >
-            {/* Badge "Em Breve" no canto */}
+            {/* Badge "Em Breve" no canto - Neon Style */}
             <div style={{
               position: 'absolute',
               top: 16,
               right: -30,
-              background: 'linear-gradient(135deg, #06b6d4, #0ea5e9)',
+              background: 'linear-gradient(135deg, #06b6d4, #38bdf8)',
               padding: '6px 40px',
               fontSize: 10,
               fontWeight: 700,
               color: 'white',
               transform: 'rotate(45deg)',
-              boxShadow: '0 2px 10px rgba(6, 182, 212, 0.4)'
+              boxShadow: '0 0 20px rgba(6, 182, 212, 0.5)'
             }}>
               EM BREVE
             </div>
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
-                <div style={{ fontSize: 36 }}>🔍</div>
+                <div style={{ fontSize: 36, filter: 'drop-shadow(0 0 10px rgba(6, 182, 212, 0.5))' }}>🔍</div>
                 <span style={{ 
-                  background: 'rgba(6, 182, 212, 0.15)', 
-                  color: '#06b6d4', 
+                  background: 'rgba(6, 182, 212, 0.2)', 
+                  color: '#38bdf8', 
                   padding: '4px 10px', 
                   borderRadius: 6, 
                   fontSize: 11, 
-                  fontWeight: 600 
+                  fontWeight: 600,
+                  boxShadow: '0 0 10px rgba(6, 182, 212, 0.3)',
                 }}>
                   SHARKSCOPE
                 </span>
               </div>
-              <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Análise de Jogadores</h3>
-              <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 16 }}>
+              <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8, color: '#f8fafc' }}>Análise de Jogadores</h3>
+              <p style={{ fontSize: 14, color: '#7dd3fc', lineHeight: 1.6, marginBottom: 16 }}>
                 Descubra os leaks dos seus oponentes. Análise completa de tendências e padrões de jogo.
               </p>
             </div>
@@ -798,10 +955,11 @@ function Home() {
               style={{ 
                 width: '100%', 
                 padding: '12px',
-                background: 'linear-gradient(135deg, #06b6d4, #0ea5e9)',
+                background: 'linear-gradient(135deg, #06b6d4, #38bdf8)',
                 color: '#fff',
                 fontWeight: 600,
-                border: 'none'
+                border: 'none',
+                boxShadow: '0 0 20px rgba(6, 182, 212, 0.3)',
               }}
             >
               Ver Preview →
@@ -810,48 +968,94 @@ function Home() {
         </div>
       </div>
 
-      {/* Social Proof */}
+      {/* Social Proof - Neon Stats */}
       <div className="card" style={{ 
         marginBottom: 60, 
-        background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.08), rgba(6, 182, 212, 0.08))',
+        background: 'linear-gradient(145deg, rgba(10, 15, 36, 0.98), rgba(5, 8, 22, 0.95))',
         textAlign: 'center',
-        padding: '48px 24px'
+        padding: '48px 24px',
+        border: '1px solid rgba(168, 85, 247, 0.3)',
+        boxShadow: '0 0 60px rgba(168, 85, 247, 0.1)',
+        position: 'relative',
+        zIndex: 1,
       }}>
-        <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 32 }}>
+        <h3 style={{ 
+          fontSize: 20, 
+          fontWeight: 700, 
+          marginBottom: 32,
+          background: 'linear-gradient(135deg, #f8fafc, #c084fc)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+        }}>
           Jogadores que já evoluíram com PokerWizard
         </h3>
         <div className="cards-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 32 }}>
           <div>
-            <div style={{ fontSize: 32, fontWeight: 800, color: 'var(--accent-primary)', marginBottom: 4 }}>
+            <div style={{ 
+              fontSize: 32, 
+              fontWeight: 800, 
+              background: 'linear-gradient(135deg, #a855f7, #c084fc)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              marginBottom: 4,
+              textShadow: 'none',
+              filter: 'drop-shadow(0 0 15px rgba(168, 85, 247, 0.5))',
+            }}>
               500+
             </div>
-            <div style={{ color: 'var(--text-secondary)', fontSize: 13 }}>Treinos Gerados</div>
+            <div style={{ color: '#c4b5fd', fontSize: 13 }}>Treinos Gerados</div>
           </div>
           <div>
-            <div style={{ fontSize: 32, fontWeight: 800, color: 'var(--accent-green)', marginBottom: 4 }}>
+            <div style={{ 
+              fontSize: 32, 
+              fontWeight: 800, 
+              background: 'linear-gradient(135deg, #10b981, #06b6d4)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              marginBottom: 4,
+              filter: 'drop-shadow(0 0 15px rgba(16, 185, 129, 0.5))',
+            }}>
               89%
             </div>
-            <div style={{ color: 'var(--text-secondary)', fontSize: 13 }}>Satisfação</div>
+            <div style={{ color: '#6ee7b7', fontSize: 13 }}>Satisfação</div>
           </div>
           <div>
-            <div style={{ fontSize: 32, fontWeight: 800, color: 'var(--accent-secondary)', marginBottom: 4 }}>
+            <div style={{ 
+              fontSize: 32, 
+              fontWeight: 800, 
+              background: 'linear-gradient(135deg, #06b6d4, #38bdf8)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              marginBottom: 4,
+              filter: 'drop-shadow(0 0 15px rgba(6, 182, 212, 0.5))',
+            }}>
               24/7
             </div>
-            <div style={{ color: 'var(--text-secondary)', fontSize: 13 }}>Disponível</div>
+            <div style={{ color: '#7dd3fc', fontSize: 13 }}>Disponível</div>
           </div>
         </div>
       </div>
 
-      {/* CTA Final - Conversão */}
+      {/* CTA Final - Neon Style */}
       <div style={{ 
         textAlign: 'center', 
         marginBottom: 60,
-        background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+        background: 'linear-gradient(145deg, rgba(10, 15, 36, 0.98), rgba(5, 8, 22, 0.95))',
         borderRadius: 20,
         padding: '48px 24px',
-        border: '1px solid rgba(139, 92, 246, 0.2)'
+        border: '1px solid rgba(168, 85, 247, 0.4)',
+        boxShadow: '0 0 60px rgba(168, 85, 247, 0.15), 0 0 100px rgba(236, 72, 153, 0.08)',
+        position: 'relative',
+        zIndex: 1,
       }}>
-        <h2 style={{ fontSize: 28, fontWeight: 700, marginBottom: 12 }}>
+        <h2 style={{ 
+          fontSize: 28, 
+          fontWeight: 700, 
+          marginBottom: 12,
+          background: 'linear-gradient(135deg, #f8fafc, #c084fc, #f472b6)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+        }}>
           🔥 Pronto para evoluir seu jogo?
         </h2>
         <p style={{ fontSize: 16, color: 'var(--text-secondary)', marginBottom: 28, maxWidth: 450, margin: '0 auto 28px' }}>
