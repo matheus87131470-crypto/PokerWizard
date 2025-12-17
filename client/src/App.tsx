@@ -156,6 +156,30 @@ function Layout({ children }: { children: React.ReactNode }) {
           <NavLink to="/trainer" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>🎯 Practice</NavLink>
           <NavLink to="/analyze" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>🔍 Analyze</NavLink>
           <NavLink to="/ranges" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>📊 Ranges</NavLink>
+          <span 
+            className="nav-link" 
+            style={{ 
+              opacity: 0.5, 
+              cursor: 'not-allowed',
+              position: 'relative'
+            }}
+            title="Em Breve"
+          >
+            🔍 Análise de Jogadores
+            <span style={{
+              position: 'absolute',
+              top: -8,
+              right: -8,
+              background: 'linear-gradient(135deg, #06b6d4, #0ea5e9)',
+              color: 'white',
+              fontSize: 8,
+              padding: '2px 6px',
+              borderRadius: 10,
+              fontWeight: 700
+            }}>
+              EM BREVE
+            </span>
+          </span>
             <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             {auth.user ? (
               <>
