@@ -249,20 +249,18 @@ function PokerTableVisual({
   };
   
   return (
-    // Wrapper para scroll horizontal no mobile
+    // Wrapper para scroll horizontal nativo no mobile
     <div 
       className="poker-table-wrapper"
       style={{
         width: '100%',
-        overflowX: 'auto',
-        WebkitOverflowScrolling: 'touch',
-        paddingBottom: 8,
+        minWidth: 520, // Garante scroll horizontal em telas < 520px
       }}
     >
       <div style={{
         position: 'relative',
         width: '100%',
-        minWidth: 500, // Tamanho mínimo para garantir scroll no mobile
+        minWidth: 500, // Tamanho mínimo da mesa
         maxWidth: 600,
         height: 300,
         margin: '0 auto',

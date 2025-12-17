@@ -38,7 +38,7 @@ body {
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  overflow-x: hidden;
+  /* overflow-x: hidden removido para permitir scroll horizontal no Trainer mobile */
 }
 
 /* Header */
@@ -549,27 +549,63 @@ h3 {
   }
 }
 
-/* ===== TRAINER MOBILE - SCROLL HORIZONTAL DA MESA ===== */
-@media (max-width: 640px) {
-  .poker-table-wrapper {
+/* ===== TRAINER MOBILE - SCROLL HORIZONTAL NATIVO DA PÁGINA ===== */
+@media (max-width: 768px) {
+  /* Permitir scroll horizontal na página inteira */
+  html, body, #root {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(124, 58, 237, 0.5) transparent;
-    margin: 0 -16px; /* Estende até a borda do card */
-    padding: 0 16px;
   }
   
-  .poker-table-wrapper::-webkit-scrollbar {
-    height: 6px;
+  /* Container principal - não bloquear overflow */
+  .container {
+    overflow-x: visible;
+    max-width: none;
   }
   
-  .poker-table-wrapper::-webkit-scrollbar-track {
-    background: transparent;
+  /* Container do Trainer - não esconder overflow */
+  .trainer-page,
+  .trainer-container {
+    overflow-x: visible !important;
+    min-width: fit-content;
   }
   
-  .poker-table-wrapper::-webkit-scrollbar-thumb {
-    background: rgba(124, 58, 237, 0.5);
-    border-radius: 3px;
+  /* Wrapper da mesa - scroll horizontal nativo */
+  .poker-table-wrapper {
+    overflow-x: visible !important;
+    -webkit-overflow-scrolling: touch;
+    min-width: 520px; /* Força scroll quando viewport < 520px */
+    width: 100%;
+    padding: 8px 0;
+  }
+  
+  /* Mesa do poker - tamanho mínimo garantido */
+  .poker-table-wrapper > div {
+    min-width: 500px !important;
+  }
+  
+  /* Scrollbar customizada para a página */
+  body::-webkit-scrollbar {
+    height: 8px;
+  }
+  
+  body::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+  }
+  
+  body::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #7c3aed 0%, #06b6d4 100%);
+    border-radius: 4px;
+  }
+  
+  body::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #8b5cf6 0%, #22d3ee 100%);
+  }
+}
+
+/* Mobile pequeno (< 480px) - garantir scroll horizontal */
+@media (max-width: 480px) {
+  .poker-table-wrapper {
+    min-width: 540px; /* Garante scroll em telas muito pequenas */
   }
 }
