@@ -264,7 +264,7 @@ export default function Login() {
             // Redirecionar para o endpoint de Google OAuth do backend
             const apiBase = window.location.hostname.includes('localhost')
               ? 'http://localhost:3000'
-              : 'https://pokerwizard.onrender.com';
+              : 'https://poker.pokio.online';
             window.location.href = `${apiBase}/api/auth/google`;
           }}
           style={{
