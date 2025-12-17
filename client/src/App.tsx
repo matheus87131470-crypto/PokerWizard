@@ -5,6 +5,7 @@ import Features from './pages/Features';
 import Analysis from './pages/Analysis';
 import Analyze from './pages/Analyze';
 import Ranges from './pages/Ranges';
+import PlayerAnalysis from './pages/PlayerAnalysis';
 import Login from './pages/Login';
 import Premium from './pages/Premium';
 import Profile from './pages/Profile';
@@ -156,14 +157,10 @@ function Layout({ children }: { children: React.ReactNode }) {
           <NavLink to="/trainer" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>🎯 Practice</NavLink>
           <NavLink to="/analyze" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>🔍 Analyze</NavLink>
           <NavLink to="/ranges" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>📊 Ranges</NavLink>
-          <span 
-            className="nav-link" 
-            style={{ 
-              opacity: 0.5, 
-              cursor: 'not-allowed',
-              position: 'relative'
-            }}
-            title="Em Breve"
+          <NavLink 
+            to="/player-analysis" 
+            className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}
+            style={{ position: 'relative' }}
           >
             🔍 Análise de Jogadores
             <span style={{
@@ -179,7 +176,7 @@ function Layout({ children }: { children: React.ReactNode }) {
             }}>
               EM BREVE
             </span>
-          </span>
+          </NavLink>
             <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             {auth.user ? (
               <>
@@ -745,42 +742,37 @@ function Home() {
           </div>
 
           {/* Card 4 - Análise de Jogadores - EM BREVE */}
-          <div className="card" style={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
-            padding: 24,
-            minHeight: 280,
-            justifyContent: 'space-between',
-            background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.08), rgba(14, 165, 233, 0.05))',
-            border: '1px solid rgba(6, 182, 212, 0.25)',
-            position: 'relative',
-            overflow: 'hidden'
-          }}>
-            {/* Overlay "Em Breve" */}
+          <div 
+            className="card" 
+            onClick={() => navigate('/player-analysis')}
+            style={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              padding: 24,
+              minHeight: 280,
+              justifyContent: 'space-between',
+              background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.08), rgba(14, 165, 233, 0.05))',
+              border: '1px solid rgba(6, 182, 212, 0.25)',
+              position: 'relative',
+              overflow: 'hidden',
+              cursor: 'pointer',
+              transition: 'all 0.2s'
+            }}
+          >
+            {/* Badge "Em Breve" no canto */}
             <div style={{
               position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background: 'rgba(15, 23, 42, 0.6)',
-              backdropFilter: 'blur(2px)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              zIndex: 2
+              top: 16,
+              right: -30,
+              background: 'linear-gradient(135deg, #06b6d4, #0ea5e9)',
+              padding: '6px 40px',
+              fontSize: 10,
+              fontWeight: 700,
+              color: 'white',
+              transform: 'rotate(45deg)',
+              boxShadow: '0 2px 10px rgba(6, 182, 212, 0.4)'
             }}>
-              <div style={{
-                background: 'linear-gradient(135deg, #06b6d4, #0ea5e9)',
-                padding: '12px 28px',
-                borderRadius: 30,
-                fontSize: 14,
-                fontWeight: 700,
-                color: 'white',
-                boxShadow: '0 4px 20px rgba(6, 182, 212, 0.4)'
-              }}>
-                🚀 EM BREVE
-              </div>
+              EM BREVE
             </div>
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
@@ -793,7 +785,7 @@ function Home() {
                   fontSize: 11, 
                   fontWeight: 600 
                 }}>
-                  NOVO
+                  SHARKSCOPE
                 </span>
               </div>
               <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Análise de Jogadores</h3>
@@ -802,11 +794,17 @@ function Home() {
               </p>
             </div>
             <button 
-              className="btn btn-ghost" 
-              style={{ width: '100%', padding: '12px', opacity: 0.5, cursor: 'not-allowed' }}
-              disabled
+              className="btn" 
+              style={{ 
+                width: '100%', 
+                padding: '12px',
+                background: 'linear-gradient(135deg, #06b6d4, #0ea5e9)',
+                color: '#fff',
+                fontWeight: 600,
+                border: 'none'
+              }}
             >
-              Em Breve →
+              Ver Preview →
             </button>
           </div>
         </div>
@@ -927,6 +925,7 @@ export default function App() {
             <Route path="/trainer" element={<Trainer />} />
             <Route path="/analyze" element={<Analyze />} />
             <Route path="/ranges" element={<Ranges />} />
+            <Route path="/player-analysis" element={<PlayerAnalysis />} />
             {/* Outras páginas */}
             <Route path="/analysis" element={<Analysis />} />
             <Route path="/features" element={<Features />} />
