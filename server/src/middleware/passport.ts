@@ -8,6 +8,9 @@ console.log('  - CLIENT_ID:', process.env.GOOGLE_CLIENT_ID ? `${process.env.GOOG
 console.log('  - CLIENT_SECRET:', process.env.GOOGLE_CLIENT_SECRET ? '✅ Definido' : '❌ NÃO DEFINIDO');
 console.log('  - CALLBACK_URL:', process.env.GOOGLE_CALLBACK_URL || '❌ NÃO DEFINIDO');
 
+// DEBUG TEMPORÁRIO
+console.log('GOOGLE CALLBACK EM USO →', process.env.GOOGLE_CALLBACK_URL);
+
 // Só configura o Google Strategy se as credenciais existirem
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET && process.env.GOOGLE_CALLBACK_URL) {
   passport.use(
