@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Link, NavLink, useNavigate } from 'react-router-dom';
 import { Analytics } from '@vercel/analytics/react';
-import Rankings from './pages/Rankings';
 import Features from './pages/Features';
 import Analysis from './pages/Analysis';
 import Analyze from './pages/Analyze';
@@ -157,7 +156,6 @@ function Layout({ children }: { children: React.ReactNode }) {
           <NavLink to="/trainer" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>🎯 Practice</NavLink>
           <NavLink to="/analyze" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>🔍 Analyze</NavLink>
           <NavLink to="/ranges" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>📊 Ranges</NavLink>
-          <NavLink to="/rankings" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>🏆 Rankings</NavLink>
             <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             {auth.user ? (
               <>
@@ -402,18 +400,18 @@ function Home() {
           </p>
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
             <button 
-              onClick={() => navigate('/solutions')}
+              onClick={() => navigate('/trainer')}
               className="btn btn-success" 
               style={{ padding: '14px 24px', fontSize: 15, fontWeight: 700 }}
             >
-              📊 Analisar Mão Agora
+              🎯 Começar a Treinar
             </button>
             <button 
-              onClick={() => navigate('/rankings')}
+              onClick={() => navigate('/analyze')}
               className="btn btn-ghost" 
               style={{ padding: '14px 24px', fontSize: 15 }}
             >
-              🏆 Ver Rankings
+              🔍 Analisar Mão
             </button>
           </div>
         </div>
@@ -787,89 +785,6 @@ function Home() {
               Em Breve →
             </button>
           </div>
-
-          {/* Card 5 - Rankings */}
-          <div className="card" style={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
-            padding: 24,
-            minHeight: 280,
-            justifyContent: 'space-between'
-          }}>
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
-                <div style={{ fontSize: 36 }}>🏆</div>
-                <span style={{ 
-                  background: 'rgba(16, 185, 129, 0.15)', 
-                  color: '#10b981', 
-                  padding: '4px 10px', 
-                  borderRadius: 6, 
-                  fontSize: 11, 
-                  fontWeight: 600 
-                }}>
-                  GRATUITO
-                </span>
-              </div>
-              <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Rankings Globais</h3>
-              <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 16 }}>
-                Veja como você se compara aos melhores. Acompanhe sua evolução no ranking.
-              </p>
-            </div>
-            <button 
-              onClick={() => navigate('/rankings')}
-              className="btn btn-ghost" 
-              style={{ width: '100%', padding: '12px' }}
-            >
-              Ver Rankings →
-            </button>
-          </div>
-
-          {/* Card 3 - Premium */}
-          <div className="card" style={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
-            padding: 24,
-            minHeight: 280,
-            justifyContent: 'space-between',
-            background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.1), rgba(245, 158, 11, 0.05))',
-            border: '1px solid rgba(251, 191, 36, 0.3)'
-          }}>
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
-                <div style={{ fontSize: 36 }}>👑</div>
-                <span style={{ 
-                  background: 'linear-gradient(135deg, #fbbf24, #f59e0b)', 
-                  color: '#000', 
-                  padding: '4px 10px', 
-                  borderRadius: 6, 
-                  fontSize: 11, 
-                  fontWeight: 700 
-                }}>
-                  PREMIUM
-                </span>
-              </div>
-              <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Acesso Ilimitado</h3>
-              <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 12 }}>
-                Treinos ilimitados, análise avançada da IA e relatórios completos de evolução.
-              </p>
-              <p style={{ fontSize: 13, color: '#fbbf24', fontWeight: 600 }}>
-                R$ 3,50/mês • Cancele quando quiser
-              </p>
-            </div>
-            <button 
-              onClick={() => navigate('/premium')}
-              className="btn" 
-              style={{ 
-                width: '100%', 
-                padding: '12px',
-                background: 'linear-gradient(135deg, #fbbf24, #f59e0b)',
-                color: '#000',
-                fontWeight: 700
-              }}
-            >
-              Assinar Premium →
-            </button>
-          </div>
         </div>
       </div>
 
@@ -918,22 +833,22 @@ function Home() {
           🔥 Pronto para evoluir seu jogo?
         </h2>
         <p style={{ fontSize: 16, color: 'var(--text-secondary)', marginBottom: 28, maxWidth: 450, margin: '0 auto 28px' }}>
-          Analise suas mãos com IA e receba feedback profissional. É grátis.
+          Treine com cenários GTO e análise de mãos com IA. É grátis para começar.
         </p>
         <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
           <button 
-            onClick={() => navigate('/solutions')}
+            onClick={() => navigate('/trainer')}
             className="btn btn-success" 
             style={{ padding: '16px 32px', fontSize: 16, fontWeight: 700 }}
           >
-            📊 Analisar Mão Agora
+            🎯 Começar a Treinar
           </button>
           <button 
-            onClick={() => navigate('/rankings')}
+            onClick={() => navigate('/analyze')}
             className="btn btn-primary" 
             style={{ padding: '16px 32px', fontSize: 16 }}
           >
-            🏆 Ver Rankings
+            🔍 Analisar Mão
           </button>
         </div>
       </div>
@@ -989,7 +904,6 @@ export default function App() {
             <Route path="/analyze" element={<Analyze />} />
             <Route path="/ranges" element={<Ranges />} />
             {/* Outras páginas */}
-            <Route path="/rankings" element={<Rankings />} />
             <Route path="/analysis" element={<Analysis />} />
             <Route path="/features" element={<Features />} />
             <Route path="/solutions" element={<Solutions />} />
