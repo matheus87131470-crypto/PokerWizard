@@ -722,7 +722,73 @@ function Home() {
             </button>
           </div>
 
-          {/* Card 4 - Rankings */}
+          {/* Card 4 - Análise de Jogadores - EM BREVE */}
+          <div className="card" style={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            padding: 24,
+            minHeight: 280,
+            justifyContent: 'space-between',
+            background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.08), rgba(14, 165, 233, 0.05))',
+            border: '1px solid rgba(6, 182, 212, 0.25)',
+            position: 'relative',
+            overflow: 'hidden'
+          }}>
+            {/* Overlay "Em Breve" */}
+            <div style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'rgba(15, 23, 42, 0.6)',
+              backdropFilter: 'blur(2px)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 2
+            }}>
+              <div style={{
+                background: 'linear-gradient(135deg, #06b6d4, #0ea5e9)',
+                padding: '12px 28px',
+                borderRadius: 30,
+                fontSize: 14,
+                fontWeight: 700,
+                color: 'white',
+                boxShadow: '0 4px 20px rgba(6, 182, 212, 0.4)'
+              }}>
+                🚀 EM BREVE
+              </div>
+            </div>
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+                <div style={{ fontSize: 36 }}>🔍</div>
+                <span style={{ 
+                  background: 'rgba(6, 182, 212, 0.15)', 
+                  color: '#06b6d4', 
+                  padding: '4px 10px', 
+                  borderRadius: 6, 
+                  fontSize: 11, 
+                  fontWeight: 600 
+                }}>
+                  NOVO
+                </span>
+              </div>
+              <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Análise de Jogadores</h3>
+              <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 16 }}>
+                Descubra os leaks dos seus oponentes. Análise completa de tendências e padrões de jogo.
+              </p>
+            </div>
+            <button 
+              className="btn btn-ghost" 
+              style={{ width: '100%', padding: '12px', opacity: 0.5, cursor: 'not-allowed' }}
+              disabled
+            >
+              Em Breve →
+            </button>
+          </div>
+
+          {/* Card 5 - Rankings */}
           <div className="card" style={{ 
             display: 'flex', 
             flexDirection: 'column', 

@@ -190,6 +190,7 @@ export default function Ranges() {
       {/* Tabs de Posição */}
       <div className="card" style={{ padding: 20, marginBottom: 20 }}>
         <PositionTabs
+          positions={['UTG', 'HJ', 'CO', 'BTN', 'SB', 'BB']}
           activePosition={activePosition}
           onPositionChange={setActivePosition}
         />
