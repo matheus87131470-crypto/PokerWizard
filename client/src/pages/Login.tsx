@@ -122,34 +122,6 @@ export default function Login() {
             </div>
           )}
 
-          {/* Campo de username só no registro */}
-          {!isLogin && (
-            <div>
-              <label
-                style={{
-                  display: 'block',
-                  fontSize: 13,
-                  fontWeight: 600,
-                  marginBottom: 8,
-                  color: 'var(--text-muted)'
-                }}
-              >
-                Nome de Usuário <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>(opcional)</span>
-              </label>
-              <input
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
-                placeholder="seu_usuario"
-                className="search-input"
-                style={{ padding: '12px 14px' }}
-              />
-              <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
-                Usado para login. Apenas letras, números e _
-              </p>
-            </div>
-          )}
-
           <div>
             <label
               style={{
