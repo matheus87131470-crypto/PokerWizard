@@ -40,7 +40,7 @@ function getApiBase(): string {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Começa true enquanto verifica token
   const [error, setError] = useState<string | null>(null);
 
   const API_BASE = getApiBase();
@@ -49,17 +49,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const stored = localStorage.getItem('pokerwizard_token');
     const storedUser = localStorage.getItem('pokerwizard_user');
+    
     if (stored) {
       setToken(stored);
-      // Validate token by fetching user info
-      fetchUserInfo(stored);
-    }
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (_) {
-        localStorage.removeItem('pokerwizard_user');
+      // Carregar usuário do localStorage imediatamente
+      if (storedUser) {
+        try {
+          setUser(JSON.parse(storedUser));
+        } catch (_) {
+          localStorage.removeItem('pokerwizard_user');
+        }
       }
+      // Validar token no servidor (em background)
+      fetchUserInfo(stored).finally(() => setLoading(false));
+    } else {
+      // Sem token, não está logado
+      setLoading(false);
     }
   }, []);
 
