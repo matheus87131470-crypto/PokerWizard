@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import PremiumPaywallModal from '../components/PremiumPaywallModal';
+import PaywallOverlay from '../components/PaywallOverlay';
 import CreditWarningBanner from '../components/CreditWarningBanner';
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://pokerwizard-api.onrender.com';
@@ -1230,21 +1230,13 @@ export default function Trainer() {
         </div>
       </div>
       
-      {/* Modal Paywall Premium */}
-      <PremiumPaywallModal
-        isOpen={showPaywall}
-        onClose={() => setShowPaywall(false)}
-        paywallType="trainer"
-        remaining={usosTrainer}
-        onUpgrade={() => {
-          setShowPaywall(false);
-          navigate('/premium');
-        }}
-        onViewPlans={() => {
-          setShowPaywall(false);
-          navigate('/planos');
-        }}
-      />
+      {/* Paywall Overlay - Soft Paywall */}
+      {showPaywall && (
+        <PaywallOverlay 
+          feature="trainer"
+          onClose={() => setShowPaywall(false)}
+        />
+      )}
     </div>
   );
 }

@@ -8,7 +8,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import PremiumPaywallModal from '../components/PremiumPaywallModal';
+import PaywallOverlay from '../components/PaywallOverlay';
 import CreditWarningBanner from '../components/CreditWarningBanner';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'https://pokerwizard.onrender.com';
@@ -26,17 +26,17 @@ export default function Analyze() {
   const [loading, setLoading] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
 
-  // Verificar créditos
+  // Verificar créditos (usosAnalise específico para essa página)
   const isPremium = user?.premium || (user as any)?.statusPlano === 'premium';
-  const freeCredits = (user as any)?.freeCredits ?? (user as any)?.usosRestantes ?? 7;
-  const canUse = isPremium || freeCredits > 0;
+  const usosAnalise = (user as any)?.usosAnalise ?? 5;
+  const canUse = isPremium || usosAnalise > 0;
 
-  // Mostrar paywall se sem créditos
+  // Mostrar paywall se sem créditos ao carregar a página
   useEffect(() => {
-    if (user && !isPremium && freeCredits <= 0) {
+    if (user && !isPremium && usosAnalise <= 0) {
       setShowPaywall(true);
     }
-  }, [user, isPremium, freeCredits]);
+  }, [user, isPremium, usosAnalise]);
 
   // Analisar mão
   const handleAnalyze = async () => {
@@ -130,26 +130,18 @@ Hero?`
   ];
 
   return (
-    <div className="analyze-page" style={{ maxWidth: 900, margin: '0 auto' }}>
-      {/* Paywall Modal */}
-      <PremiumPaywallModal
-        isOpen={showPaywall}
-        onClose={() => setShowPaywall(false)}
-        paywallType="analyze"
-        remaining={freeCredits}
-        onUpgrade={() => {
-          setShowPaywall(false);
-          navigate('/premium');
-        }}
-        onViewPlans={() => {
-          setShowPaywall(false);
-          navigate('/planos');
-        }}
-      />
+    <div className="analyze-page" style={{ maxWidth: 900, margin: '0 auto', position: 'relative' }}>
+      {/* Paywall Overlay - Soft Paywall */}
+      {showPaywall && (
+        <PaywallOverlay 
+          feature="analyze"
+          onClose={() => setShowPaywall(false)}
+        />
+      )}
 
       {/* Banner de Créditos Baixos */}
       <CreditWarningBanner 
-        credits={freeCredits}
+        credits={usosAnalise}
         isPremium={isPremium}
         onUpgrade={() => navigate('/premium')}
       />
@@ -185,7 +177,7 @@ Hero?`
               <span style={{ color: '#34d399', fontWeight: 700 }}>👑 Premium • Ilimitado</span>
             ) : (
               <span style={{ color: '#a78bfa', fontWeight: 600 }}>
-                📊 {freeCredits} análises restantes
+                📊 {usosAnalise} análises restantes
               </span>
             )}
           </div>
