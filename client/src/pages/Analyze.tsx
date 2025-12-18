@@ -39,8 +39,8 @@ export default function Analyze() {
       return;
     }
 
+    // PaywallOverlay já bloqueia se não tiver créditos
     if (!canUse) {
-      setShowPaywall(true);
       return;
     }
 
@@ -68,7 +68,7 @@ export default function Analyze() {
       const data = await response.json();
 
       if (data.error === 'no_credits') {
-        setShowPaywall(true);
+        // PaywallOverlay detecta automaticamente após refresh
         setAnalysis(null);
         if (refreshUser) await refreshUser();
         return;
