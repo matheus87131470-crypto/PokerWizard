@@ -1,12 +1,12 @@
 /**
- * PaywallOverlay - Soft Paywall Wrapper
+ * PaywallOverlay - Soft Paywall que CONVERTE
  * 
- * Regras:
- * - Se user.premium === true → NUNCA bloqueia
- * - Se user.usosAnalise < requiredCredits → Mostra overlay
- * - Conteúdo visível com blur (soft paywall)
- * - Não redireciona, apenas bloqueia interação
- * - Reutilizável em qualquer página
+ * Princípios:
+ * 1. Nunca punir curiosidade - explicar, não castigar
+ * 2. Mostrar perda, não limitação - "faltava pouco"
+ * 3. PRO = aceleração, não privilégio
+ * 
+ * Copy psicológico + visual de progresso = conversão
  */
 
 import React, { ReactNode } from 'react';
@@ -15,8 +15,8 @@ import { useAuth } from '../contexts/AuthContext';
 
 interface PaywallOverlayProps {
   children: ReactNode;
-  requiredCredits?: number; // default = 1
-  creditType?: 'analise' | 'trainer' | 'players'; // qual campo verificar
+  requiredCredits?: number;
+  creditType?: 'analise' | 'trainer' | 'players';
 }
 
 export default function PaywallOverlay({
@@ -34,9 +34,27 @@ export default function PaywallOverlay({
     players: 'usosPlayers',
   };
 
+  const maxCredits: Record<string, number> = {
+    analise: 5,
+    trainer: 5,
+    players: 3,
+  };
+
+  const featureNames: Record<string, string> = {
+    analise: 'análises',
+    trainer: 'treinos',
+    players: 'buscas',
+  };
+
   const creditField = creditFields[creditType] || 'usosAnalise';
   const currentCredits = (user as any)?.[creditField] ?? 5;
+  const maxCredit = maxCredits[creditType] || 5;
+  const featureName = featureNames[creditType] || 'análises';
   const isPremium = user?.premium || (user as any)?.statusPlano === 'premium';
+
+  // Calcular progresso
+  const usedCredits = maxCredit - currentCredits;
+  const progressPercent = (usedCredits / maxCredit) * 100;
 
   // Verificar se está bloqueado
   const isBlocked = !isPremium && currentCredits < requiredCredits;
@@ -71,80 +89,149 @@ export default function PaywallOverlay({
         >
           <div
             style={{
-              maxWidth: 440,
+              maxWidth: 460,
               width: '100%',
               margin: '0 20px',
               borderRadius: 20,
-              // Borda vermelha consistente com badge do header quando créditos = 0
-              border: '1px solid rgba(239, 68, 68, 0.4)',
+              border: '1px solid rgba(139, 92, 246, 0.3)',
               background: 'linear-gradient(135deg, #0b0f1a, #11162a)',
-              padding: 32,
-              boxShadow: '0 0 60px rgba(239, 68, 68, 0.1), 0 25px 50px rgba(0, 0, 0, 0.5)',
+              padding: '36px 32px',
+              boxShadow: '0 0 60px rgba(139, 92, 246, 0.15), 0 25px 50px rgba(0, 0, 0, 0.5)',
             }}
           >
-            {/* Header com ícone */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-              <div
-                style={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: '50%',
-                  background: 'rgba(239, 68, 68, 0.2)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 24,
-                }}
-              >
-                🔒
-              </div>
-              <h2
-                style={{
-                  fontSize: 22,
-                  fontWeight: 700,
-                  margin: 0,
-                  background: 'linear-gradient(135deg, #ef4444, #dc2626)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                }}
-              >
-                Limite diário atingido
-              </h2>
+            {/* Emoji motivacional */}
+            <div style={{ textAlign: 'center', fontSize: 48, marginBottom: 16 }}>
+              🔥
             </div>
 
-            {/* Texto - COPY EXATO */}
+            {/* Título - Copy psicológico: progresso interrompido */}
+            <h2
+              style={{
+                fontSize: 24,
+                fontWeight: 700,
+                margin: '0 0 8px',
+                textAlign: 'center',
+                color: '#f8fafc',
+              }}
+            >
+              Você estava indo bem demais pra parar agora.
+            </h2>
+
+            {/* Subtexto - Mostrar perda, não limitação */}
             <p
               style={{
                 fontSize: 14,
-                color: '#d1d5db',
-                lineHeight: 1.7,
+                color: '#94a3b8',
+                textAlign: 'center',
                 marginBottom: 24,
+                lineHeight: 1.5,
               }}
             >
-              Você já utilizou todas as análises disponíveis hoje no plano{' '}
-              <strong style={{ color: '#e5e7eb' }}>FREE</strong>.
-              <br />
-              <br />
-              Desbloqueie análises ilimitadas, feedback avançado e acesso completo ao{' '}
-              <strong>PokerWizard</strong> com o plano{' '}
-              <strong style={{ color: '#a78bfa' }}>PRO</strong>.
+              Faltava só mais uma {creditType === 'analise' ? 'análise' : creditType === 'trainer' ? 'sessão de treino' : 'busca'} para completar sua sessão de estudo hoje.
             </p>
 
-            {/* Botão - vai direto pra /premium, sem modal */}
+            {/* Barra de progresso visual */}
+            <div style={{
+              background: 'rgba(30, 41, 59, 0.8)',
+              borderRadius: 12,
+              padding: 16,
+              marginBottom: 20,
+            }}>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: 10,
+                fontSize: 13,
+              }}>
+                <span style={{ color: '#94a3b8' }}>Seu progresso hoje</span>
+                <span style={{ color: '#a78bfa', fontWeight: 600 }}>
+                  {usedCredits} / {maxCredit} {featureName}
+                </span>
+              </div>
+              
+              {/* Barra visual */}
+              <div style={{
+                height: 8,
+                background: 'rgba(100, 116, 139, 0.3)',
+                borderRadius: 4,
+                overflow: 'hidden',
+                position: 'relative',
+              }}>
+                {/* Progresso feito */}
+                <div style={{
+                  position: 'absolute',
+                  left: 0,
+                  top: 0,
+                  bottom: 0,
+                  width: `${progressPercent}%`,
+                  background: 'linear-gradient(90deg, #8b5cf6, #a78bfa)',
+                  borderRadius: 4,
+                  transition: 'width 0.3s ease',
+                }} />
+                
+                {/* Parte bloqueada (piscando) */}
+                <div style={{
+                  position: 'absolute',
+                  left: `${progressPercent}%`,
+                  top: 0,
+                  bottom: 0,
+                  width: `${100 / maxCredit}%`,
+                  background: 'rgba(239, 68, 68, 0.6)',
+                  borderRadius: 4,
+                  animation: 'pulse 2s infinite',
+                }} />
+              </div>
+
+              {/* Texto de status */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                marginTop: 10,
+                fontSize: 12,
+              }}>
+                <span style={{ color: '#22c55e' }}>✓ {usedCredits} {featureName} feitas</span>
+                <span style={{ color: '#ef4444' }}>🔒 1 bloqueada</span>
+              </div>
+            </div>
+
+            {/* Micro prova de valor */}
+            <div style={{
+              background: 'rgba(139, 92, 246, 0.1)',
+              border: '1px solid rgba(139, 92, 246, 0.2)',
+              borderRadius: 10,
+              padding: '12px 16px',
+              marginBottom: 24,
+              textAlign: 'center',
+            }}>
+              <p style={{
+                margin: 0,
+                fontSize: 13,
+                color: '#c4b5fd',
+              }}>
+                📊 <strong>Jogadores PRO</strong> analisam <strong style={{ color: '#22c55e' }}>5x mais mãos</strong> por semana
+              </p>
+            </div>
+
+            {/* CTA - Continuidade, não compra */}
             <button
               onClick={() => navigate('/premium')}
               style={{
                 width: '100%',
-                padding: '14px 24px',
+                padding: '16px 24px',
                 borderRadius: 12,
                 border: 'none',
-                background: 'linear-gradient(135deg, #8b5cf6, #ec4899)',
+                background: 'linear-gradient(135deg, #8b5cf6, #a855f7)',
                 color: '#fff',
                 fontSize: 15,
                 fontWeight: 600,
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
                 boxShadow: '0 4px 20px rgba(139, 92, 246, 0.3)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.transform = 'scale(1.02)';
@@ -155,23 +242,31 @@ export default function PaywallOverlay({
                 e.currentTarget.style.boxShadow = '0 4px 20px rgba(139, 92, 246, 0.3)';
               }}
             >
-              ✨ Upgrade para PRO
+              ✨ Desbloquear meu ritmo de estudo
             </button>
 
-            {/* Texto auxiliar */}
+            {/* Texto auxiliar - Sem pressão */}
             <p
               style={{
                 marginTop: 16,
                 textAlign: 'center',
                 fontSize: 12,
-                color: '#6b7280',
+                color: '#64748b',
               }}
             >
-              Continue jogando amanhã gratuitamente
+              Ou volte amanhã com +{maxCredit} {featureName} gratuitas
             </p>
           </div>
         </div>
       )}
+
+      {/* CSS para animação */}
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 0.6; }
+          50% { opacity: 1; }
+        }
+      `}</style>
     </div>
   );
 }
