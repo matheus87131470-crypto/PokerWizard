@@ -181,13 +181,6 @@ function Layout({ children }: { children: React.ReactNode }) {
             <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             {auth.user ? (
               <>
-                {/* Contador de créditos global */}
-                <CreditCounter
-                  freeCredits={freeCredits}
-                  freeCreditsLimit={freeCreditsLimit}
-                  isPremium={isPremium}
-                />
-                
                 {/* User badge */}
                 <Link to="/profile" style={{ textDecoration: 'none' }}>
                   <div style={{
