@@ -648,10 +648,8 @@ export default function Trainer() {
   };
   
   const startTraining = async () => {
-    // ⚠️ BLOQUEIO: Se não pode usar, não faz nada (PaywallOverlay já bloqueia)
-    if (!canUse && !isPremium) {
-      return;
-    }
+    // ✅ NÃO bloquear aqui - deixar consumeUse() validar (mesmo padrão do Analyze)
+    // Isso permite que FREE faça o 1º treino e só bloqueie quando realmente acabar
     
     setLoadingUse(true);
     

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Link, NavLink, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { Analytics } from '@vercel/analytics/react';
 import Features from './pages/Features';
 import Analysis from './pages/Analysis';
@@ -24,6 +24,7 @@ import { usePaywall } from './hooks/usePaywall';
 
 function Layout({ children }: { children: React.ReactNode }) {
   const auth = useAuth();
+  const location = useLocation();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const navigate = useNavigate();
@@ -237,7 +238,7 @@ function Layout({ children }: { children: React.ReactNode }) {
                       }}>
                         FREE
                       </span>
-                      {/* Créditos restantes */}
+                      {/* Créditos restantes - CONTEXTUAL baseado na página atual */}
                       <span style={{ 
                         fontSize: 12, 
                         color: '#94a3b8',
@@ -245,10 +246,30 @@ function Layout({ children }: { children: React.ReactNode }) {
                         alignItems: 'center',
                         gap: 6,
                       }}>
-                        <span style={{ color: (auth.user as any).usosAnalise > 0 ? '#a78bfa' : '#ef4444' }}>
-                          {(auth.user as any).usosAnalise ?? 0}/5
-                        </span>
-                        <span style={{ color: '#64748b', fontSize: 10 }}>análises</span>
+                        {location.pathname === '/analyze' && (
+                          <>
+                            <span style={{ color: (auth.user as any).usosAnalise > 0 ? '#a78bfa' : '#ef4444' }}>
+                              {(auth.user as any).usosAnalise ?? 0}/5
+                            </span>
+                            <span style={{ color: '#64748b', fontSize: 10 }}>análises</span>
+                          </>
+                        )}
+                        {location.pathname === '/trainer' && (
+                          <>
+                            <span style={{ color: (auth.user as any).usosTrainer > 0 ? '#a78bfa' : '#ef4444' }}>
+                              {(auth.user as any).usosTrainer ?? 0}/5
+                            </span>
+                            <span style={{ color: '#64748b', fontSize: 10 }}>treinos</span>
+                          </>
+                        )}
+                        {!['/analyze', '/trainer'].includes(location.pathname) && (
+                          <>
+                            <span style={{ color: (auth.user as any).usosAnalise > 0 ? '#a78bfa' : '#ef4444' }}>
+                              {(auth.user as any).usosAnalise ?? 0}/5
+                            </span>
+                            <span style={{ color: '#64748b', fontSize: 10 }}>análises</span>
+                          </>
+                        )}
                       </span>
                       {/* Botão Upgrade */}
                       <button
