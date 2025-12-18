@@ -23,6 +23,7 @@ import { usePaywall } from './hooks/usePaywall';
 function Layout({ children }: { children: React.ReactNode }) {
   const auth = useAuth();
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
   const navigate = useNavigate();
   
   // Hook para obter créditos do usuário (freeCredits global)
@@ -35,8 +36,21 @@ function Layout({ children }: { children: React.ReactNode }) {
     }
   }, [auth.token, refreshUsage]);
 
+  // Fechar menu ao clicar fora
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.user-menu-container')) {
+        setShowUserMenu(false);
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
+
   const handleLogout = () => {
     auth.logout();
+    setShowUserMenu(false);
     navigate('/');
   };
 
@@ -181,45 +195,172 @@ function Layout({ children }: { children: React.ReactNode }) {
             <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             {auth.user ? (
               <>
-                {/* User badge */}
-                <Link to="/profile" style={{ textDecoration: 'none' }}>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 10,
-                    padding: '8px 12px',
-                    borderRadius: 12,
-                    background: 'linear-gradient(135deg, rgba(139,92,246,0.15), rgba(16,185,129,0.12))',
-                    border: '1px solid rgba(139, 92, 246, 0.35)',
-                    boxShadow: '0 6px 20px rgba(139, 92, 246, 0.18)',
-                    transition: 'all 0.2s',
-                  }}>
-                    <span style={{ fontSize: 14, color: '#e9d5ff', fontWeight: 700 }}>👤 {auth.user.name}</span>
-                  </div>
-                </Link>
-                {/* Botão Assina Premium quando zerou */}
-                {!isPremium && freeCredits <= 0 && (
-                    <button 
-                      onClick={() => navigate('/premium')} 
-                      style={{ 
-                        padding: '10px 20px', 
-                        fontSize: 13, 
-                        fontWeight: 800,
-                        background: 'linear-gradient(135deg, #fbbf24, #f59e0b)',
-                        border: 'none',
-                        borderRadius: 10,
-                        color: '#000',
-                        cursor: 'pointer',
-                        boxShadow: '0 4px 20px rgba(251, 191, 36, 0.4)',
-                        transition: 'all 0.2s',
-                      }}
-                    >
-                      👑 Assinar Premium
-                    </button>
-                )}
-                <button onClick={handleLogout} className="btn btn-ghost" style={{ padding: '8px 16px', fontSize: 13 }}>
-                  Sair
-                </button>
+                {/* User Menu Dropdown */}
+                <div className="user-menu-container" style={{ position: 'relative' }}>
+                  <button
+                    onClick={() => setShowUserMenu(!showUserMenu)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      padding: '8px 14px',
+                      borderRadius: 10,
+                      background: 'rgba(30, 41, 59, 0.9)',
+                      border: '1px solid rgba(139, 92, 246, 0.3)',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                    }}
+                  >
+                    <div style={{
+                      width: 28,
+                      height: 28,
+                      borderRadius: '50%',
+                      background: 'linear-gradient(135deg, #8b5cf6, #06b6d4)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: 14,
+                      color: '#fff',
+                      fontWeight: 700,
+                    }}>
+                      {auth.user.name?.charAt(0).toUpperCase() || '👤'}
+                    </div>
+                  </button>
+
+                  {/* Dropdown Menu */}
+                  {showUserMenu && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '100%',
+                      right: 0,
+                      marginTop: 8,
+                      minWidth: 200,
+                      background: 'rgba(15, 23, 42, 0.98)',
+                      border: '1px solid rgba(139, 92, 246, 0.3)',
+                      borderRadius: 12,
+                      boxShadow: '0 10px 40px rgba(0, 0, 0, 0.5)',
+                      overflow: 'hidden',
+                      zIndex: 1000,
+                    }}>
+                      {/* Account */}
+                      <button
+                        onClick={() => { navigate('/profile'); setShowUserMenu(false); }}
+                        style={{
+                          width: '100%',
+                          padding: '12px 16px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 12,
+                          background: 'transparent',
+                          border: 'none',
+                          color: '#e2e8f0',
+                          fontSize: 14,
+                          cursor: 'pointer',
+                          transition: 'background 0.2s',
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(139, 92, 246, 0.15)'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                      >
+                        <span style={{ fontSize: 16 }}>👤</span>
+                        Conta
+                      </button>
+
+                      {/* Subscription */}
+                      <button
+                        onClick={() => { navigate('/premium'); setShowUserMenu(false); }}
+                        style={{
+                          width: '100%',
+                          padding: '12px 16px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 12,
+                          background: 'transparent',
+                          border: 'none',
+                          color: '#e2e8f0',
+                          fontSize: 14,
+                          cursor: 'pointer',
+                          transition: 'background 0.2s',
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(139, 92, 246, 0.15)'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                      >
+                        <span style={{ fontSize: 16 }}>💳</span>
+                        Assinatura
+                        {isPremium && <span style={{ marginLeft: 'auto', fontSize: 10, background: '#22c55e', padding: '2px 6px', borderRadius: 4, color: '#fff' }}>PRO</span>}
+                      </button>
+
+                      {/* Analyzer */}
+                      <button
+                        onClick={() => { navigate('/analyze'); setShowUserMenu(false); }}
+                        style={{
+                          width: '100%',
+                          padding: '12px 16px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 12,
+                          background: 'transparent',
+                          border: 'none',
+                          color: '#e2e8f0',
+                          fontSize: 14,
+                          cursor: 'pointer',
+                          transition: 'background 0.2s',
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(139, 92, 246, 0.15)'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                      >
+                        <span style={{ fontSize: 16 }}>🔍</span>
+                        Analisador
+                      </button>
+
+                      {/* Appearance - placeholder */}
+                      <button
+                        onClick={() => setShowUserMenu(false)}
+                        style={{
+                          width: '100%',
+                          padding: '12px 16px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 12,
+                          background: 'transparent',
+                          border: 'none',
+                          color: '#64748b',
+                          fontSize: 14,
+                          cursor: 'not-allowed',
+                        }}
+                      >
+                        <span style={{ fontSize: 16 }}>🎨</span>
+                        Aparência
+                        <span style={{ marginLeft: 'auto', fontSize: 9, color: '#64748b' }}>em breve</span>
+                      </button>
+
+                      {/* Divider */}
+                      <div style={{ height: 1, background: 'rgba(139, 92, 246, 0.2)', margin: '4px 0' }} />
+
+                      {/* Log out */}
+                      <button
+                        onClick={handleLogout}
+                        style={{
+                          width: '100%',
+                          padding: '12px 16px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 12,
+                          background: 'transparent',
+                          border: 'none',
+                          color: '#ef4444',
+                          fontSize: 14,
+                          cursor: 'pointer',
+                          transition: 'background 0.2s',
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.15)'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                      >
+                        <span style={{ fontSize: 16 }}>🚪</span>
+                        Sair
+                      </button>
+                    </div>
+                  )}
+                </div>
               </>
             ) : (
               <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
