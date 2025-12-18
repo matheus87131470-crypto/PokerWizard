@@ -8,6 +8,7 @@ import Ranges from './pages/Ranges';
 import PlayerAnalysis from './pages/PlayerAnalysis';
 import Login from './pages/Login';
 import Premium from './pages/Premium';
+import UpgradeSuccess from './pages/UpgradeSuccess';
 import Profile from './pages/Profile';
 import Solutions from './pages/Solutions';
 import ForgotPassword from './pages/ForgotPassword';
@@ -1282,6 +1283,7 @@ export default function App() {
             <Route path="/google-success" element={<GoogleSuccess />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/premium" element={<Premium />} />
+            <Route path="/upgrade-success" element={<ProtectedRoute><UpgradeSuccess /></ProtectedRoute>} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
           

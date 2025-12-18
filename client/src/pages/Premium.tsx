@@ -85,10 +85,11 @@ export default function Premium() {
           setPaidBanner('✅ Pagamento confirmado! Premium ativado. Redirecionando...');
           clearInterval(pollInterval);
           
+          // Redireciona para página de sucesso
           setTimeout(() => {
             setPayment(null);
-            navigate('/');
-          }, 2500);
+            navigate('/upgrade-success');
+          }, 1500);
         }
       } catch (err) {
         // Ignora erros de polling
