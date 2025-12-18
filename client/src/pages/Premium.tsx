@@ -3,21 +3,22 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 /**
- * Página de Premium com Mercado Pago
+ * Página Premium - Focada em CONVERSÃO
  * 
- * SEGURANÇA:
- * - QR Code gerado dinamicamente via Mercado Pago
- * - Polling verifica status do pagamento
- * - Premium ativado APENAS via webhook do MP (backend)
- * - Frontend NÃO pode confirmar pagamento
+ * Estrutura:
+ * 1. Hero com continuidade emocional (do paywall)
+ * 2. Comparação clara FREE vs PRO
+ * 3. Benefícios práticos
+ * 4. Prova social leve
+ * 5. CTA final + Pagamento
  */
 
 interface PaymentData {
   id: string;
   mpPaymentId: number;
   amount: number;
-  qrCode: string | null;       // Código PIX copia-cola
-  qrCodeBase64: string | null; // QR Code em base64
+  qrCode: string | null;
+  qrCodeBase64: string | null;
   ticketUrl: string | null;
   status: string;
   expiresIn: number;
@@ -167,56 +168,208 @@ export default function Premium() {
   return (
     <div style={{ 
       minHeight: '100vh', 
-      display: 'flex', 
-      alignItems: 'center', 
-      justifyContent: 'center', 
-      padding: 20, 
-      background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.05), rgba(6, 182, 212, 0.05))' 
+      background: 'linear-gradient(180deg, #0b0f1a 0%, #11162a 100%)',
+      paddingBottom: 60,
     }}>
-      <div className="card" style={{ maxWidth: 500, width: '100%' }}>
-        
-        {/* Banner de pagamento confirmado */}
-        {paidBanner && (
-          <div style={{ 
-            padding: 16,
-            background: 'rgba(16, 185, 129, 0.15)',
-            border: '2px solid rgba(16, 185, 129, 0.4)',
-            color: '#10b981',
-            borderRadius: 12,
-            marginBottom: 20,
-            fontSize: 15,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-            fontWeight: 700
-          }}>
-            <span style={{ fontSize: 24 }}>🎉</span>
-            <span>{paidBanner}</span>
-          </div>
-        )}
+      {/* Banner de pagamento confirmado */}
+      {paidBanner && (
+        <div style={{ 
+          padding: 16,
+          background: 'rgba(16, 185, 129, 0.15)',
+          border: '2px solid rgba(16, 185, 129, 0.4)',
+          color: '#10b981',
+          borderRadius: 12,
+          margin: '20px auto',
+          maxWidth: 600,
+          fontSize: 15,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+          fontWeight: 700
+        }}>
+          <span style={{ fontSize: 24 }}>🎉</span>
+          <span>{paidBanner}</span>
+        </div>
+      )}
 
-        {!payment ? (
-          // Estado: Antes de gerar pagamento
-          <div style={{ textAlign: 'center' }}>
-            <h1 style={{ fontSize: 32, marginBottom: 8 }}>🚀 Ative Premium</h1>
-            <p style={{ color: 'var(--text-muted)', fontSize: 12, marginBottom: 12 }}>PokerWizard by Pokio</p>
-            <p style={{ color: 'var(--text-secondary)', marginBottom: 8 }}>
-              Análises ilimitadas, histórico completo e prioridade na IA
+      {!payment ? (
+        // ========== PÁGINA DE VENDAS ==========
+        <div style={{ maxWidth: 700, margin: '0 auto', padding: '40px 20px' }}>
+          
+          {/* 🔥 HERO - Continuidade emocional */}
+          <div style={{ textAlign: 'center', marginBottom: 48 }}>
+            <h1 style={{ 
+              fontSize: 32, 
+              fontWeight: 700, 
+              marginBottom: 16,
+              color: '#f8fafc',
+              lineHeight: 1.3,
+            }}>
+              Continue no seu melhor ritmo de estudo
+            </h1>
+            <p style={{ 
+              fontSize: 16, 
+              color: '#94a3b8', 
+              lineHeight: 1.6,
+              maxWidth: 500,
+              margin: '0 auto 32px',
+            }}>
+              O plano PRO remove limites, acelera seu aprendizado e transforma cada sessão em progresso real.
             </p>
-            <p style={{ fontSize: 28, fontWeight: 800, color: 'var(--accent-primary)', marginBottom: 24 }}>
-              R$ 3,50/mês
-            </p>
+            <button
+              onClick={createPix}
+              disabled={loading}
+              style={{
+                padding: '16px 40px',
+                fontSize: 16,
+                fontWeight: 600,
+                background: 'linear-gradient(135deg, #9333ea, #ec4899)',
+                border: 'none',
+                borderRadius: 12,
+                color: '#fff',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
+              onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+            >
+              {loading ? 'Gerando...' : 'Desbloquear acesso PRO'}
+            </button>
+          </div>
+
+          {/* 📊 COMPARAÇÃO FREE vs PRO */}
+          <div style={{ 
+            background: 'rgba(30, 41, 59, 0.5)', 
+            borderRadius: 16, 
+            padding: 32,
+            marginBottom: 48,
+            border: '1px solid rgba(100, 116, 139, 0.2)',
+          }}>
+            <h2 style={{ 
+              fontSize: 20, 
+              fontWeight: 600, 
+              marginBottom: 24, 
+              textAlign: 'center',
+              color: '#f8fafc',
+            }}>
+              FREE vs PRO
+            </h2>
             
-            {/* Benefícios */}
-            <div style={{ padding: 16, background: 'rgba(124, 58, 237, 0.1)', borderRadius: 12, marginBottom: 24 }}>
-              <ul style={{ textAlign: 'left', color: 'var(--text-secondary)', lineHeight: 2, listStyle: 'none', padding: 0, margin: 0 }}>
-                <li>✅ Análises ilimitadas</li>
-                <li>✅ Histórico completo</li>
-                <li>✅ Prioridade na IA</li>
-                <li>✅ Sem anúncios</li>
-                <li>✅ Cancelar quando quiser</li>
-              </ul>
+            <div style={{ display: 'grid', gap: 12 }}>
+              {[
+                { feature: 'Análises por dia', free: '5 limitadas', pro: '♾️ Ilimitadas' },
+                { feature: 'Trainer GTO', free: '5 sessões', pro: '♾️ Ilimitado' },
+                { feature: 'Análise detalhada', free: '❌', pro: '✅' },
+                { feature: 'Análise de jogadores', free: '❌', pro: '✅' },
+                { feature: 'Evolução contínua', free: '❌', pro: '✅' },
+                { feature: 'Interrupções', free: '⚠️ Diárias', pro: '✅ Nunca' },
+              ].map((row, i) => (
+                <div key={i} style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr 1fr',
+                  gap: 16,
+                  padding: '12px 16px',
+                  background: i % 2 === 0 ? 'rgba(15, 23, 42, 0.5)' : 'transparent',
+                  borderRadius: 8,
+                  alignItems: 'center',
+                }}>
+                  <span style={{ color: '#d1d5db', fontSize: 14 }}>{row.feature}</span>
+                  <span style={{ color: '#6b7280', fontSize: 14, textAlign: 'center' }}>{row.free}</span>
+                  <span style={{ color: '#a78bfa', fontSize: 14, textAlign: 'center', fontWeight: 600 }}>{row.pro}</span>
+                </div>
+              ))}
             </div>
+          </div>
+
+          {/* 🚀 BENEFÍCIOS PRÁTICOS */}
+          <div style={{ marginBottom: 48 }}>
+            <h2 style={{ 
+              fontSize: 20, 
+              fontWeight: 600, 
+              marginBottom: 20, 
+              textAlign: 'center',
+              color: '#f8fafc',
+            }}>
+              O que muda no seu dia a dia
+            </h2>
+            
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', 
+              gap: 16 
+            }}>
+              {[
+                { icon: '🎯', text: 'Estuda quando quiser, sem travas' },
+                { icon: '⚡', text: 'Mantém foco e ritmo de estudo' },
+                { icon: '📈', text: 'Aprende mais por sessão' },
+                { icon: '🚀', text: 'Evolui mais rápido no poker' },
+              ].map((item, i) => (
+                <div key={i} style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 12,
+                  padding: '16px 20px',
+                  background: 'rgba(139, 92, 246, 0.1)',
+                  borderRadius: 12,
+                  border: '1px solid rgba(139, 92, 246, 0.2)',
+                }}>
+                  <span style={{ fontSize: 24 }}>{item.icon}</span>
+                  <span style={{ color: '#d1d5db', fontSize: 14 }}>{item.text}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 🧠 PROVA SOCIAL LEVE */}
+          <div style={{
+            textAlign: 'center',
+            padding: '24px 20px',
+            background: 'rgba(30, 41, 59, 0.3)',
+            borderRadius: 12,
+            marginBottom: 48,
+          }}>
+            <p style={{ 
+              color: '#94a3b8', 
+              fontSize: 14, 
+              lineHeight: 1.6,
+              margin: 0,
+            }}>
+              Jogadores que usam o PRO analisam mais mãos e constroem decisões melhores com mais consistência.
+            </p>
+          </div>
+
+          {/* 💳 CTA FINAL + PREÇO */}
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(236, 72, 153, 0.1))',
+            borderRadius: 20,
+            padding: 32,
+            textAlign: 'center',
+            border: '1px solid rgba(139, 92, 246, 0.3)',
+          }}>
+            <p style={{ 
+              fontSize: 14, 
+              color: '#94a3b8', 
+              marginBottom: 8,
+              textTransform: 'uppercase',
+              letterSpacing: 1,
+            }}>
+              Plano PRO
+            </p>
+            <p style={{ 
+              fontSize: 40, 
+              fontWeight: 800, 
+              color: '#a78bfa',
+              marginBottom: 8,
+            }}>
+              R$ 3,50<span style={{ fontSize: 16, fontWeight: 400, color: '#6b7280' }}>/mês</span>
+            </p>
+            <p style={{ 
+              fontSize: 13, 
+              color: '#6b7280', 
+              marginBottom: 24,
+            }}>
+              Menos que um café ☕
+            </p>
 
             {/* Erro */}
             {error && (
@@ -224,62 +377,85 @@ export default function Premium() {
                 padding: 14, 
                 background: 'rgba(239, 68, 68, 0.1)', 
                 border: '1px solid rgba(239, 68, 68, 0.3)',
-                color: 'var(--accent-red)', 
+                color: '#ef4444', 
                 borderRadius: 10, 
                 marginBottom: 16, 
                 fontSize: 13,
                 fontWeight: 500
               }}>
-                <span style={{ marginRight: 8 }}>⚠️</span>
-                {error}
+                ⚠️ {error}
               </div>
             )}
 
-            {/* Botão Pagar */}
             <button
               onClick={createPix}
               disabled={loading}
-              className="btn btn-primary"
-              style={{ 
-                width: '100%', 
-                padding: 16, 
-                fontSize: 16, 
-                fontWeight: 700,
-                transition: 'all 0.3s'
+              style={{
+                width: '100%',
+                padding: '18px 32px',
+                fontSize: 16,
+                fontWeight: 600,
+                background: 'linear-gradient(135deg, #9333ea, #ec4899)',
+                border: 'none',
+                borderRadius: 12,
+                color: '#fff',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                marginBottom: 12,
               }}
+              onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
+              onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
             >
               {loading ? (
                 <span style={{ display: 'flex', alignItems: 'center', gap: 10, justifyContent: 'center' }}>
-                  <span className="spinner" style={{ width: 16, height: 16, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: 'white', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></span>
-                  Gerando QR Code...
+                  <span style={{ 
+                    width: 16, 
+                    height: 16, 
+                    border: '2px solid rgba(255,255,255,0.3)', 
+                    borderTopColor: 'white', 
+                    borderRadius: '50%', 
+                    animation: 'spin 1s linear infinite' 
+                  }}></span>
+                  Gerando PIX...
                 </span>
               ) : (
-                '💳 Pagar com PIX'
+                'Começar PRO agora'
               )}
             </button>
 
-            <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 16 }}>
-              💡 Pagamento seguro via Mercado Pago • Confirmação automática
+            <p style={{ 
+              fontSize: 12, 
+              color: '#6b7280',
+              margin: 0,
+            }}>
+              Cancelamento simples • Sem pegadinhas
             </p>
           </div>
-        ) : (
-          // Estado: QR Code gerado, aguardando pagamento
-          <div style={{ textAlign: 'center' }}>
-            <h2 style={{ marginBottom: 24 }}>💰 Complete seu Pagamento</h2>
+        </div>
+      ) : (
+        // ========== ESTADO: PAGAMENTO PIX ==========
+        <div style={{ maxWidth: 500, margin: '0 auto', padding: '40px 20px' }}>
+          <div style={{
+            background: 'rgba(30, 41, 59, 0.5)',
+            borderRadius: 20,
+            padding: 32,
+            border: '1px solid rgba(139, 92, 246, 0.3)',
+          }}>
+            <h2 style={{ textAlign: 'center', marginBottom: 24, color: '#f8fafc' }}>💰 Complete seu Pagamento</h2>
 
             {/* Info do pagamento */}
-            <div style={{ padding: 16, background: 'rgba(255, 255, 255, 0.05)', borderRadius: 12, marginBottom: 24 }}>
+            <div style={{ padding: 16, background: 'rgba(15, 23, 42, 0.5)', borderRadius: 12, marginBottom: 24 }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                 <div>
-                  <div style={{ color: 'var(--text-muted)', fontSize: 12, marginBottom: 4 }}>Valor</div>
-                  <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--accent-primary)' }}>
+                  <div style={{ color: '#6b7280', fontSize: 12, marginBottom: 4 }}>Valor</div>
+                  <div style={{ fontSize: 24, fontWeight: 800, color: '#a78bfa' }}>
                     R$ {payment.amount?.toFixed(2) || '3,50'}
                   </div>
                 </div>
                 <div>
-                  <div style={{ color: 'var(--text-muted)', fontSize: 12, marginBottom: 4 }}>Expira em</div>
-                  <div style={{ fontSize: 20, fontWeight: 700 }}>{formatTime(timeLeft)}</div>
-                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>(até {getExpirationTime()})</div>
+                  <div style={{ color: '#6b7280', fontSize: 12, marginBottom: 4 }}>Expira em</div>
+                  <div style={{ fontSize: 20, fontWeight: 700, color: '#f8fafc' }}>{formatTime(timeLeft)}</div>
+                  <div style={{ fontSize: 11, color: '#6b7280' }}>(até {getExpirationTime()})</div>
                 </div>
               </div>
             </div>
@@ -291,17 +467,17 @@ export default function Premium() {
                   <img
                     alt="QR Code PIX"
                     src={`data:image/png;base64,${payment.qrCodeBase64}`}
-                    style={{ width: 250, height: 250, borderRadius: 8 }}
+                    style={{ width: 220, height: 220, borderRadius: 8 }}
                   />
                 ) : payment.qrCode ? (
                   <img
                     alt="QR Code PIX"
-                    src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(payment.qrCode)}`}
-                    style={{ width: 250, height: 250, borderRadius: 8 }}
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(payment.qrCode)}`}
+                    style={{ width: 220, height: 220, borderRadius: 8 }}
                   />
                 ) : (
-                  <div style={{ width: 250, height: 250, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666' }}>
-                    Carregando QR Code...
+                  <div style={{ width: 220, height: 220, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666' }}>
+                    Carregando...
                   </div>
                 )}
               </div>
@@ -310,19 +486,19 @@ export default function Premium() {
             {/* Código Copia e Cola */}
             {payment.qrCode && (
               <div style={{ marginBottom: 24 }}>
-                <p style={{ color: 'var(--text-secondary)', fontSize: 12, marginBottom: 8 }}>CÓDIGO PIX (Copia e Cola)</p>
+                <p style={{ color: '#94a3b8', fontSize: 12, marginBottom: 8, textAlign: 'center' }}>CÓDIGO PIX (Copia e Cola)</p>
                 <div
                   onClick={copyToClipboard}
                   style={{
                     padding: 12,
-                    background: 'rgba(124, 58, 237, 0.1)',
-                    border: '2px solid var(--accent-primary)',
+                    background: 'rgba(139, 92, 246, 0.1)',
+                    border: '1px solid rgba(139, 92, 246, 0.3)',
                     borderRadius: 8,
                     cursor: 'pointer',
                     wordBreak: 'break-all',
                     fontFamily: 'monospace',
                     fontSize: 10,
-                    color: 'var(--text-primary)',
+                    color: '#d1d5db',
                     maxHeight: 80,
                     overflow: 'auto',
                   }}
@@ -331,8 +507,18 @@ export default function Premium() {
                 </div>
                 <button
                   onClick={copyToClipboard}
-                  className="btn btn-ghost"
-                  style={{ width: '100%', marginTop: 8, fontSize: 13 }}
+                  style={{
+                    width: '100%',
+                    marginTop: 8,
+                    padding: '12px 16px',
+                    background: 'rgba(139, 92, 246, 0.2)',
+                    border: '1px solid rgba(139, 92, 246, 0.3)',
+                    borderRadius: 8,
+                    color: '#a78bfa',
+                    fontSize: 13,
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                  }}
                 >
                   {copied ? '✅ Copiado!' : '📋 Copiar Código PIX'}
                 </button>
@@ -340,57 +526,72 @@ export default function Premium() {
             )}
 
             {/* Instruções */}
-            <div style={{ padding: 16, background: 'rgba(16, 185, 129, 0.05)', borderRadius: 12, marginBottom: 24, textAlign: 'left' }}>
-              <h4 style={{ marginBottom: 12, color: 'var(--text-primary)' }}>📱 Como Pagar</h4>
-              <ol style={{ color: 'var(--text-secondary)', fontSize: 13, lineHeight: 1.8, margin: 0, paddingLeft: 20 }}>
+            <div style={{ padding: 16, background: 'rgba(16, 185, 129, 0.1)', borderRadius: 12, marginBottom: 24, textAlign: 'left' }}>
+              <h4 style={{ marginBottom: 12, color: '#f8fafc', fontSize: 14 }}>📱 Como Pagar</h4>
+              <ol style={{ color: '#94a3b8', fontSize: 13, lineHeight: 1.8, margin: 0, paddingLeft: 20 }}>
                 <li>Abra o app do seu banco</li>
-                <li><strong>Opção 1:</strong> Escaneie o QR Code</li>
-                <li><strong>Opção 2:</strong> Copie o código e cole no Pix</li>
-                <li>Confirme o pagamento de R$ 3,50</li>
+                <li>Escaneie o QR Code ou cole o código</li>
+                <li>Confirme o pagamento</li>
               </ol>
             </div>
 
             {/* Status */}
             <div style={{ 
               padding: 16, 
-              background: 'rgba(124, 58, 237, 0.1)', 
+              background: 'rgba(139, 92, 246, 0.1)', 
               borderRadius: 12, 
               marginBottom: 16,
-              border: '2px solid var(--accent-primary)',
+              border: '1px solid rgba(139, 92, 246, 0.3)',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
                 <div style={{ 
                   width: 20, 
                   height: 20, 
-                  border: '3px solid rgba(124, 58, 237, 0.3)', 
-                  borderTopColor: 'var(--accent-primary)',
+                  border: '3px solid rgba(139, 92, 246, 0.3)', 
+                  borderTopColor: '#a78bfa',
                   borderRadius: '50%',
                   animation: 'spin 1s linear infinite'
                 }}></div>
-                <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                <span style={{ fontWeight: 600, color: '#f8fafc' }}>
                   Aguardando pagamento...
                 </span>
               </div>
-              <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 8, marginBottom: 0 }}>
-                Verificando automaticamente • {pollCount > 0 && `Verificações: ${pollCount}`}
+              <p style={{ fontSize: 12, color: '#6b7280', marginTop: 8, marginBottom: 0, textAlign: 'center' }}>
+                Verificando automaticamente {pollCount > 0 && `• ${pollCount} verificações`}
               </p>
             </div>
 
             {/* Cancelar */}
             <button
               onClick={() => { setPayment(null); setError(null); setPollCount(0); }}
-              className="btn btn-ghost"
-              style={{ width: '100%', padding: 12, fontSize: 14 }}
+              style={{
+                width: '100%',
+                padding: 12,
+                background: 'transparent',
+                border: '1px solid rgba(100, 116, 139, 0.3)',
+                borderRadius: 8,
+                color: '#6b7280',
+                fontSize: 14,
+                cursor: 'pointer',
+              }}
             >
               Cancelar
             </button>
 
-            <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 16 }}>
-              ⚠️ O Premium será ativado automaticamente após a confirmação do Mercado Pago
+            <p style={{ fontSize: 11, color: '#6b7280', marginTop: 16, textAlign: 'center' }}>
+              ⚠️ Premium ativado automaticamente após confirmação
             </p>
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
+      {/* CSS Animation */}
+      <style>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 }
