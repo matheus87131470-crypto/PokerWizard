@@ -1,12 +1,12 @@
 /**
  * PaywallOverlay - Soft Paywall que CONVERTE
  * 
- * Princípios:
- * 1. Nunca punir curiosidade - explicar, não castigar
- * 2. Mostrar perda, não limitação - "faltava pouco"
- * 3. PRO = aceleração, não privilégio
- * 
- * Copy psicológico + visual de progresso = conversão
+ * Estrutura pensada para converter:
+ * 1. Headline emocional (interrompe sem punir)
+ * 2. Progresso perdido (gatilho psicológico)
+ * 3. Valor claro do PRO
+ * 4. CTA de continuidade
+ * 5. Saída sem pressão
  */
 
 import React, { ReactNode } from 'react';
@@ -40,21 +40,24 @@ export default function PaywallOverlay({
     players: 3,
   };
 
-  const featureNames: Record<string, string> = {
-    analise: 'análises',
-    trainer: 'treinos',
-    players: 'buscas',
-  };
-
   const creditField = creditFields[creditType] || 'usosAnalise';
   const currentCredits = (user as any)?.[creditField] ?? 5;
   const maxCredit = maxCredits[creditType] || 5;
-  const featureName = featureNames[creditType] || 'análises';
   const isPremium = user?.premium || (user as any)?.statusPlano === 'premium';
 
   // Calcular progresso
   const usedCredits = maxCredit - currentCredits;
-  const progressPercent = (usedCredits / maxCredit) * 100;
+
+  // Texto dinâmico baseado no tipo
+  const getUsedText = () => {
+    if (creditType === 'analise') {
+      return usedCredits === 1 ? '1 mão' : `${usedCredits} mãos`;
+    } else if (creditType === 'trainer') {
+      return usedCredits === 1 ? '1 treino' : `${usedCredits} treinos`;
+    } else {
+      return usedCredits === 1 ? '1 busca' : `${usedCredits} buscas`;
+    }
+  };
 
   // Verificar se está bloqueado
   const isBlocked = !isPremium && currentCredits < requiredCredits;
@@ -89,184 +92,109 @@ export default function PaywallOverlay({
         >
           <div
             style={{
-              maxWidth: 460,
+              maxWidth: 440,
               width: '100%',
               margin: '0 20px',
               borderRadius: 20,
               border: '1px solid rgba(139, 92, 246, 0.3)',
               background: 'linear-gradient(135deg, #0b0f1a, #11162a)',
-              padding: '36px 32px',
+              padding: '32px 28px',
               boxShadow: '0 0 60px rgba(139, 92, 246, 0.15), 0 25px 50px rgba(0, 0, 0, 0.5)',
             }}
           >
-            {/* Emoji motivacional */}
-            <div style={{ textAlign: 'center', fontSize: 48, marginBottom: 16 }}>
-              🔥
-            </div>
-
-            {/* Título - Copy psicológico: progresso interrompido */}
+            {/* 🔒 Headline emocional */}
             <h2
               style={{
-                fontSize: 24,
-                fontWeight: 700,
-                margin: '0 0 8px',
+                fontSize: 21,
+                fontWeight: 600,
+                margin: '0 0 16px',
                 textAlign: 'center',
                 color: '#f8fafc',
+                lineHeight: 1.3,
               }}
             >
               Você estava indo bem demais pra parar agora.
             </h2>
 
-            {/* Subtexto - Mostrar perda, não limitação */}
+            {/* 📊 Progresso perdido */}
             <p
               style={{
                 fontSize: 14,
-                color: '#94a3b8',
+                color: '#d1d5db',
                 textAlign: 'center',
-                marginBottom: 24,
-                lineHeight: 1.5,
+                marginBottom: 20,
+                lineHeight: 1.6,
               }}
             >
-              Faltava só mais uma {creditType === 'analise' ? 'análise' : creditType === 'trainer' ? 'sessão de treino' : 'busca'} para completar sua sessão de estudo hoje.
+              Hoje você já analisou <strong style={{ color: '#fff' }}>{getUsedText()}</strong>.
+              <br />
+              Faltava <strong style={{ color: '#fff' }}>apenas 1</strong> para concluir sua sessão de estudo.
             </p>
 
-            {/* Barra de progresso visual */}
-            <div style={{
-              background: 'rgba(30, 41, 59, 0.8)',
-              borderRadius: 12,
-              padding: 16,
-              marginBottom: 20,
-            }}>
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: 10,
-                fontSize: 13,
-              }}>
-                <span style={{ color: '#94a3b8' }}>Seu progresso hoje</span>
-                <span style={{ color: '#a78bfa', fontWeight: 600 }}>
-                  {usedCredits} / {maxCredit} {featureName}
-                </span>
-              </div>
-              
-              {/* Barra visual */}
-              <div style={{
-                height: 8,
-                background: 'rgba(100, 116, 139, 0.3)',
-                borderRadius: 4,
-                overflow: 'hidden',
-                position: 'relative',
-              }}>
-                {/* Progresso feito */}
-                <div style={{
-                  position: 'absolute',
-                  left: 0,
-                  top: 0,
-                  bottom: 0,
-                  width: `${progressPercent}%`,
-                  background: 'linear-gradient(90deg, #8b5cf6, #a78bfa)',
-                  borderRadius: 4,
-                  transition: 'width 0.3s ease',
-                }} />
-                
-                {/* Parte bloqueada (piscando) */}
-                <div style={{
-                  position: 'absolute',
-                  left: `${progressPercent}%`,
-                  top: 0,
-                  bottom: 0,
-                  width: `${100 / maxCredit}%`,
-                  background: 'rgba(239, 68, 68, 0.6)',
-                  borderRadius: 4,
-                  animation: 'pulse 2s infinite',
-                }} />
-              </div>
+            {/* 💡 Valor do PRO */}
+            <p
+              style={{
+                fontSize: 14,
+                color: '#9ca3af',
+                textAlign: 'center',
+                marginBottom: 8,
+                lineHeight: 1.6,
+              }}
+            >
+              Com o plano <strong style={{ color: '#a78bfa' }}>PRO</strong>, você mantém seu ritmo de estudo, analisa quantas mãos quiser e acelera sua evolução no poker.
+            </p>
 
-              {/* Texto de status */}
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                marginTop: 10,
+            {/* Linha de prova social */}
+            <p
+              style={{
                 fontSize: 12,
-              }}>
-                <span style={{ color: '#22c55e' }}>✓ {usedCredits} {featureName} feitas</span>
-                <span style={{ color: '#ef4444' }}>🔒 1 bloqueada</span>
-              </div>
-            </div>
+                color: '#6b7280',
+                textAlign: 'center',
+                marginBottom: 24,
+              }}
+            >
+              Jogadores PRO analisam até 5× mais mãos por semana.
+            </p>
 
-            {/* Micro prova de valor */}
-            <div style={{
-              background: 'rgba(139, 92, 246, 0.1)',
-              border: '1px solid rgba(139, 92, 246, 0.2)',
-              borderRadius: 10,
-              padding: '12px 16px',
-              marginBottom: 24,
-              textAlign: 'center',
-            }}>
-              <p style={{
-                margin: 0,
-                fontSize: 13,
-                color: '#c4b5fd',
-              }}>
-                📊 <strong>Jogadores PRO</strong> analisam <strong style={{ color: '#22c55e' }}>5x mais mãos</strong> por semana
-              </p>
-            </div>
-
-            {/* CTA - Continuidade, não compra */}
+            {/* 🚀 CTA de continuidade */}
             <button
               onClick={() => navigate('/premium')}
               style={{
                 width: '100%',
-                padding: '16px 24px',
+                padding: '14px 24px',
                 borderRadius: 12,
                 border: 'none',
-                background: 'linear-gradient(135deg, #8b5cf6, #a855f7)',
+                background: 'linear-gradient(135deg, #9333ea, #ec4899)',
                 color: '#fff',
-                fontSize: 15,
+                fontSize: 14,
                 fontWeight: 600,
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
-                boxShadow: '0 4px 20px rgba(139, 92, 246, 0.3)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 8,
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.transform = 'scale(1.02)';
-                e.currentTarget.style.boxShadow = '0 8px 30px rgba(139, 92, 246, 0.4)';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = 'scale(1)';
-                e.currentTarget.style.boxShadow = '0 4px 20px rgba(139, 92, 246, 0.3)';
               }}
             >
-              ✨ Desbloquear meu ritmo de estudo
+              Desbloquear meu ritmo de estudo
             </button>
 
-            {/* Texto auxiliar - Sem pressão */}
+            {/* Saída sem pressão */}
             <p
               style={{
-                marginTop: 16,
+                marginTop: 12,
                 textAlign: 'center',
                 fontSize: 12,
-                color: '#64748b',
+                color: '#6b7280',
               }}
             >
-              Ou volte amanhã com +{maxCredit} {featureName} gratuitas
+              Ou continue gratuitamente amanhã
             </p>
           </div>
         </div>
       )}
-
-      {/* CSS para animação */}
-      <style>{`
-        @keyframes pulse {
-          0%, 100% { opacity: 0.6; }
-          50% { opacity: 1; }
-        }
-      `}</style>
     </div>
   );
 }
