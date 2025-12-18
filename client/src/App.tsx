@@ -15,6 +15,7 @@ import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 import Trainer from './pages/Trainer';
 import GoogleSuccess from './pages/GoogleSuccess';
+import ProtectedRoute from './components/ProtectedRoute';
 import CookieConsent from './components/CookieConsent';
 import CreditCounter from './components/CreditCounter';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -1188,12 +1189,13 @@ export default function App() {
         <Layout>
           <Routes>
             <Route path="/" element={<Home />} />
-            {/* Modelo GTO Wizard - 3 intenções claras */}
-            <Route path="/trainer" element={<Trainer />} />
-            <Route path="/analyze" element={<Analyze />} />
-            <Route path="/ranges" element={<Ranges />} />
-            <Route path="/player-analysis" element={<PlayerAnalysis />} />
-            {/* Outras páginas */}
+            {/* Rotas protegidas - requerem login */}
+            <Route path="/trainer" element={<ProtectedRoute><Trainer /></ProtectedRoute>} />
+            <Route path="/analyze" element={<ProtectedRoute><Analyze /></ProtectedRoute>} />
+            <Route path="/ranges" element={<ProtectedRoute><Ranges /></ProtectedRoute>} />
+            <Route path="/player-analysis" element={<ProtectedRoute><PlayerAnalysis /></ProtectedRoute>} />
+            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+            {/* Páginas públicas */}
             <Route path="/analysis" element={<Analysis />} />
             <Route path="/features" element={<Features />} />
             <Route path="/solutions" element={<Solutions />} />
@@ -1201,7 +1203,6 @@ export default function App() {
             <Route path="/google-success" element={<GoogleSuccess />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/premium" element={<Premium />} />
-            <Route path="/profile" element={<Profile />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
           
