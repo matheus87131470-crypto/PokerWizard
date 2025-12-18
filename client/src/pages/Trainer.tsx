@@ -591,7 +591,6 @@ export default function Trainer() {
   const [stats, setStats] = useState<TrainingStats>({ total: 0, correct: 0, streak: 0, bestStreak: 0 });
   const [evolutionHistory, setEvolutionHistory] = useState<{ hand: number; accuracy: number; correct: boolean }[]>([]);
   const [loadingUse, setLoadingUse] = useState(false);
-  const [showPaywall, setShowPaywall] = useState(false);
   
   // Usa campo específico do Trainer (5 usos) - atualizado do servidor
   const usosTrainer = (auth.user as any)?.usosTrainer ?? 5;
@@ -620,10 +619,9 @@ export default function Trainer() {
       
       const data = await res.json();
       
-      // ⚠️ BLOQUEIO: Se retornou 403 ou no_credits, mostrar paywall
+      // ⚠️ BLOQUEIO: Se retornou 403 ou no_credits, atualizar usuário (PaywallOverlay detecta automaticamente)
       if (res.status === 403 || data.error === 'no_credits') {
-        console.log('[Trainer] Limite atingido! Mostrando paywall...');
-        setShowPaywall(true);
+        console.log('[Trainer] Limite atingido!');
         // Atualiza o usuário para refletir que acabaram os usos
         if (auth.refreshUser) {
           await auth.refreshUser();
@@ -650,9 +648,8 @@ export default function Trainer() {
   };
   
   const startTraining = async () => {
-    // ⚠️ BLOQUEIO: Se não pode usar, mostrar paywall
+    // ⚠️ BLOQUEIO: Se não pode usar, não faz nada (PaywallOverlay já bloqueia)
     if (!canUse && !isPremium) {
-      setShowPaywall(true);
       return;
     }
     
@@ -784,9 +781,10 @@ export default function Trainer() {
   }
   
   return (
-    <div className="trainer-page">
-      {/* Banner de Créditos Baixos */}
-      <CreditWarningBanner 
+    <PaywallOverlay requiredCredits={1} creditType="trainer">
+      <div className="trainer-page">
+        {/* Banner de Créditos Baixos */}
+        <CreditWarningBanner 
         credits={usosTrainer}
         isPremium={isPremium}
         onUpgrade={() => navigate('/premium')}
@@ -1229,14 +1227,7 @@ export default function Trainer() {
           )}
         </div>
       </div>
-      
-      {/* Paywall Overlay - Soft Paywall */}
-      {showPaywall && (
-        <PaywallOverlay 
-          feature="trainer"
-          onClose={() => setShowPaywall(false)}
-        />
-      )}
     </div>
+    </PaywallOverlay>
   );
 }

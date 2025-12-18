@@ -3,9 +3,11 @@
  * 
  * Intenção: Usuário cola histórico de mão e recebe análise GTO detalhada
  * Similar ao "Hand History" do GTO Wizard
+ * 
+ * Usa PaywallOverlay como wrapper para soft paywall
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import PaywallOverlay from '../components/PaywallOverlay';
@@ -24,19 +26,11 @@ export default function Analyze() {
   const [handHistory, setHandHistory] = useState('');
   const [analysis, setAnalysis] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [showPaywall, setShowPaywall] = useState(false);
 
   // Verificar créditos (usosAnalise específico para essa página)
   const isPremium = user?.premium || (user as any)?.statusPlano === 'premium';
   const usosAnalise = (user as any)?.usosAnalise ?? 5;
   const canUse = isPremium || usosAnalise > 0;
-
-  // Mostrar paywall se sem créditos ao carregar a página
-  useEffect(() => {
-    if (user && !isPremium && usosAnalise <= 0) {
-      setShowPaywall(true);
-    }
-  }, [user, isPremium, usosAnalise]);
 
   // Analisar mão
   const handleAnalyze = async () => {
@@ -130,17 +124,10 @@ Hero?`
   ];
 
   return (
-    <div className="analyze-page" style={{ maxWidth: 900, margin: '0 auto', position: 'relative' }}>
-      {/* Paywall Overlay - Soft Paywall */}
-      {showPaywall && (
-        <PaywallOverlay 
-          feature="analyze"
-          onClose={() => setShowPaywall(false)}
-        />
-      )}
-
-      {/* Banner de Créditos Baixos */}
-      <CreditWarningBanner 
+    <PaywallOverlay requiredCredits={1} creditType="analise">
+      <div className="analyze-page" style={{ maxWidth: 900, margin: '0 auto' }}>
+        {/* Banner de Créditos Baixos */}
+        <CreditWarningBanner 
         credits={usosAnalise}
         isPremium={isPremium}
         onUpgrade={() => navigate('/premium')}
@@ -348,5 +335,6 @@ UTG raises to 3bb, Hero 3-bets to 9bb...`}
         </div>
       </div>
     </div>
+    </PaywallOverlay>
   );
 }
