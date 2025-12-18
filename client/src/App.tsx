@@ -196,6 +196,85 @@ function Layout({ children }: { children: React.ReactNode }) {
             <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             {auth.user ? (
               <>
+                {/* Status do Plano e Créditos */}
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: 12,
+                  padding: '6px 14px',
+                  background: 'rgba(15, 23, 42, 0.6)',
+                  borderRadius: 8,
+                  border: '1px solid rgba(139, 92, 246, 0.2)',
+                }}>
+                  {/* Badge do Plano */}
+                  {auth.user.premium ? (
+                    <span style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 4,
+                      padding: '4px 10px',
+                      background: 'linear-gradient(135deg, #8b5cf6, #a855f7)',
+                      borderRadius: 6,
+                      fontSize: 11,
+                      fontWeight: 700,
+                      color: '#fff',
+                      textTransform: 'uppercase',
+                      letterSpacing: 0.5,
+                    }}>
+                      ✓ PRO
+                    </span>
+                  ) : (
+                    <>
+                      <span style={{
+                        padding: '4px 8px',
+                        background: 'rgba(100, 116, 139, 0.3)',
+                        borderRadius: 6,
+                        fontSize: 11,
+                        fontWeight: 600,
+                        color: '#94a3b8',
+                        textTransform: 'uppercase',
+                      }}>
+                        FREE
+                      </span>
+                      {/* Créditos restantes */}
+                      <span style={{ 
+                        fontSize: 12, 
+                        color: '#94a3b8',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 6,
+                      }}>
+                        <span style={{ color: (auth.user as any).usosAnalise > 0 ? '#a78bfa' : '#ef4444' }}>
+                          {(auth.user as any).usosAnalise ?? 0}/5
+                        </span>
+                        <span style={{ color: '#64748b', fontSize: 10 }}>análises</span>
+                      </span>
+                      {/* Botão Upgrade */}
+                      <button
+                        onClick={() => navigate('/premium')}
+                        style={{
+                          padding: '4px 10px',
+                          background: 'linear-gradient(135deg, #fbbf24, #f59e0b)',
+                          border: 'none',
+                          borderRadius: 6,
+                          fontSize: 11,
+                          fontWeight: 700,
+                          color: '#000',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 4,
+                          transition: 'all 0.2s',
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+                        onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                      >
+                        ✨ Upgrade
+                      </button>
+                    </>
+                  )}
+                </div>
+
                 {/* User Menu Dropdown */}
                 <div className="user-menu-container" style={{ position: 'relative' }}>
                   <button
