@@ -416,7 +416,7 @@ export async function generateScenario(req: any, res: any) {
   const aiModelUsed = (scenario as any).aiModelUsed || null;
   const aiExplanation = (scenario as any).aiExplanation || null;
   const u = await getUserById(userId);
-  const remaining = u ? (u.usosRestantes === -1 || u.usosRestantes === null ? -1 : u.usosRestantes) : null;
+  const remaining = u ? ((u as any).usosTrainer ?? 5) : null;
   return res.json({ ok: true, scenario, aiModelUsed, aiExplanation, remaining });
 }
 

@@ -182,11 +182,16 @@ export type FeatureType = 'trainer' | 'analise' | 'jogadores' | 'generic';
 const FREE_CREDITS_LIMIT = 7;
 
 /**
- * Verifica se usuário pode usar e deduz 1 crédito global
+ * Verifica se usuário pode usar e deduz 1 crédito específico
  * 
  * REGRAS:
  * - Premium: sempre permite (ilimitado)
- * - Free: verifica freeCredits > 0 e deduz 1
+ * - Free: verifica créditos específicos > 0 e deduz 1
+ * 
+ * CAMPOS:
+ * - analise -> usosAnalise (5 grátis)
+ * - trainer -> usosTrainer (5 grátis)
+ * - jogadores -> usosJogadores (5 grátis)
  */
 export async function deductCredit(userId: string, feature: FeatureType = 'generic'): Promise<boolean> {
   const user = await getUserById(userId);
@@ -198,32 +203,36 @@ export async function deductCredit(userId: string, feature: FeatureType = 'gener
     return true;
   }
   
-  // Usar freeCredits global (com fallback para usosRestantes para usuários antigos)
-  const currentCredits = user.freeCredits ?? user.usosRestantes ?? FREE_CREDITS_LIMIT;
+  // Mapear feature para campo específico
+  const featureFieldMap: Record<FeatureType, keyof typeof user> = {
+    'analise': 'usosAnalise',
+    'trainer': 'usosTrainer',
+    'jogadores': 'usosJogadores',
+    'generic': 'usosRestantes'
+  };
+  
+  const fieldName = featureFieldMap[feature] || 'usosRestantes';
+  const currentCredits = (user as any)[fieldName] ?? 5;
   
   // Verificar se tem créditos disponíveis
   if (currentCredits <= 0) {
-    console.log(`[userService] ❌ Sem créditos: ${user.email} | Feature: ${feature} | Credits: 0`);
+    console.log(`[userService] ❌ Sem créditos: ${user.email} | Feature: ${feature} | ${fieldName}: 0`);
     return false;
   }
   
-  // Deduzir 1 crédito
+  // Deduzir 1 crédito do campo específico
   const newCredits = currentCredits - 1;
   
+  const updates: any = {};
+  updates[fieldName] = newCredits;
+  
   if (dbAvailable) {
-    await dbUpdateUser(userId, { 
-      freeCredits: newCredits,
-      // Atualizar legacy também para manter sincronizado
-      usosRestantes: newCredits,
-      credits: newCredits,
-    });
+    await dbUpdateUser(userId, updates);
   } else {
-    user.freeCredits = newCredits;
-    user.usosRestantes = newCredits;
-    user.credits = newCredits;
+    (user as any)[fieldName] = newCredits;
   }
   
-  console.log(`[userService] ✅ Crédito usado: ${feature} | User: ${user.email} | Restantes: ${newCredits}/${FREE_CREDITS_LIMIT}`);
+  console.log(`[userService] ✅ Crédito usado: ${feature} | User: ${user.email} | ${fieldName}: ${newCredits}/5`);
   return true;
 }
 

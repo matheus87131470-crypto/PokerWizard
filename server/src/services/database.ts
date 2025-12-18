@@ -49,6 +49,9 @@ export async function initDatabase(): Promise<void> {
         credits INTEGER DEFAULT 7,
         usos_restantes INTEGER DEFAULT 7,
         free_credits INTEGER DEFAULT 7,
+        usos_analise INTEGER DEFAULT 5,
+        usos_trainer INTEGER DEFAULT 5,
+        usos_jogadores INTEGER DEFAULT 5,
         status_plano VARCHAR(50) DEFAULT 'free',
         premium BOOLEAN DEFAULT false,
         premium_until TIMESTAMP,
@@ -56,12 +59,22 @@ export async function initDatabase(): Promise<void> {
       )
     `);
     
-    // Add free_credits column to existing tables (migration)
+    // Migrations para adicionar colunas em tabelas existentes
     await db.query(`
       ALTER TABLE users ADD COLUMN IF NOT EXISTS free_credits INTEGER DEFAULT 7
-    `).catch(() => {
-      // Column might already exist, ignore error
-    });
+    `).catch(() => {});
+    
+    await db.query(`
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS usos_analise INTEGER DEFAULT 5
+    `).catch(() => {});
+    
+    await db.query(`
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS usos_trainer INTEGER DEFAULT 5
+    `).catch(() => {});
+    
+    await db.query(`
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS usos_jogadores INTEGER DEFAULT 5
+    `).catch(() => {});
     
     // Create payments table
     await db.query(`
@@ -211,6 +224,9 @@ export async function dbUpdateUser(id: string, updates: Partial<{
   credits: number;
   usosRestantes: number | null;
   freeCredits: number;
+  usosAnalise: number;
+  usosTrainer: number;
+  usosJogadores: number;
   statusPlano: string;
   premium: boolean;
   premiumUntil: Date | null;
@@ -232,6 +248,18 @@ export async function dbUpdateUser(id: string, updates: Partial<{
   if (updates.freeCredits !== undefined) {
     setClauses.push(`free_credits = $${paramIndex++}`);
     values.push(updates.freeCredits);
+  }
+  if (updates.usosAnalise !== undefined) {
+    setClauses.push(`usos_analise = $${paramIndex++}`);
+    values.push(updates.usosAnalise);
+  }
+  if (updates.usosTrainer !== undefined) {
+    setClauses.push(`usos_trainer = $${paramIndex++}`);
+    values.push(updates.usosTrainer);
+  }
+  if (updates.usosJogadores !== undefined) {
+    setClauses.push(`usos_jogadores = $${paramIndex++}`);
+    values.push(updates.usosJogadores);
   }
   if (updates.statusPlano !== undefined) {
     setClauses.push(`status_plano = $${paramIndex++}`);
@@ -419,6 +447,10 @@ function mapUserFromDb(row: any): any {
     usosRestantes: row.usos_restantes,
     // Novo campo global de créditos (fallback para usosRestantes se não existir)
     freeCredits: row.free_credits ?? row.usos_restantes ?? 7,
+    // Campos específicos por feature
+    usosAnalise: row.usos_analise ?? 5,
+    usosTrainer: row.usos_trainer ?? 5,
+    usosJogadores: row.usos_jogadores ?? 5,
     statusPlano: row.status_plano,
     premium: row.premium,
     premiumUntil: row.premium_until ? new Date(row.premium_until) : null,

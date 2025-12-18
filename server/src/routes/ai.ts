@@ -78,7 +78,7 @@ router.post('/analyze', authMiddleware, async (req: AuthRequest, res) => {
       improvements: analysisResult.improvements || [],
       leaks: analysisResult.leaks || [],
       aiModelUsed: analysisResult.aiModelUsed || null,
-      remaining: updatedUser?.credits || 0,
+      remaining: (updatedUser as any)?.usosAnalise ?? 0,
       analysisId: analysis.id,
     });
   } catch (err: any) {
