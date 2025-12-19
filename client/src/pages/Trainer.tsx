@@ -15,6 +15,9 @@ type Street = 'preflop' | 'flop' | 'turn' | 'river';
 type PreflopAction = 'any' | 'srp' | '3bet' | '4bet' | '5bet' | 'squeeze' | 'limp' | 'iso';
 type Action = 'fold' | 'call' | 'raise' | 'check' | 'bet' | 'allin';
 
+// 🎯 MÁQUINA DE ESTADOS (GTO Wizard style)
+type PracticeStage = 'SETUP' | 'PREFLOP' | 'FLOP' | 'TURN' | 'RIVER' | 'FEEDBACK';
+
 interface TrainingConfig {
   gameType: GameType;
   tableSize: TableSize;
@@ -35,6 +38,18 @@ interface TrainingStats {
   correct: number;
   streak: number;
   bestStreak: number;
+}
+
+// 🎯 SESSÃO PROGRESSIVA
+interface PracticeSession {
+  stage: PracticeStage;
+  heroPosition: Position;
+  holeCards: string[]; // ['As', 'Kh']
+  board: string[]; // [] → [Qh, Jd, Ts] → [Qh, Jd, Ts, 9c] → [Qh, Jd, Ts, 9c, 2h]
+  availableActions: Action[];
+  correctActions: Record<PracticeStage, Action>; // Ação correta por stage
+  userActions: Record<PracticeStage, Action | null>; // Ações do usuário
+  mistakes: number; // Contador de erros
 }
 
 // ===== DADOS GTO =====

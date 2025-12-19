@@ -14,7 +14,7 @@ import Solutions from './pages/Solutions';
 import ForgotPassword from './pages/ForgotPassword';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
-import Trainer from './pages/Trainer';
+import TrainerV2 from './pages/TrainerV2';
 import GoogleSuccess from './pages/GoogleSuccess';
 import ProtectedRoute from './components/ProtectedRoute';
 import CookieConsent from './components/CookieConsent';
@@ -1291,7 +1291,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             {/* Rotas protegidas - requerem login */}
-            <Route path="/trainer" element={<ProtectedRoute><Trainer /></ProtectedRoute>} />
+            <Route path="/trainer" element={<ProtectedRoute><TrainerV2 /></ProtectedRoute>} />
             <Route path="/analyze" element={<ProtectedRoute><Analyze /></ProtectedRoute>} />
             <Route path="/ranges" element={<ProtectedRoute><Ranges /></ProtectedRoute>} />
             <Route path="/player-analysis" element={<ProtectedRoute><PlayerAnalysis /></ProtectedRoute>} />
