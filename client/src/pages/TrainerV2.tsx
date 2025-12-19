@@ -573,12 +573,15 @@ export default function TrainerV2() {
         }),
       });
 
-      const data = await response.json();
-
-      if (data.error === 'no_credits') {
-        // PaywallOverlay detecta automaticamente após refresh
-        if (auth.refreshUser) await auth.refreshUser();
-        return;
+      if (!response.ok) {
+        const data = await response.json();
+        if (data.error === 'no_credits') {
+          // PaywallOverlay detecta automaticamente após refresh
+          if (auth.refreshUser) await auth.refreshUser();
+          setLoading(false);
+          return;
+        }
+        throw new Error(data.error || 'Erro ao consumir crédito');
       }
 
       // Atualizar créditos
