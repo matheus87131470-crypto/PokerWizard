@@ -335,9 +335,9 @@ export default function Ranges() {
                     setExplanation('');
                     
                     // Verificar se tem token
-                    const token = localStorage.getItem('token');
+                    const token = localStorage.getItem('pokerwizard_token');
                     if (!token) {
-                      setExplanation('❌ Sessão expirada. Faça login novamente.');
+                      setExplanation('❌ Você precisa estar logado. Redirecionando...');
                       setTimeout(() => navigate('/login'), 2000);
                       setLoadingExplanation(false);
                       return;

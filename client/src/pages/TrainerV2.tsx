@@ -749,7 +749,7 @@ export default function TrainerV2() {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'Authorization': `Bearer ${localStorage.getItem('pokerwizard_token')}`,
               },
               body: JSON.stringify({
                 holeCards,

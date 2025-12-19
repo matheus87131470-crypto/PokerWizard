@@ -36,7 +36,7 @@ export async function generateAIScenario(
   network: string = 'PokerStars'
 ): Promise<AIScenario | null> {
   try {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('pokerwizard_token');
     
     const response = await fetch(`${API_BASE}/api/trainer/generate`, {
       method: 'POST',
@@ -76,7 +76,7 @@ export async function recordAIResult(
   timeSpent: number
 ): Promise<void> {
   try {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('pokerwizard_token');
     
     await fetch(`${API_BASE}/api/trainer/record`, {
       method: 'POST',
@@ -103,7 +103,7 @@ export async function getTrainingUsage(): Promise<{
   isPremium: boolean;
 }> {
   try {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('pokerwizard_token');
     
     const response = await fetch(`${API_BASE}/api/trainer/usage`, {
       method: 'GET',
