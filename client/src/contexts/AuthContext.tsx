@@ -26,7 +26,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 // Detectar ambiente automaticamente
 function getApiBase(): string {
   const env = (import.meta as any)?.env || {};
-  if (env.VITE_API_URL) return env.VITE_API_URL as string;
+  if (env.VITE_API_BASE) return env.VITE_API_BASE as string;
   const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
   if (hostname.includes('localhost')) return 'http://localhost:3000';
   // Produção: força backend oficial com IA

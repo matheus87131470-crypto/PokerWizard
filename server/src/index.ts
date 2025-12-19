@@ -23,30 +23,8 @@ import healthRouter from './routes/health';
 
 const app = express();
 
-// Middlewares principais - CORS configurado para aceitar do frontend
-const allowedOrigins = [
-  'http://localhost:5173',
-  'http://localhost:4173',
-  'https://poker.pokio.online',
-  'https://pokerwizard.pages.dev',
-  'https://pokerwizard-api.onrender.com'
-];
-
-app.use(cors({
-  origin: (origin, callback) => {
-    // Permite requisições sem origin (tipo Postman, curl, etc)
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      console.log(`[CORS] Origin bloqueada: ${origin}`);
-      callback(null, true); // Permite mesmo assim (mais permissivo)
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+// Middlewares principais
+app.use(cors());
 app.use(express.json());
 
 // Sessão necessária para Google OAuth
