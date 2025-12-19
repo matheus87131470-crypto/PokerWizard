@@ -9,6 +9,8 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import PaywallOverlay from '../components/PaywallOverlay';
+import CreditWarningBanner from '../components/CreditWarningBanner';
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://pokerwizard-api.onrender.com';
 
@@ -524,24 +526,64 @@ export default function TrainerV2() {
   const [session, setSession] = useState<PracticeSession | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // Validação para iniciar (apenas campos obrigatórios)
+  // Verificar créditos (usosTrainer específico para essa página)
+  const isPremium = auth.user?.premium || (auth.user as any)?.statusPlano === 'premium';
+  const usosTrainer = (auth.user as any)?.usosTrainer ?? 5;
+  const canUse = isPremium || usosTrainer > 0;
+
+  // Validação para iniciar
   const canStart = !!(
     config.heroPosition &&
     config.gameType &&
     config.stakes &&
-    config.spot
+    config.spot &&
+    canUse
   );
-
-  // Removido: validateCredits e consumeCredit
-  // Practice é 100% gratuito - sem validação de créditos
 
   // ===== INICIAR TREINO =====
   const handleStartPractice = async () => {
     if (!canStart) return;
 
+    // PaywallOverlay já bloqueia se não tiver créditos
+    if (!canUse) {
+      return;
+    }
+
+    if (!auth.token) {
+      navigate('/login');
+      return;
+    }
+
     setLoading(true);
     
     try {
+      // Consumir crédito no backend
+      const response = await fetch(`${API_URL}/api/trainer/generate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${auth.token}`,
+        },
+        body: JSON.stringify({
+          table: '6MAX',
+          position: config.heroPosition,
+          gameType: config.gameType,
+          street: 'Pré-flop',
+          action: 'Raise',
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.error === 'no_credits') {
+        // PaywallOverlay detecta automaticamente após refresh
+        if (auth.refreshUser) await auth.refreshUser();
+        return;
+      }
+
+      // Atualizar créditos
+      if (auth.refreshUser) await auth.refreshUser();
+
       // Gerar 4 mãos (preflop, flop, turn, river)
       const holeCards = generateHoleCards();
       const streets: Street[] = ['PREFLOP', 'FLOP', 'TURN', 'RIVER'];
@@ -655,10 +697,18 @@ export default function TrainerV2() {
   }
 
   return (
-    <div style={{ minHeight: '100vh' }}>
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '20px' }}>
-        {/* RENDERIZAÇÃO POR STAGE */}
-        {stage === 'SETUP' && (
+    <PaywallOverlay requiredCredits={1} creditType="trainer">
+      <div style={{ minHeight: '100vh' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '20px' }}>
+          {/* Banner de Créditos Baixos */}
+          <CreditWarningBanner 
+            credits={usosTrainer}
+            isPremium={isPremium}
+            onUpgrade={() => navigate('/premium')}
+          />
+
+          {/* RENDERIZAÇÃO POR STAGE */}
+          {stage === 'SETUP' && (
           <PracticeSetup
             config={config}
             setConfig={setConfig}
@@ -682,7 +732,8 @@ export default function TrainerV2() {
             onNext={handleNext}
           />
         )}
+        </div>
       </div>
-    </div>
+    </PaywallOverlay>
   );
 }
