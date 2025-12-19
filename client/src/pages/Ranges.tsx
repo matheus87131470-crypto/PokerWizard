@@ -333,12 +333,22 @@ export default function Ranges() {
 
                     setLoadingExplanation(true);
                     setExplanation('');
+                    
+                    // Verificar se tem token
+                    const token = localStorage.getItem('token');
+                    if (!token) {
+                      setExplanation('❌ Sessão expirada. Faça login novamente.');
+                      setTimeout(() => navigate('/login'), 2000);
+                      setLoadingExplanation(false);
+                      return;
+                    }
+
                     try {
                       const response = await fetch(`${API_URL}/api/gto-analyze/range`, {
                         method: 'POST',
                         headers: {
                           'Content-Type': 'application/json',
-                          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                          'Authorization': `Bearer ${token}`,
                         },
                         body: JSON.stringify({
                           position: activePosition,
@@ -367,7 +377,12 @@ export default function Ranges() {
                         const errorData = await response.json().catch(() => ({}));
                         console.error('Error response:', errorData);
                         
-                        if (errorData.error === 'no_credits') {
+                        // Token inválido ou expirado
+                        if (response.status === 401 || errorData.error === 'invalid_token') {
+                          setExplanation('❌ Sessão expirada. Redirecionando...');
+                          localStorage.removeItem('token');
+                          setTimeout(() => navigate('/login'), 2000);
+                        } else if (errorData.error === 'no_credits') {
                           setShowPaywall(true);
                         } else {
                           setExplanation(`❌ Erro: ${errorData.error || errorData.details || 'Tente novamente'}`);
