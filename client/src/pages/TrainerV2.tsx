@@ -333,61 +333,200 @@ function PracticeTable({
   const currentHand = session.hands[session.currentHandIndex];
   const { config } = session;
 
+  // Posições dos assentos ao redor da mesa
+  const SEAT_POSITIONS = [
+    { pos: 'BTN' as const, x: 75, y: 50 },
+    { pos: 'SB' as const, x: 60, y: 15 },
+    { pos: 'BB' as const, x: 40, y: 15 },
+    { pos: 'UTG' as const, x: 25, y: 50 },
+    { pos: 'HJ' as const, x: 30, y: 85 },
+    { pos: 'CO' as const, x: 70, y: 85 },
+  ];
+
   return (
-    <div style={{ maxWidth: 800, margin: '40px auto', padding: '20px' }}>
+    <div style={{ maxWidth: 900, margin: '40px auto', padding: '20px' }}>
       {/* Info Contexto */}
       <div style={{ 
         textAlign: 'center', 
-        marginBottom: 32,
-        padding: 20,
+        marginBottom: 24,
+        padding: 16,
         background: 'rgba(100, 116, 139, 0.1)',
         borderRadius: 12,
       }}>
-        <div style={{ fontSize: 14, color: '#94a3b8', marginBottom: 8 }}>
-          Você está no <strong style={{ color: '#10b981' }}>{config.heroPosition}</strong> · 
-          Stack: <strong>{currentHand.stack}bb</strong> · 
-          Situação: <strong>{config.spot}</strong>
-        </div>
-        <div style={{ fontSize: 12, color: '#64748b' }}>
+        <div style={{ fontSize: 13, color: '#94a3b8' }}>
+          Situação: <strong>{config.spot}</strong> · 
           {currentHand.street}
         </div>
       </div>
 
-      {/* Hole Cards */}
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        gap: 16, 
-        marginBottom: 32 
+      {/* MESA DE POKER */}
+      <div style={{
+        position: 'relative',
+        width: '100%',
+        maxWidth: 700,
+        height: 450,
+        margin: '0 auto 40px',
+        background: 'linear-gradient(135deg, #1a4d2e, #1e5f3a)',
+        borderRadius: '50%',
+        border: '12px solid #8b4513',
+        boxShadow: '0 20px 60px rgba(0,0,0,0.5), inset 0 0 40px rgba(0,0,0,0.3)',
       }}>
-        {currentHand.holeCards.map((card, i) => (
-          <Card key={i} card={card} />
-        ))}
+        {/* Pot Central */}
+        <div style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          background: 'rgba(0,0,0,0.7)',
+          padding: '12px 24px',
+          borderRadius: 20,
+          border: '2px solid #fbbf24',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+          zIndex: 1,
+        }}>
+          <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 4 }}>Pot</div>
+          <div style={{ fontSize: 20, fontWeight: 700, color: '#fbbf24' }}>
+            {currentHand.pot}bb
+          </div>
+        </div>
+
+        {/* Board (centro) */}
+        {currentHand.board.length > 0 && (
+          <div style={{
+            position: 'absolute',
+            top: '35%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            display: 'flex',
+            gap: 8,
+            zIndex: 2,
+          }}>
+            {currentHand.board.map((card, i) => (
+              <Card key={i} card={card} />
+            ))}
+          </div>
+        )}
+
+        {/* Posições dos jogadores */}
+        {SEAT_POSITIONS.map(({ pos, x, y }) => {
+          const isHero = pos === config.heroPosition;
+          
+          return (
+            <div
+              key={pos}
+              style={{
+                position: 'absolute',
+                left: `${x}%`,
+                top: `${y}%`,
+                transform: 'translate(-50%, -50%)',
+                zIndex: 3,
+              }}
+            >
+              {/* Assento */}
+              <div style={{
+                background: isHero 
+                  ? 'linear-gradient(135deg, #10b981, #059669)' 
+                  : 'rgba(71, 85, 105, 0.4)',
+                padding: '10px 18px',
+                borderRadius: 12,
+                border: isHero ? '3px solid #10b981' : '2px solid #475569',
+                boxShadow: isHero 
+                  ? '0 0 20px rgba(16, 185, 129, 0.6)' 
+                  : '0 4px 12px rgba(0,0,0,0.3)',
+                minWidth: 75,
+                textAlign: 'center',
+              }}>
+                <div style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: isHero ? '#fff' : '#94a3b8',
+                  marginBottom: isHero ? 4 : 0,
+                }}>
+                  {pos}
+                </div>
+                {isHero && (
+                  <>
+                    <div style={{
+                      fontSize: 9,
+                      color: 'rgba(255,255,255,0.7)',
+                      marginBottom: 2,
+                    }}>
+                      YOU
+                    </div>
+                    <div style={{
+                      fontSize: 13,
+                      fontWeight: 700,
+                      color: '#fbbf24',
+                    }}>
+                      {currentHand.stack}bb
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Cartas do Hero (abaixo da posição) */}
+              {isHero && (
+                <div style={{
+                  marginTop: 8,
+                  display: 'flex',
+                  gap: 6,
+                  justifyContent: 'center',
+                }}>
+                  {currentHand.holeCards.map((card, i) => (
+                    <div key={i} style={{
+                      width: 50,
+                      height: 70,
+                      background: '#fff',
+                      borderRadius: 6,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: 20,
+                      fontWeight: 700,
+                      color: (card[1] === '♥' || card[1] === '♦') ? '#ef4444' : '#1e293b',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                    }}>
+                      <div>{card[0]}</div>
+                      <div style={{ fontSize: 24 }}>{card[1]}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+
+        {/* Dealer Button */}
+        <div style={{
+          position: 'absolute',
+          left: '82%',
+          top: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: 32,
+          height: 32,
+          background: '#fff',
+          borderRadius: '50%',
+          border: '3px solid #1e293b',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: 14,
+          fontWeight: 700,
+          color: '#1e293b',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+          zIndex: 4,
+        }}>
+          D
+        </div>
       </div>
 
-      {/* Board */}
-      {currentHand.board.length > 0 && (
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          gap: 12, 
-          marginBottom: 40,
-          padding: 24,
-          background: 'linear-gradient(135deg, #1e293b, #334155)',
-          borderRadius: 16,
-        }}>
-          {currentHand.board.map((card, i) => (
-            <Card key={i} card={card} />
-          ))}
-        </div>
-      )}
-
-      {/* Actions */}
+      {/* Actions (fora da mesa) */}
       <div style={{ 
         display: 'flex', 
         justifyContent: 'center', 
         gap: 20,
-        marginTop: 48,
+        marginTop: 24,
       }}>
         {currentHand.availableActions.map(action => (
           <ActionButton
