@@ -538,7 +538,31 @@ export default function TrainerV2() {
     (isPremium || usosTrainer > 0)
   );
 
-  // ===== CONSUMIR CRÉDITO =====
+  // ===== VALIDAR CRÉDITOS (sem consumir ainda) =====
+  const validateCredits = async (): Promise<boolean> => {
+    if (isPremium) return true;
+
+    try {
+      const res = await fetch(`${API_URL}/api/trainer/hand`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${auth.token}`,
+        },
+      });
+
+      if (res.status === 403) {
+        return false;
+      }
+
+      const data = await res.json();
+      return data.ok;
+    } catch {
+      return false;
+    }
+  };
+
+  // ===== CONSUMIR CRÉDITO (após completar a sessão) =====
   const consumeCredit = async (): Promise<boolean> => {
     if (isPremium) return true;
 
@@ -559,7 +583,6 @@ export default function TrainerV2() {
       });
 
       if (res.status === 403) {
-        if (auth.refreshUser) await auth.refreshUser();
         return false;
       }
 
@@ -577,7 +600,8 @@ export default function TrainerV2() {
     setLoading(true);
     
     try {
-      const allowed = await consumeCredit();
+      // Apenas VALIDA créditos (não consome ainda)
+      const allowed = await validateCredits();
       
       if (!allowed) {
         setLoading(false);
@@ -666,6 +690,8 @@ export default function TrainerV2() {
   };
 
   const handleNext = async () => {
+    // Consumir crédito AQUI (após completar sessão anterior)
+    await consumeCredit();
     await handleStartPractice();
   };
 

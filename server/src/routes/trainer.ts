@@ -16,7 +16,47 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || '',
 });
 
-// Protect generation endpoint so it consumes a user usage
+// NEW: Generate hand WITHOUT consuming credit (just validates)
+router.post('/hand', authMiddleware, async (req: any, res: any) => {
+  const userId = req.userId;
+  if (!userId) return res.status(401).json({ ok: false, error: 'unauthorized' });
+
+  // Import here to avoid circular deps
+  const { getUserById } = await import('../services/userService');
+  const user = await getUserById(userId);
+  
+  if (!user) return res.status(404).json({ ok: false, error: 'user_not_found' });
+
+  const isPremium = (user as any).premium || (user as any).statusPlano === 'premium';
+  const usosTrainer = (user as any).usosTrainer ?? 5;
+
+  // Validate credits but DON'T deduct
+  if (!isPremium && usosTrainer <= 0) {
+    return res.status(403).json({ 
+      ok: false, 
+      error: 'no_credits',
+      remaining: 0,
+      feature: 'trainer'
+    });
+  }
+
+  // Generate hand (cards, board, etc)
+  const ranks = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'];
+  const suits = ['♠', '♥', '♦', '♣'];
+  const randCard = () => `${ranks[Math.floor(Math.random() * ranks.length)]}${suits[Math.floor(Math.random() * suits.length)]}`;
+  
+  const holeCards = [randCard(), randCard()];
+  const handId = `h-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+  return res.json({
+    ok: true,
+    handId,
+    holeCards,
+    remaining: isPremium ? 999 : usosTrainer
+  });
+});
+
+// OLD: Protect generation endpoint (legacy, mantém para compatibilidade)
 router.post('/generate', authMiddleware, generateScenario);
 router.post('/record', authMiddleware, recordResult);
 router.get('/stats', getStats);
