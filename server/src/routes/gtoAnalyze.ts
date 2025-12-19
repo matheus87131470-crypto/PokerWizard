@@ -111,15 +111,6 @@ router.post('/range', authMiddleware, async (req: any, res: any) => {
       });
     }
 
-    // Verificar se OpenAI está configurado
-    if (!process.env.OPENAI_API_KEY) {
-      console.error('[gtoAnalyze] OpenAI API key not configured');
-      return res.status(503).json({ 
-        error: 'Service unavailable',
-        details: 'AI service not configured'
-      });
-    }
-
     // Deduzir crédito (se não for premium)
     if (!isPremium) {
       await deductCredit(userId, 'analise');
@@ -152,24 +143,45 @@ Provide a detailed explanation (150-200 words) covering:
 
 Write in a clear, educational tone in Portuguese.`;
 
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        { role: 'system', content: 'You are a professional poker coach explaining GTO ranges in Portuguese. Be detailed but accessible.' },
-        { role: 'user', content: prompt }
-      ],
-      temperature: 0.7,
-      max_tokens: 400,
-    });
+    // Gerar explicação
+    let explanation = '';
+    const useAI = !!process.env.OPENAI_API_KEY;
+    if (useAI) {
+      try {
+        const completion = await openai.chat.completions.create({
+          model: 'gpt-4',
+          messages: [
+            { role: 'system', content: 'You are a professional poker coach explaining GTO ranges in Portuguese. Be detailed but accessible.' },
+            { role: 'user', content: prompt }
+          ],
+          temperature: 0.7,
+          max_tokens: 400,
+        });
+        explanation = completion.choices[0]?.message?.content || '';
+        console.log('[gtoAnalyze] Explanation generated via OpenAI');
+      } catch (err: any) {
+        console.error('[gtoAnalyze] OpenAI error, using fallback:', err?.message);
+      }
+    }
 
-    const explanation = completion.choices[0]?.message?.content || 'Erro ao gerar explicação.';
+    // Fallback se IA não disponível ou falhou
+    if (!explanation) {
+      const scenarioText = scenario === 'RFI' ? 'Open Raise' : scenario === '3bet' ? '3-Bet' : 'vs 3-Bet';
+      const freq = Number(stats?.openingRange ?? 0);
+      explanation = `Este range de ${position} em ${scenarioText} prioriza valor e jogabilidade.
+Em posições iniciais, focamos em mãos com boa equidade e baixa dominância, reduzindo offsuit marginais. À medida que avançamos (CO/BTN), incorporamos mais suited connectors e broadways, explorando posição e fold equity.
 
-    console.log('[gtoAnalyze] Explanation generated successfully');
-    
-    return res.json({
-      ok: true,
-      explanation,
-    });
+Pontos-chave:
+- Valor: pares médios-altos (TT+) e broadways fortes (AK, AQ) compõem a base.
+- Mix: mãos suited ganham frequência de raise/call pela jogabilidade pós-flop; offsuit marginais reduzem.
+- Ajustes: contra oponentes que pagam demais, aumente o componente de valor; contra quem folda muito, amplie steals com suited.
+- Erros comuns: abrir demais offsuit fracos sem posição; subestimar defesa com suited conectados.
+
+Abertura estimada: ~${freq}% do baralho. Use esse guia como referência prática quando não houver solver.`;
+      console.log('[gtoAnalyze] Fallback explanation generated');
+    }
+
+    return res.json({ ok: true, explanation });
 
   } catch (error: any) {
     console.error('[gtoAnalyze] Range Explanation Error:', error);
@@ -178,11 +190,19 @@ Write in a clear, educational tone in Portuguese.`;
       stack: error.stack,
       code: error.code,
     });
-    
-    return res.status(500).json({ 
-      error: 'Failed to explain range',
-      details: error.message || 'Internal server error'
-    });
+    // Em caso de erro inesperado, tente retornar fallback básico
+    try {
+      const { position, scenario, stats } = req.body || {};
+      const scenarioText = scenario === 'RFI' ? 'Open Raise' : scenario === '3bet' ? '3-Bet' : 'vs 3-Bet';
+      const freq = Number(stats?.openingRange ?? 0);
+      const explanation = `Resumo rápido de ${position} em ${scenarioText}: priorize valor, evite offsuit marginais fora de posição, e dê preferência a mãos suited com jogabilidade. Abertura referência: ~${freq}%.`;
+      return res.json({ ok: true, explanation });
+    } catch (_) {
+      return res.status(500).json({ 
+        error: 'Failed to explain range',
+        details: error.message || 'Internal server error'
+      });
+    }
   }
 });
 

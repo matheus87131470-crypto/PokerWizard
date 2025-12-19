@@ -510,7 +510,7 @@ export default function Ranges() {
                         // Token inválido ou expirado
                         if (response.status === 401 || errorData.error === 'invalid_token') {
                           setExplanation('❌ Sessão expirada. Redirecionando...');
-                          localStorage.removeItem('token');
+                          localStorage.removeItem('pokerwizard_token');
                           setTimeout(() => navigate('/login'), 2000);
                         } else if (errorData.error === 'no_credits') {
                           setShowPaywall(true);
