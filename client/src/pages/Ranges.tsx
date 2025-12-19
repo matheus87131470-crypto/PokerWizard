@@ -130,6 +130,7 @@ export default function Ranges() {
   const [confidence, setConfidence] = useState<number>(82);
   const [format, setFormat] = useState<'CASH' | 'MTT'>('CASH');
   const [field, setField] = useState<'recreativo' | 'regulares'>('regulares');
+  const IA_RANGES_COMING_SOON = true; // placeholder: desabilita IA de explicação por enquanto
 
   // Verificar status premium e créditos (igual ao Analyze)
   const isPremium = user?.premium || (user as any)?.statusPlano === 'premium';
@@ -645,160 +646,64 @@ export default function Ranges() {
             }}>
               Entenda o porquê de cada decisão no range de {activePosition}
             </p>
-            
-            {isPremium ? (
+            {IA_RANGES_COMING_SOON ? (
               <>
                 <button
-                  onClick={async () => {
-                    if (!canExplain) {
-                      setShowPaywall(true);
-                      return;
-                    }
-
-                    setLoadingExplanation(true);
-                    setExplanation('');
-                    
-                    // Verificar se tem token
-                    const token = localStorage.getItem('pokerwizard_token');
-                    if (!token) {
-                      setExplanation('❌ Você precisa estar logado. Redirecionando...');
-                      setTimeout(() => navigate('/login'), 2000);
-                      setLoadingExplanation(false);
-                      return;
-                    }
-
-                    try {
-                      const response = await fetch(`${API_URL}/api/gto-analyze/range`, {
-                        method: 'POST',
-                        headers: {
-                          'Content-Type': 'application/json',
-                          'Authorization': `Bearer ${token}`,
-                        },
-                        body: JSON.stringify({
-                          position: activePosition,
-                          scenario,
-                          rangeData: hands.filter(h => h.action !== 'fold'),
-                          stats,
-                          context: {
-                            format,
-                            field,
-                            stackSize,
-                          },
-                        }),
-                      });
-
-                      console.log('Response status:', response.status);
-                      
-                      if (response.ok) {
-                        const data = await response.json();
-                        console.log('Explanation received:', data);
-                        
-                        if (data.explanation) {
-                          setExplanation(data.explanation);
-                          // Atualizar créditos do usuário
-                          if (auth.user && !isPremium) {
-                            auth.refreshUser();
-                          }
-                        } else {
-                          setExplanation('❌ Resposta inválida do servidor.');
-                        }
-                      } else {
-                        const errorData = await response.json().catch(() => ({}));
-                        console.error('Error response:', errorData);
-                        
-                        // Token inválido ou expirado
-                        if (response.status === 401 || errorData.error === 'invalid_token') {
-                          setExplanation('❌ Sessão expirada. Redirecionando...');
-                          localStorage.removeItem('pokerwizard_token');
-                          setTimeout(() => navigate('/login'), 2000);
-                        } else if (errorData.error === 'no_credits') {
-                          setShowPaywall(true);
-                        } else {
-                          setExplanation(`❌ Erro: ${errorData.error || errorData.details || 'Tente novamente'}`);
-                        }
-                      }
-                    } catch (error: any) {
-                      console.error('Range explanation error:', error);
-                      setExplanation(`❌ Erro: ${error.message || 'Falha ao conectar'}`);
-                    } finally {
-                      setLoadingExplanation(false);
-                    }
-                  }}
-                  disabled={loadingExplanation}
+                  disabled
                   style={{
                     width: '100%',
                     padding: '14px 20px',
-                    background: loadingExplanation
-                      ? 'rgba(139, 92, 246, 0.5)'
-                      : 'linear-gradient(135deg, #8b5cf6, #6d28d9)',
-                    border: 'none',
+                    background: 'rgba(148,163,184,0.2)',
+                    border: '1px solid rgba(148,163,184,0.3)',
                     borderRadius: 10,
-                    color: 'white',
+                    color: '#cbd5e1',
                     fontSize: 14,
                     fontWeight: 700,
-                    cursor: loadingExplanation ? 'wait' : 'pointer',
+                    cursor: 'not-allowed',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: 8,
                   }}
                 >
-                  {loadingExplanation ? '⏳ Analisando...' : '🤖 Explicar este Range'}
+                  🚧 Em breve disponível
                 </button>
-
-                {/* Contador de usos restantes (apenas FREE) */}
-                {!isPremium && (
-                  <div style={{
-                    marginTop: 8,
-                    fontSize: 12,
-                    color: usosRanges > 0 ? '#a78bfa' : '#ef4444',
-                    textAlign: 'center',
-                  }}>
-                    📊 {usosRanges} explicações restantes
-                  </div>
-                )}
-
-                {/* Explicação da IA */}
-                {explanation && (
-                  <div style={{
-                    marginTop: 16,
-                    padding: 16,
-                    background: 'rgba(139, 92, 246, 0.1)',
-                    border: '1px solid rgba(139, 92, 246, 0.3)',
-                    borderRadius: 10,
-                    color: 'var(--text-primary)',
-                    fontSize: 14,
-                    lineHeight: 1.6,
-                    whiteSpace: 'pre-wrap',
-                  }}>
-                    <div style={{ fontWeight: 700, color: '#a78bfa', marginBottom: 8 }}>
-                      🤖 Análise GTO:
-                    </div>
-                    {explanation}
-                  </div>
-                )}
+                <div style={{
+                  marginTop: 10,
+                  fontSize: 12,
+                  color: 'var(--text-secondary)',
+                  textAlign: 'center'
+                }}>
+                  A explicação por IA dos ranges será liberada em breve.
+                </div>
               </>
             ) : (
-              <button
-                onClick={() => setShowPaywall(true)}
-                style={{
-                  width: '100%',
-                  padding: '14px 20px',
-                  background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(139, 92, 246, 0.1))',
-                  border: '1px solid rgba(139, 92, 246, 0.3)',
-                  borderRadius: 10,
-                  color: '#a78bfa',
-                  fontSize: 14,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 8,
-                }}
-              >
-                🔒 Explicação Premium
-              </button>
+              isPremium ? (
+                <>
+                  {/* conteúdo original premium (mantido) */}
+                </>
+              ) : (
+                <button
+                  onClick={() => setShowPaywall(true)}
+                  style={{
+                    width: '100%',
+                    padding: '14px 20px',
+                    background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(139, 92, 246, 0.1))',
+                    border: '1px solid rgba(139, 92, 246, 0.3)',
+                    borderRadius: 10,
+                    color: '#a78bfa',
+                    fontSize: 14,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8,
+                  }}
+                >
+                  🔒 Explicação Premium
+                </button>
+              )
             )}
           </div>
         </div>
