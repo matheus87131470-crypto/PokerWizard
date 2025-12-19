@@ -24,7 +24,7 @@ export default function GoogleSuccess() {
       // Buscar dados do usuário
       const apiBase = window.location.hostname.includes('localhost')
         ? 'http://localhost:3000'
-        : 'https://pokerwizard.onrender.com';
+        : 'https://pokerwizard-api.onrender.com';
         
       fetch(apiBase + '/api/auth/me', {
         headers: {

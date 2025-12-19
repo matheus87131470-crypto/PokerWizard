@@ -31,7 +31,7 @@ function getApiBase(): string {
   }
   // Em produção (não localhost), usar a API do Render
   if (typeof window !== 'undefined' && !window.location.hostname.includes('localhost')) {
-    return 'https://pokerwizard.onrender.com';
+    return 'https://pokerwizard-api.onrender.com';
   }
   // Local
   return 'http://localhost:3000';

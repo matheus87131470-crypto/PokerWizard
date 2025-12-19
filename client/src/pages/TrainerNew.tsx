@@ -7,7 +7,7 @@ function getApiBase(): string {
     return (import.meta as any).env.VITE_API_BASE;
   }
   if (typeof window !== 'undefined' && !window.location.hostname.includes('localhost')) {
-    return 'https://pokerwizard.onrender.com';
+    return 'https://pokerwizard-api.onrender.com';
   }
   return 'http://localhost:3000';
 }

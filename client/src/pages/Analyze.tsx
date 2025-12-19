@@ -13,7 +13,7 @@ import { useAuth } from '../contexts/AuthContext';
 import PaywallOverlay from '../components/PaywallOverlay';
 import CreditWarningBanner from '../components/CreditWarningBanner';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://pokerwizard.onrender.com';
+const API_BASE = import.meta.env.VITE_API_URL || 'https://pokerwizard-api.onrender.com';
 
 export default function Analyze() {
   const auth = useAuth();
