@@ -13,8 +13,6 @@ export default function Login() {
   const [error, setError] = useState('');
   const [emailError, setEmailError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [googleReady, setGoogleReady] = useState<null | boolean>(null);
-  const [googleMsg, setGoogleMsg] = useState<string>('');
   const navigate = useNavigate();
   const auth = useAuth();
 
@@ -67,31 +65,7 @@ export default function Login() {
     }
   };
 
-  // Status do Google OAuth (debug)
-  React.useEffect(() => {
-    const apiBase = window.location.hostname.includes('localhost')
-      ? 'http://localhost:3000'
-      : 'https://pokerwizard-api.onrender.com';
-    (async () => {
-      try {
-        const resp = await fetch(`${apiBase}/api/auth/google-debug`);
-        if (!resp.ok) throw new Error(String(resp.status));
-        const json = await resp.json();
-        const ready = !!json?.googleOAuth?.ready;
-        setGoogleReady(ready);
-        const parts: string[] = [];
-        parts.push(ready ? '✅ Pronto' : '⚠️ Pendente');
-        if (json?.googleOAuth) {
-          parts.push(`Callback: ${json.googleOAuth.callbackUrl || 'N/A'}`);
-          parts.push(`ClientUrl: ${json.googleOAuth.clientUrl || 'N/A'}`);
-        }
-        setGoogleMsg(parts.join(' • '));
-      } catch (err: any) {
-        setGoogleReady(false);
-        setGoogleMsg(`⚠️ Não foi possível verificar (${err?.message || 'erro'})`);
-      }
-    })();
-  }, []);
+
 
   return (
     <div
@@ -261,13 +235,8 @@ export default function Login() {
         <button
           type="button"
           onClick={() => {
-            // Redirecionar para o endpoint de Google OAuth do backend
-            const apiBase = window.location.hostname.includes('localhost')
-              ? 'http://localhost:3000'
-              : 'https://pokerwizard-api.onrender.com';
-            window.location.href = `${apiBase}/api/auth/google`;
+            window.location.href = `${(import.meta as any).env.VITE_API_BASE || 'https://pokerwizard-api.onrender.com'}/api/auth/google`;
           }}
-          disabled={googleReady === false}
           style={{
             width: '100%',
             padding: '12px 16px',
@@ -276,8 +245,8 @@ export default function Login() {
             background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(240, 240, 240, 0.95))',
             border: '1px solid rgba(168, 85, 247, 0.3)',
             borderRadius: 12,
-            color: googleReady === false ? '#9ca3af' : '#333',
-            cursor: googleReady === false ? 'not-allowed' : 'pointer',
+            color: '#333',
+            cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -303,11 +272,6 @@ export default function Login() {
           </svg>
           Continuar com Google
         </button>
-
-        {/* Status Google OAuth */}
-        <div style={{ marginTop: 10, fontSize: 12, color: googleReady ? '#22c55e' : '#eab308', textAlign: 'center' }}>
-          {googleReady === null ? 'Verificando integração Google…' : googleMsg}
-        </div>
 
         {/* Alternar Login ↔ Registro */}
         <div

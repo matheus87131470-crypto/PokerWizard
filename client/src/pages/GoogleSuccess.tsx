@@ -22,9 +22,7 @@ export default function GoogleSuccess() {
       localStorage.setItem('pokerwizard_token', token);
       
       // Buscar dados do usuário
-      const apiBase = window.location.hostname.includes('localhost')
-        ? 'http://localhost:3000'
-        : 'https://pokerwizard-api.onrender.com';
+      const apiBase = (import.meta as any).env.VITE_API_BASE || 'https://pokerwizard-api.onrender.com';
         
       fetch(apiBase + '/api/auth/me', {
         headers: {
