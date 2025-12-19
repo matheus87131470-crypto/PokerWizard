@@ -101,6 +101,7 @@ export default function Ranges() {
   const [showPaywall, setShowPaywall] = useState(false);
   const [explanation, setExplanation] = useState<string>('');
   const [loadingExplanation, setLoadingExplanation] = useState(false);
+  const [selectedHand, setSelectedHand] = useState<string | null>(null);
 
   // Verificar status premium e créditos (igual ao Analyze)
   const isPremium = user?.premium || (user as any)?.statusPlano === 'premium';
@@ -236,9 +237,31 @@ export default function Ranges() {
 
           <HandMatrix
             hands={hands}
-            onHandClick={() => {}} // Apenas visualização
-            selectedHands={[]}
+            onHandClick={(hand) => {
+              setSelectedHand(hand === selectedHand ? null : hand);
+            }}
+            selectedHands={selectedHand ? [selectedHand] : []}
           />
+
+          {/* Mão Selecionada */}
+          {selectedHand && (
+            <div style={{
+              marginTop: 16,
+              padding: 16,
+              background: 'rgba(34, 197, 94, 0.1)',
+              border: '2px solid rgba(34, 197, 94, 0.3)',
+              borderRadius: 12,
+              textAlign: 'center',
+            }}>
+              <div style={{ fontSize: 14, color: '#94a3b8', marginBottom: 4 }}>Mão Selecionada</div>
+              <div style={{ fontSize: 24, fontWeight: 800, color: '#22c55e' }}>{selectedHand}</div>
+              <div style={{ fontSize: 12, color: '#64748b', marginTop: 8 }}>
+                Ação: <strong style={{ color: '#fff' }}>
+                  {hands.find(h => h.hand === selectedHand)?.action.toUpperCase()}
+                </strong>
+              </div>
+            </div>
+          )}
 
           {/* Barra de Range */}
           <div style={{ marginTop: 20 }}>
