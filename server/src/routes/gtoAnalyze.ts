@@ -76,4 +76,66 @@ REASON: [brief explanation]`;
   }
 });
 
+// Explain GTO range for specific position
+router.post('/range', authMiddleware, async (req: any, res: any) => {
+  try {
+    const { position, scenario, rangeData, stats } = req.body;
+
+    if (!position || !scenario || !rangeData) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    // Build range summary
+    const rangeHands = rangeData.map((h: any) => `${h.hand} (${h.action})`).slice(0, 20).join(', ');
+    const totalHands = rangeData.length;
+
+    const scenarioText = scenario === 'RFI' ? 'Open Raise' : scenario === '3bet' ? '3-Bet' : 'vs 3-Bet';
+
+    const prompt = `You are a GTO poker expert. Explain the strategic reasoning behind this poker range in Portuguese (Brazil).
+
+Position: ${position}
+Scenario: ${scenarioText}
+Total hands in range: ${totalHands}
+Sample hands: ${rangeHands}
+
+Statistics:
+- All-in: ${stats.allin} hands
+- Raise: ${stats.raise} hands
+- Call: ${stats.call} hands
+- Opening Range: ${stats.openingRange}%
+
+Provide a detailed explanation (150-200 words) covering:
+1. Why this range makes sense for ${position} position
+2. Key strategic concepts (position, equity, fold equity)
+3. How to adjust this range based on opponent tendencies
+4. Common mistakes players make from this position
+
+Write in a clear, educational tone in Portuguese.`;
+
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4',
+      messages: [
+        { role: 'system', content: 'You are a professional poker coach explaining GTO ranges in Portuguese. Be detailed but accessible.' },
+        { role: 'user', content: prompt }
+      ],
+      temperature: 0.7,
+      max_tokens: 400,
+    });
+
+    const explanation = completion.choices[0]?.message?.content || 'Erro ao gerar explicação.';
+
+    return res.json({
+      ok: true,
+      explanation,
+    });
+
+  } catch (error: any) {
+    console.error('Range Explanation Error:', error);
+    return res.status(500).json({ 
+      error: 'Failed to explain range',
+      details: error.message 
+    });
+  }
+});
+
 export default router;

@@ -99,9 +99,13 @@ export default function Ranges() {
   const [hands, setHands] = useState<HandData[]>([]);
   const [scenario, setScenario] = useState<'RFI' | '3bet' | 'vs3bet'>('RFI');
   const [showPaywall, setShowPaywall] = useState(false);
+  const [explanation, setExplanation] = useState<string>('');
+  const [loadingExplanation, setLoadingExplanation] = useState(false);
 
   // Verificar status premium
   const isPremium = user?.premium || (user as any)?.statusPlano === 'premium';
+
+  const API_URL = import.meta.env.VITE_API_URL || 'https://pokerwizard.onrender.com';
 
   // Carregar range quando posição mudar
   useEffect(() => {
@@ -294,29 +298,81 @@ export default function Ranges() {
             </p>
             
             {isPremium ? (
-              <button
-                onClick={() => {
-                  // TODO: Implementar explicação com IA
-                  alert('🧠 Funcionalidade em desenvolvimento! Em breve você terá explicações detalhadas com IA.');
-                }}
-                style={{
-                  width: '100%',
-                  padding: '14px 20px',
-                  background: 'linear-gradient(135deg, #8b5cf6, #6d28d9)',
-                  border: 'none',
-                  borderRadius: 10,
-                  color: 'white',
-                  fontSize: 14,
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 8,
-                }}
-              >
-                🤖 Explicar este Range
-              </button>
+              <>
+                <button
+                  onClick={async () => {
+                    setLoadingExplanation(true);
+                    setExplanation('');
+                    try {
+                      const response = await fetch(`${API_URL}/api/gto-analyze/range`, {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                        },
+                        body: JSON.stringify({
+                          position: activePosition,
+                          scenario,
+                          rangeData: hands.filter(h => h.action !== 'fold'),
+                          stats,
+                        }),
+                      });
+
+                      if (response.ok) {
+                        const data = await response.json();
+                        setExplanation(data.explanation);
+                      } else {
+                        setExplanation('❌ Erro ao gerar explicação. Tente novamente.');
+                      }
+                    } catch (error) {
+                      console.error('Range explanation error:', error);
+                      setExplanation('❌ Erro ao conectar com o servidor.');
+                    } finally {
+                      setLoadingExplanation(false);
+                    }
+                  }}
+                  disabled={loadingExplanation}
+                  style={{
+                    width: '100%',
+                    padding: '14px 20px',
+                    background: loadingExplanation
+                      ? 'rgba(139, 92, 246, 0.5)'
+                      : 'linear-gradient(135deg, #8b5cf6, #6d28d9)',
+                    border: 'none',
+                    borderRadius: 10,
+                    color: 'white',
+                    fontSize: 14,
+                    fontWeight: 700,
+                    cursor: loadingExplanation ? 'wait' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8,
+                  }}
+                >
+                  {loadingExplanation ? '⏳ Analisando...' : '🤖 Explicar este Range'}
+                </button>
+
+                {/* Explicação da IA */}
+                {explanation && (
+                  <div style={{
+                    marginTop: 16,
+                    padding: 16,
+                    background: 'rgba(139, 92, 246, 0.1)',
+                    border: '1px solid rgba(139, 92, 246, 0.3)',
+                    borderRadius: 10,
+                    color: 'var(--text-primary)',
+                    fontSize: 14,
+                    lineHeight: 1.6,
+                    whiteSpace: 'pre-wrap',
+                  }}>
+                    <div style={{ fontWeight: 700, color: '#a78bfa', marginBottom: 8 }}>
+                      🤖 Análise GTO:
+                    </div>
+                    {explanation}
+                  </div>
+                )}
+              </>
             ) : (
               <button
                 onClick={() => setShowPaywall(true)}
