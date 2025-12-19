@@ -219,6 +219,7 @@ export default function TrainerV2() {
     spot: 'SRP',
   });
 
+  const [heroPosition, setHeroPosition] = useState<Position | null>(null);
   const [session, setSession] = useState<PracticeSession | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -255,39 +256,57 @@ export default function TrainerV2() {
   };
 
   // ===== INICIAR TREINO =====
-  const startPractice = async () => {
-    const isFree = !isPremium;
-    const hasCredits = usosTrainer > 0;
+  const handleStartPractice = async () => {
+    // Validação 1: Hero Position obrigatória
+    if (!heroPosition) {
+      alert('⚠️ Selecione uma posição para jogar');
+      return;
+    }
 
-    if (isFree && !hasCredits) return;
+    const isFree = !isPremium;
+
+    // Validação 2: Créditos FREE
+    if (isFree && usosTrainer <= 0) {
+      // Paywall será exibido automaticamente pelo PaywallOverlay
+      return;
+    }
 
     setLoading(true);
-    const allowed = await consumeCredit();
-    setLoading(false);
+    
+    try {
+      const allowed = await consumeCredit();
+      
+      if (!allowed) {
+        setLoading(false);
+        return;
+      }
 
-    if (!allowed) return;
+      // Gerar mão inicial
+      const holeCards = generateHoleCards();
 
-    // Gerar mão inicial
-    const holeCards = generateHoleCards();
-    const heroPos: Position = 'BTN'; // Mock - usuário escolhe no SETUP
-
-    setSession({
-      stage: 'PREFLOP',
-      config,
-      heroPosition: heroPos,
-      villainPosition: 'BB',
-      holeCards,
-      board: [],
-      availableActions: ['FOLD', 'CALL', 'RAISE'],
-      correctActions: {
-        PREFLOP: getCorrectAction('PREFLOP', heroPos),
-        FLOP: getCorrectAction('FLOP', heroPos),
-        TURN: getCorrectAction('TURN', heroPos),
-        RIVER: getCorrectAction('RIVER', heroPos),
-      },
-      userActions: {},
-      mistakes: 0,
-    });
+      setSession({
+        stage: 'PREFLOP',
+        config,
+        heroPosition: heroPosition,
+        villainPosition: 'BB',
+        holeCards,
+        board: [],
+        availableActions: ['FOLD', 'CALL', 'RAISE'],
+        correctActions: {
+          PREFLOP: getCorrectAction('PREFLOP', heroPosition),
+          FLOP: getCorrectAction('FLOP', heroPosition),
+          TURN: getCorrectAction('TURN', heroPosition),
+          RIVER: getCorrectAction('RIVER', heroPosition),
+        },
+        userActions: {},
+        mistakes: 0,
+      });
+    } catch (error) {
+      console.error('Erro ao iniciar treino:', error);
+      alert('Erro ao iniciar treino. Tente novamente.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // ===== AVANÇAR STAGE =====
@@ -346,7 +365,7 @@ export default function TrainerV2() {
   };
 
   const nextHand = async () => {
-    await startPractice();
+    await handleStartPractice();
   };
 
   // ===== RENDERIZAÇÃO =====
@@ -394,6 +413,31 @@ export default function TrainerV2() {
               {/* Config */}
               <div className="card" style={{ padding: 20 }}>
                 <h3 style={{ marginBottom: 16 }}>Configuração</h3>
+
+                <label style={{ display: 'block', marginBottom: 12, fontSize: 12, color: '#94a3b8' }}>
+                  Sua Posição (obrigatório)
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, marginTop: 6 }}>
+                    {POSITIONS_6MAX.map(pos => (
+                      <button
+                        key={pos}
+                        onClick={() => setHeroPosition(pos)}
+                        style={{
+                          padding: '8px',
+                          background: heroPosition === pos ? '#10b981' : '#334155',
+                          border: heroPosition === pos ? '2px solid #10b981' : '1px solid #475569',
+                          borderRadius: 6,
+                          color: '#fff',
+                          fontSize: 11,
+                          fontWeight: heroPosition === pos ? 700 : 400,
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                        }}
+                      >
+                        {pos}
+                      </button>
+                    ))}
+                  </div>
+                </label>
 
                 <label style={{ display: 'block', marginBottom: 12, fontSize: 12, color: '#94a3b8' }}>
                   Tipo de Jogo
@@ -465,29 +509,44 @@ export default function TrainerV2() {
                 </label>
 
                 <button
-                  onClick={startPractice}
-                  disabled={loading}
+                  onClick={handleStartPractice}
+                  disabled={!heroPosition || loading || (!isPremium && usosTrainer <= 0)}
                   style={{
                     width: '100%',
                     padding: '14px',
-                    background: loading ? '#64748b' : 'linear-gradient(135deg, #10b981, #06b6d4)',
+                    background: (!heroPosition || loading || (!isPremium && usosTrainer <= 0)) 
+                      ? '#64748b' 
+                      : 'linear-gradient(135deg, #10b981, #06b6d4)',
                     border: 'none',
                     borderRadius: 10,
                     color: '#fff',
                     fontSize: 14,
                     fontWeight: 700,
-                    cursor: loading ? 'not-allowed' : 'pointer',
+                    cursor: (!heroPosition || loading || (!isPremium && usosTrainer <= 0)) 
+                      ? 'not-allowed' 
+                      : 'pointer',
+                    opacity: (!heroPosition || (!isPremium && usosTrainer <= 0)) ? 0.5 : 1,
                   }}
                 >
                   {loading ? 'Gerando...' : '▶️ INICIAR TREINO'}
                 </button>
+                
+                {/* DEBUG VISUAL (temporário) */}
+                <div style={{ marginTop: 12, padding: 8, background: 'rgba(0,0,0,0.2)', borderRadius: 6, fontSize: 11, opacity: 0.6 }}>
+                  <div>Stage: {session?.stage || 'SETUP'}</div>
+                  <div>Credits: {usosTrainer}</div>
+                  <div>Position: {heroPosition || 'não selecionada'}</div>
+                  <div>Premium: {isPremium ? 'Sim' : 'Não'}</div>
+                </div>
               </div>
 
               {/* Mesa Preview */}
               <div className="card" style={{ padding: 40, textAlign: 'center' }}>
-                <PokerTable heroPosition="BTN" />
+                <PokerTable heroPosition={heroPosition || 'BTN'} />
                 <p style={{ marginTop: 20, color: '#94a3b8', fontSize: 13 }}>
-                  Configure as opções e clique em "Iniciar Treino"
+                  {!heroPosition && '⚠️ Selecione sua posição acima'}
+                  {heroPosition && !isPremium && usosTrainer <= 0 && '⚠️ Sem créditos disponíveis'}
+                  {heroPosition && (isPremium || usosTrainer > 0) && 'Tudo pronto! Clique em "Iniciar Treino"'}
                 </p>
               </div>
             </div>
