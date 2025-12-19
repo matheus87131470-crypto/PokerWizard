@@ -267,6 +267,7 @@ export default function Login() {
               : 'https://pokerwizard-api.onrender.com';
             window.location.href = `${apiBase}/api/auth/google`;
           }}
+          disabled={googleReady === false}
           style={{
             width: '100%',
             padding: '12px 16px',
@@ -275,8 +276,8 @@ export default function Login() {
             background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(240, 240, 240, 0.95))',
             border: '1px solid rgba(168, 85, 247, 0.3)',
             borderRadius: 12,
-            color: '#333',
-            cursor: 'pointer',
+            color: googleReady === false ? '#9ca3af' : '#333',
+            cursor: googleReady === false ? 'not-allowed' : 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
