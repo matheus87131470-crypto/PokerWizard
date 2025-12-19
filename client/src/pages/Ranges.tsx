@@ -134,7 +134,7 @@ export default function Ranges() {
   const usosRanges = (user as any)?.usosAnalise ?? 5; // Usa mesmo campo do Analyze
   const canExplain = isPremium || usosRanges > 0;
 
-  const API_URL = import.meta.env.VITE_API_URL || 'https://pokerwizard.onrender.com';
+  const API_URL = import.meta.env.VITE_API_URL || 'https://pokerwizard-api.onrender.com';
 
   // Carregar range quando posição mudar
   useEffect(() => {
