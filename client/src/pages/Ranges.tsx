@@ -135,8 +135,8 @@ export default function Ranges() {
   const canExplain = isPremium || usosRanges > 0;
 
   const API_URL = (import.meta as any)?.env?.VITE_API_URL
-    || (typeof window !== 'undefined' && window.location.hostname.includes('pokio.online')
-      ? 'https://poker.pokio.online'
+    || (typeof window !== 'undefined' && window.location.hostname.includes('localhost')
+      ? 'http://localhost:3000'
       : 'https://pokerwizard-api.onrender.com');
 
   // Carregar range quando posição mudar

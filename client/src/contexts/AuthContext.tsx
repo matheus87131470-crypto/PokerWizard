@@ -29,7 +29,7 @@ function getApiBase(): string {
   if (env.VITE_API_URL) return env.VITE_API_URL as string;
   const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
   if (hostname.includes('localhost')) return 'http://localhost:3000';
-  if (hostname.includes('pokio.online')) return 'https://poker.pokio.online';
+  // Produção: força backend oficial com IA
   return 'https://pokerwizard-api.onrender.com';
 }
 
