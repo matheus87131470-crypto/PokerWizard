@@ -102,8 +102,10 @@ export default function Ranges() {
   const [explanation, setExplanation] = useState<string>('');
   const [loadingExplanation, setLoadingExplanation] = useState(false);
 
-  // Verificar status premium
+  // Verificar status premium e créditos (igual ao Analyze)
   const isPremium = user?.premium || (user as any)?.statusPlano === 'premium';
+  const usosRanges = (user as any)?.usosAnalise ?? 5; // Usa mesmo campo do Analyze
+  const canExplain = isPremium || usosRanges > 0;
 
   const API_URL = import.meta.env.VITE_API_URL || 'https://pokerwizard.onrender.com';
 
@@ -301,6 +303,11 @@ export default function Ranges() {
               <>
                 <button
                   onClick={async () => {
+                    if (!canExplain) {
+                      setShowPaywall(true);
+                      return;
+                    }
+
                     setLoadingExplanation(true);
                     setExplanation('');
                     try {
@@ -321,8 +328,17 @@ export default function Ranges() {
                       if (response.ok) {
                         const data = await response.json();
                         setExplanation(data.explanation);
+                        // Atualizar créditos do usuário
+                        if (auth.user && !isPremium) {
+                          auth.refreshUser();
+                        }
                       } else {
-                        setExplanation('❌ Erro ao gerar explicação. Tente novamente.');
+                        const errorData = await response.json().catch(() => ({}));
+                        if (errorData.error === 'no_credits') {
+                          setShowPaywall(true);
+                        } else {
+                          setExplanation('❌ Erro ao gerar explicação. Tente novamente.');
+                        }
                       }
                     } catch (error) {
                       console.error('Range explanation error:', error);
@@ -352,6 +368,18 @@ export default function Ranges() {
                 >
                   {loadingExplanation ? '⏳ Analisando...' : '🤖 Explicar este Range'}
                 </button>
+
+                {/* Contador de usos restantes (apenas FREE) */}
+                {!isPremium && (
+                  <div style={{
+                    marginTop: 8,
+                    fontSize: 12,
+                    color: usosRanges > 0 ? '#a78bfa' : '#ef4444',
+                    textAlign: 'center',
+                  }}>
+                    📊 {usosRanges} explicações restantes
+                  </div>
+                )}
 
                 {/* Explicação da IA */}
                 {explanation && (

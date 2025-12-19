@@ -79,10 +79,36 @@ REASON: [brief explanation]`;
 // Explain GTO range for specific position
 router.post('/range', authMiddleware, async (req: any, res: any) => {
   try {
+    const userId = req.userId;
     const { position, scenario, rangeData, stats } = req.body;
 
     if (!position || !scenario || !rangeData) {
       return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    // Verificar e deduzir créditos (igual ao Analyze)
+    const { getUserById, deductCredit } = await import('../services/userService');
+    const user = await getUserById(userId);
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const isPremium = (user as any).premium || (user as any).statusPlano === 'premium';
+    const usosAnalise = (user as any).usosAnalise ?? 5;
+
+    // Verificar créditos
+    if (!isPremium && usosAnalise <= 0) {
+      return res.status(403).json({ 
+        error: 'no_credits',
+        remaining: 0,
+        feature: 'ranges'
+      });
+    }
+
+    // Deduzir crédito (se não for premium)
+    if (!isPremium) {
+      await deductCredit(userId, 'analise');
     }
 
     // Build range summary
