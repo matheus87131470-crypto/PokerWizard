@@ -70,7 +70,30 @@ function generateRangeData(position: Position): HandData[] {
     if (positionRange.allin.includes(hand)) action = 'allin';
     else if (positionRange.raise.includes(hand)) action = 'raise';
     else if (positionRange.call.includes(hand)) action = 'call';
-    return { hand, action };
+
+    // Heurística de mix de ações (visual GTO-like)
+    // Suited e pares têm mais frequência; offsuit marginais têm menos.
+    const isSuited = hand.endsWith('s');
+    const isOffsuit = hand.endsWith('o');
+    const isPair = (hand.length === 2 && hand[0] === hand[1]);
+
+    let mix: HandData['mix'] = { allin: 0, raise: 0, call: 0, fold: 0 };
+    if (action === 'allin') {
+      mix = { allin: 100, raise: 0, call: 0, fold: 0 };
+    } else if (action === 'raise') {
+      const base = isPair ? 85 : isSuited ? 75 : 65;
+      mix = { raise: base, call: isSuited ? 15 : 10, fold: 100 - base - (isSuited ? 15 : 10), allin: 0 };
+    } else if (action === 'call') {
+      const base = isSuited ? 60 : 45;
+      mix = { call: base, raise: isSuited ? 20 : 15, fold: 100 - base - (isSuited ? 20 : 15), allin: 0 };
+    } else {
+      mix = { fold: 100, call: 0, raise: 0, allin: 0 };
+    }
+
+    // Frequência principal para heatmap (usa a maior do mix)
+    const percentage = Math.max(mix.allin || 0, mix.raise || 0, mix.call || 0, mix.fold || 0);
+
+    return { hand, action, percentage, mix };
   });
 }
 
@@ -102,6 +125,9 @@ export default function Ranges() {
   const [explanation, setExplanation] = useState<string>('');
   const [loadingExplanation, setLoadingExplanation] = useState(false);
   const [selectedHand, setSelectedHand] = useState<string | null>(null);
+  const [matrixMode, setMatrixMode] = useState<'simple' | 'advanced'>('simple');
+  const [stackSize, setStackSize] = useState<10 | 20 | 40 | 100>(40);
+  const [confidence, setConfidence] = useState<number>(82);
 
   // Verificar status premium e créditos (igual ao Analyze)
   const isPremium = user?.premium || (user as any)?.statusPlano === 'premium';
@@ -113,6 +139,7 @@ export default function Ranges() {
   // Carregar range quando posição mudar
   useEffect(() => {
     const rangeData = generateRangeData(activePosition);
+    // Leve animação quando muda posição
     setHands(rangeData);
   }, [activePosition]);
 
@@ -138,6 +165,30 @@ export default function Ranges() {
 
   return (
     <div className="ranges-page" style={{ maxWidth: 1100, margin: '0 auto' }}>
+      <style>{`
+        @keyframes fadeSlide {
+          from { opacity: 0; transform: translateY(8px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes softPulse {
+          0% { box-shadow: 0 0 0 0 rgba(99,102,241,0.5); }
+          70% { box-shadow: 0 0 0 8px rgba(99,102,241,0); }
+          100% { box-shadow: 0 0 0 0 rgba(99,102,241,0); }
+        }
+      `}</style>
+      {/* Barra de confiança */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 12,
+        marginBottom: 12,
+      }}>
+        <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Confiabilidade GTO:</span>
+        <div style={{ flex: 1, height: 8, background: 'rgba(148,163,184,0.2)', borderRadius: 999 }}>
+          <div style={{ width: `${confidence}%`, height: '100%', background: 'linear-gradient(90deg, #22c55e, #f59e0b)', borderRadius: 999 }} />
+        </div>
+        <span style={{ fontSize: 12, color: '#fbbf24', fontWeight: 700 }}>{confidence}%</span>
+      </div>
       {/* Paywall Modal - para explicação com IA */}
       <PremiumPaywallModal
         isOpen={showPaywall}
@@ -169,8 +220,8 @@ export default function Ranges() {
           </p>
         </div>
 
-        {/* Cenário */}
-        <div style={{ display: 'flex', gap: 8 }}>
+        {/* Cenário + Toggle simples/avançado + Stack size */}
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
           {(['RFI', '3bet', 'vs3bet'] as const).map(s => (
             <button
               key={s}
@@ -191,6 +242,57 @@ export default function Ranges() {
               {s === 'RFI' ? 'Open Raise' : s === '3bet' ? '3-Bet' : 'vs 3-Bet'}
             </button>
           ))}
+          <div style={{ marginLeft: 8 }}>
+            <button
+              onClick={() => setMatrixMode('simple')}
+              style={{
+                padding: '8px 12px',
+                background: matrixMode === 'simple' ? 'rgba(34,197,94,0.2)' : 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.12)',
+                color: matrixMode === 'simple' ? '#22c55e' : 'var(--text-secondary)',
+                borderRadius: 8,
+                fontSize: 12,
+                fontWeight: 700,
+                cursor: 'pointer'
+              }}
+            >
+              Modo Simples
+            </button>
+            <button
+              onClick={() => setMatrixMode('advanced')}
+              style={{
+                marginLeft: 6,
+                padding: '8px 12px',
+                background: matrixMode === 'advanced' ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.12)',
+                color: matrixMode === 'advanced' ? '#818cf8' : 'var(--text-secondary)',
+                borderRadius: 8,
+                fontSize: 12,
+                fontWeight: 700,
+                cursor: 'pointer'
+              }}
+            >
+              Modo Avançado
+            </button>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginLeft: 8 }}>
+            <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Stack:</span>
+            {[10,20,40,100].map(ss => (
+              <button key={ss}
+                onClick={() => setStackSize(ss as 10|20|40|100)}
+                style={{
+                  padding: '6px 10px',
+                  background: stackSize === ss ? 'rgba(139,92,246,0.2)' : 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.12)',
+                  color: stackSize === ss ? '#a78bfa' : 'var(--text-secondary)',
+                  borderRadius: 8,
+                  fontSize: 12,
+                  fontWeight: 700,
+                  cursor: 'pointer'
+                }}
+              >{ss}bb</button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -235,13 +337,20 @@ export default function Ranges() {
             </span>
           </div>
 
-          <HandMatrix
-            hands={hands}
-            onHandClick={(hand) => {
-              setSelectedHand(hand === selectedHand ? null : hand);
-            }}
-            selectedHands={selectedHand ? [selectedHand] : []}
-          />
+          <div key={`${activePosition}-${scenario}-${matrixMode}-${stackSize}`}
+            style={{
+              transition: 'all 300ms ease',
+              animation: 'fadeSlide 300ms ease',
+            }}>
+            <HandMatrix
+              hands={hands}
+              onHandClick={(hand) => {
+                setSelectedHand(hand === selectedHand ? null : hand);
+              }}
+              selectedHands={selectedHand ? [selectedHand] : []}
+              mode={matrixMode}
+            />
+          </div>
 
           {/* Mão Selecionada */}
           {selectedHand && (
@@ -259,6 +368,27 @@ export default function Ranges() {
                 Ação: <strong style={{ color: '#fff' }}>
                   {hands.find(h => h.hand === selectedHand)?.action.toUpperCase()}
                 </strong>
+              </div>
+              <div style={{ marginTop: 12 }}>
+                <button
+                  onClick={() => {
+                    // Navega para treino com mão predefinida
+                    const params = new URLSearchParams({ hand: selectedHand, position: activePosition, stack: String(stackSize) });
+                    window.location.href = `/trainer?${params.toString()}`;
+                  }}
+                  style={{
+                    padding: '10px 14px',
+                    background: 'linear-gradient(135deg, #22c55e, #16a34a)',
+                    border: 'none',
+                    borderRadius: 10,
+                    color: 'white',
+                    fontSize: 13,
+                    fontWeight: 700,
+                    cursor: 'pointer'
+                  }}
+                >
+                  🎯 Treinar essa mão
+                </button>
               </div>
             </div>
           )}

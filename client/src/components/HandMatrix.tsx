@@ -1,17 +1,27 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 export type HandAction = 'allin' | 'raise' | 'call' | 'fold' | 'none';
 
 export interface HandData {
   hand: string;
   action: HandAction;
+  // Frequência principal (0-100) usada para intensidade da cor
   percentage?: number;
+  // Mix avançado por ação (0-100 cada, somando <= 100)
+  mix?: {
+    allin?: number;
+    raise?: number;
+    call?: number;
+    fold?: number;
+  };
 }
 
 interface HandMatrixProps {
   hands: HandData[];
   onHandClick?: (hand: string) => void;
   selectedHands?: string[];
+  // 'simple' mostra apenas cores, 'advanced' mostra % sobre as mãos
+  mode?: 'simple' | 'advanced';
 }
 
 const HAND_MATRIX_LAYOUT = [
@@ -58,7 +68,18 @@ const ACTION_STYLES: Record<HandAction, { background: string; border: string; bo
   },
 };
 
-export default function HandMatrix({ hands, onHandClick, selectedHands = [] }: HandMatrixProps) {
+// Gradiente de cor baseado na frequência (0-100)
+function frequencyColor(freq: number): string {
+  // Azul (baixa) → Verde → Amarelo → Vermelho (alta)
+  const f = Math.max(0, Math.min(100, freq)) / 100;
+  if (f < 0.25) return 'linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)';
+  if (f < 0.5) return 'linear-gradient(135deg, #22c55e 0%, #15803d 100%)';
+  if (f < 0.75) return 'linear-gradient(135deg, #f59e0b 0%, #b45309 100%)';
+  return 'linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)';
+}
+
+export default function HandMatrix({ hands, onHandClick, selectedHands = [], mode = 'simple' }: HandMatrixProps) {
+  const [tooltip, setTooltip] = useState<{ hand: string; x: number; y: number; content: string } | null>(null);
   const getHandData = (hand: string): HandData => {
     const found = hands.find(h => h.hand === hand);
     return found || { hand, action: 'none' };
@@ -66,6 +87,15 @@ export default function HandMatrix({ hands, onHandClick, selectedHands = [] }: H
 
   const getHandStyles = (hand: string) => {
     const handData = getHandData(hand);
+    // Em modo avançado, usa intensidade baseada em percentage
+    if (mode === 'advanced' && typeof handData.percentage === 'number') {
+      const bg = frequencyColor(handData.percentage || 0);
+      return {
+        background: bg,
+        border: isSelected(hand) ? '3px solid #facc15' : '2px solid rgba(255,255,255,0.15)',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+      };
+    }
     return ACTION_STYLES[handData.action] || ACTION_STYLES.none;
   };
 
@@ -109,18 +139,63 @@ export default function HandMatrix({ hands, onHandClick, selectedHands = [] }: H
                   title={hand}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.transform = isSelected(hand) ? 'scale(1.12)' : 'scale(1.05)';
+                    if (mode === 'advanced') {
+                      const hd = getHandData(hand);
+                      const mix = hd.mix || {};
+                      const content = `${hand}\n` +
+                        `All-in: ${mix.allin ?? 0}%\n` +
+                        `Raise: ${mix.raise ?? 0}%\n` +
+                        `Call: ${mix.call ?? 0}%\n` +
+                        `Fold: ${mix.fold ?? 0}%`;
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      setTooltip({ hand, x: rect.left + rect.width / 2, y: rect.top, content });
+                    }
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.transform = isSelected(hand) ? 'scale(1.08)' : 'scale(1)';
+                    setTooltip(null);
                   }}
                 >
                   <span style={{ color: 'white', userSelect: 'none', textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>{hand}</span>
+                  {mode === 'advanced' && (
+                    <span style={{
+                      position: 'absolute',
+                      bottom: 6,
+                      right: 8,
+                      fontSize: 10,
+                      color: 'rgba(255,255,255,0.9)',
+                      textShadow: '0 1px 2px rgba(0,0,0,0.5)'
+                    }}>
+                      {(getHandData(hand).percentage ?? 0).toFixed(0)}%
+                    </span>
+                  )}
                 </div>
               );
             })}
           </React.Fragment>
         ))}
       </div>
+
+      {/* Tooltip avançado */}
+      {tooltip && (
+        <div style={{
+          position: 'fixed',
+          left: tooltip.x,
+          top: tooltip.y - 12,
+          transform: 'translate(-50%, -100%)',
+          background: 'rgba(2,6,23,0.9)',
+          color: '#fff',
+          padding: '10px 12px',
+          border: '1px solid rgba(148,163,184,0.4)',
+          borderRadius: 8,
+          fontSize: 11,
+          whiteSpace: 'pre-line',
+          pointerEvents: 'none',
+          boxShadow: '0 6px 16px rgba(0,0,0,0.5)'
+        }}>
+          {tooltip.content}
+        </div>
+      )}
       
       {/* Legend */}
       <div style={{ 

@@ -726,8 +726,35 @@ export default function TrainerV2() {
     setLoading(true);
     
     try {
+      // Verificar query params para mão/posição/stack predefinidos
+      const qs = new URLSearchParams(window.location.search);
+      const preset = qs.get('hand');
+      const presetPos = qs.get('position');
+      const presetStack = qs.get('stack');
+
+      // Helper: converter notação (ex: AKs, AKo, AA) em duas cartas
+      const suits = ['♠', '♥', '♦', '♣'] as const;
+      function handToCards(notation: string): string[] {
+        if (!notation) return generateHoleCards();
+        const r1 = notation[0];
+        const r2 = notation[1];
+        const isSuited = notation.endsWith('s');
+        const isOffsuit = notation.endsWith('o');
+        if (r1 === r2) {
+          return [`${r1}${suits[0]}`, `${r2}${suits[1]}`];
+        }
+        if (isSuited) {
+          return [`${r1}${suits[0]}`, `${r2}${suits[0]}`];
+        }
+        if (isOffsuit) {
+          return [`${r1}${suits[0]}`, `${r2}${suits[1]}`];
+        }
+        // Sem sufixo: default suited preference
+        return [`${r1}${suits[0]}`, `${r2}${suits[0]}`];
+      }
+
       // Gerar 4 mãos (preflop, flop, turn, river) - BOARD PROGRESSIVO
-      const holeCards = generateHoleCards();
+      const holeCards = preset ? handToCards(preset) : generateHoleCards();
       const fullBoard = generateBoard(5, holeCards); // Gera board completo UMA VEZ
       const streets: Street[] = ['PREFLOP', 'FLOP', 'TURN', 'RIVER'];
       
@@ -740,7 +767,7 @@ export default function TrainerV2() {
           if (street === 'RIVER') board = fullBoard.slice(0, 5);
 
           const pot = street === 'PREFLOP' ? 1.5 : 5.0;
-          const stack = 32;
+          const stack = presetStack ? Number(presetStack) : 32;
 
           // Call backend para análise GTO
           let correctAction: Action = 'FOLD';
@@ -754,7 +781,7 @@ export default function TrainerV2() {
               body: JSON.stringify({
                 holeCards,
                 board,
-                position: config.heroPosition,
+                position: presetPos ? (presetPos as Position) : config.heroPosition,
                 street,
                 spot: config.spot,
                 stack,
