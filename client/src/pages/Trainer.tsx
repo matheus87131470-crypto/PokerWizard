@@ -170,12 +170,12 @@ function getCorrectAction(hand: Hand, position: Position, preflopAction: Preflop
     if (inRange) {
       return {
         action: 'raise',
-        explanation: `✅ ${handStr} está no range de abertura de ${position}. Esta mão tem valor suficiente para abrir raise. Você maximiza valor com mãos fortes e ganha fold equity.`
+        explanation: `✅ Raise\n\nMotivo:\n${handStr} está no range de ${position}. Você ganha valor + fold equity.`
       };
     } else {
       return {
         action: 'fold',
-        explanation: `📊 ${handStr} não está no range de abertura de ${position}. Abrir com esta mão seria -EV a longo prazo. Mantenha sua disciplina e espere por spots melhores.`
+        explanation: `❌ Blunder\nVocê deveria Foldar aqui.\n\nMotivo:\n${handStr} está fora do range de ${position}.`
       };
     }
   }
@@ -184,12 +184,12 @@ function getCorrectAction(hand: Hand, position: Position, preflopAction: Preflop
     if (inRange) {
       return {
         action: 'raise',
-        explanation: `🎯 ${handStr} é forte o suficiente para 3-bet de ${position}. Você tem equidade contra o range de abertura do vilão e boa fold equity. 3-bet por valor!`
+        explanation: `✅ 3-bet\n\nMotivo:\n${handStr} tem equidade + fold equity de ${position}.`
       };
     } else {
       return {
         action: Math.random() > 0.5 ? 'fold' : 'call',
-        explanation: `⚖️ ${handStr} não está no range de 3-bet de ${position}. Com mãos especulativas, considere call para set mining ou fold se as odds não justificam.`
+        explanation: `⚠️ Call ou Fold\n\nMotivo:\n${handStr} é marginal para 3-bet de ${position}.`
       };
     }
   }
@@ -198,12 +198,12 @@ function getCorrectAction(hand: Hand, position: Position, preflopAction: Preflop
     if (inRange) {
       return {
         action: 'raise',
-        explanation: `💎 ${handStr} tem valor para ${preflopAction} de ${position}. Mãos premium como esta justificam máxima agressividade pré-flop. All-in também é válido!`
+        explanation: `✅ ${preflopAction}\n\nMotivo:\n${handStr} é premium de ${position}. Maximize agressividade.`
       };
     } else {
       return {
         action: 'fold',
-        explanation: `🛑 ${handStr} não suporta ${preflopAction} de ${position}. Escalar potes com mãos marginais contra ranges fortes é um leak comum. Fold e aguarde.`
+        explanation: `❌ Blunder\nVocê deveria Foldar aqui.\n\nMotivo:\nRange do vilão é forte demais nessa linha.`
       };
     }
   }
@@ -212,19 +212,19 @@ function getCorrectAction(hand: Hand, position: Position, preflopAction: Preflop
     if (inRange) {
       return {
         action: 'raise',
-        explanation: `🔥 ${handStr} é ideal para squeeze de ${position}. Você pressiona o raiser original e o caller com dead money no pote. Excelente spot!`
+        explanation: `✅ Squeeze\n\nMotivo:\nDead money no pote + fold equity contra ranges wide.`
       };
     } else {
       return {
         action: 'fold',
-        explanation: `⚠️ ${handStr} não tem equidade suficiente para squeeze. Contra múltiplos ranges, você precisa de mãos mais fortes. Fold é correto.`
+        explanation: `❌ Blunder\nVocê deveria Foldar aqui.\n\nMotivo:\n${handStr} não tem equidade contra múltiplos ranges.`
       };
     }
   }
   
   return {
     action: 'fold',
-    explanation: `Ação padrão para ${handStr} em situação complexa. Quando em dúvida, fold preserva seu stack.`
+    explanation: `❌ Fold\n\nMotivo:\n${handStr} preserva stack em situação complexa.`
   };
 }
 
@@ -648,8 +648,14 @@ export default function Trainer() {
   };
   
   const startTraining = async () => {
-    // ✅ NÃO bloquear aqui - deixar consumeUse() validar (mesmo padrão do Analyze)
-    // Isso permite que FREE faça o 1º treino e só bloqueie quando realmente acabar
+    // 🔒 VALIDAÇÃO: Se FREE e sem créditos → bloquear ANTES de consumir
+    const isFree = !isPremium;
+    const hasCredits = usosTrainer > 0;
+    
+    if (isFree && !hasCredits) {
+      // PaywallOverlay já está mostrando - não fazer nada
+      return;
+    }
     
     setLoadingUse(true);
     
@@ -659,7 +665,7 @@ export default function Trainer() {
     setLoadingUse(false);
     
     if (!allowed) {
-      // Paywall já foi mostrado no consumeUse
+      // Backend rejeitou (sem créditos ou erro)
       return;
     }
     

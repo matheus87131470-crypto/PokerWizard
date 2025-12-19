@@ -102,7 +102,7 @@ export default function PaywallOverlay({
               boxShadow: '0 0 60px rgba(139, 92, 246, 0.15), 0 25px 50px rgba(0, 0, 0, 0.5)',
             }}
           >
-            {/* 🔒 Headline emocional */}
+            {/* 🔒 Headline direto */}
             <h2
               style={{
                 fontSize: 21,
@@ -113,7 +113,7 @@ export default function PaywallOverlay({
                 lineHeight: 1.3,
               }}
             >
-              Você estava indo bem demais pra parar agora.
+              {creditType === 'trainer' ? 'Continue treinando sem interrupções' : 'Você estava indo bem demais pra parar agora.'}
             </h2>
 
             {/* 📊 Progresso perdido */}
@@ -126,37 +126,61 @@ export default function PaywallOverlay({
                 lineHeight: 1.6,
               }}
             >
-              Hoje você já analisou <strong style={{ color: '#fff' }}>{getUsedText()}</strong>.
-              <br />
-              Faltava <strong style={{ color: '#fff' }}>apenas 1</strong> para concluir sua sessão de estudo.
+              {creditType === 'trainer' ? (
+                <>
+                  Você já usou seus treinos gratuitos hoje.
+                </>
+              ) : (
+                <>
+                  Hoje você já analisou <strong style={{ color: '#fff' }}>{getUsedText()}</strong>.
+                  <br />
+                  Faltava <strong style={{ color: '#fff' }}>apenas 1</strong> para concluir sua sessão de estudo.
+                </>
+              )}
             </p>
 
-            {/* 💡 Valor do PRO */}
-            <p
-              style={{
-                fontSize: 14,
-                color: '#9ca3af',
-                textAlign: 'center',
-                marginBottom: 8,
-                lineHeight: 1.6,
-              }}
-            >
-              Com o plano <strong style={{ color: '#a78bfa' }}>PRO</strong>, você mantém seu ritmo de estudo, analisa quantas mãos quiser e acelera sua evolução no poker.
-            </p>
-
-            {/* Linha de prova social */}
-            <p
-              style={{
-                fontSize: 12,
-                color: '#6b7280',
-                textAlign: 'center',
+            {/* 💡 Benefícios - SECO E DIRETO */}
+            {creditType === 'trainer' ? (
+              <div style={{
                 marginBottom: 24,
-              }}
-            >
-              Jogadores PRO analisam até 5× mais mãos por semana.
-            </p>
+                padding: '16px',
+                background: 'rgba(139, 92, 246, 0.1)',
+                borderRadius: 8,
+                border: '1px solid rgba(139, 92, 246, 0.2)'
+              }}>
+                <ul style={{ margin: 0, padding: '0 0 0 20px', color: '#d1d5db', fontSize: 13, lineHeight: 1.8 }}>
+                  <li>Treinos ilimitados</li>
+                  <li>Feedback avançado</li>
+                  <li>Evolução consistente</li>
+                </ul>
+              </div>
+            ) : (
+              <>
+                <p
+                  style={{
+                    fontSize: 14,
+                    color: '#9ca3af',
+                    textAlign: 'center',
+                    marginBottom: 8,
+                    lineHeight: 1.6,
+                  }}
+                >
+                  Com o plano <strong style={{ color: '#a78bfa' }}>PRO</strong>, você mantém seu ritmo de estudo, analisa quantas mãos quiser e acelera sua evolução no poker.
+                </p>
+                <p
+                  style={{
+                    fontSize: 12,
+                    color: '#6b7280',
+                    textAlign: 'center',
+                    marginBottom: 24,
+                  }}
+                >
+                  Jogadores PRO analisam até 5× mais mãos por semana.
+                </p>
+              </>
+            )}
 
-            {/* 🚀 CTA de continuidade */}
+            {/* 🚀 CTA adaptado */}
             <button
               onClick={() => navigate('/premium')}
               style={{
@@ -178,7 +202,7 @@ export default function PaywallOverlay({
                 e.currentTarget.style.transform = 'scale(1)';
               }}
             >
-              Desbloquear meu ritmo de estudo
+              {creditType === 'trainer' ? 'Desbloquear Treinos PRO' : 'Desbloquear meu ritmo de estudo'}
             </button>
 
             {/* Saída sem pressão */}
