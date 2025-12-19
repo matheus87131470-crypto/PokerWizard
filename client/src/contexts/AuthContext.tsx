@@ -25,16 +25,12 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Detectar ambiente automaticamente
 function getApiBase(): string {
-  // Se tiver variável de ambiente, usar ela
-  if (import.meta && (import.meta as any).env && (import.meta as any).env.VITE_API_BASE) {
-    return (import.meta as any).env.VITE_API_BASE;
-  }
-  // Em produção (não localhost), usar a API do Render
-  if (typeof window !== 'undefined' && !window.location.hostname.includes('localhost')) {
-    return 'https://pokerwizard-api.onrender.com';
-  }
-  // Local
-  return 'http://localhost:3000';
+  const env = (import.meta as any)?.env || {};
+  if (env.VITE_API_URL) return env.VITE_API_URL as string;
+  const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
+  if (hostname.includes('localhost')) return 'http://localhost:3000';
+  if (hostname.includes('pokio.online')) return 'https://poker.pokio.online';
+  return 'https://pokerwizard-api.onrender.com';
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
