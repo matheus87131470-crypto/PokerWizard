@@ -8,6 +8,11 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || '',
 });
 
+// Verificar se API key está configurada
+if (!process.env.OPENAI_API_KEY) {
+  console.warn('[gtoAnalyze] ⚠️  OPENAI_API_KEY not configured!');
+}
+
 // Analyze GTO action for Practice
 router.post('/practice', authMiddleware, async (req: any, res: any) => {
   try {
@@ -106,6 +111,15 @@ router.post('/range', authMiddleware, async (req: any, res: any) => {
       });
     }
 
+    // Verificar se OpenAI está configurado
+    if (!process.env.OPENAI_API_KEY) {
+      console.error('[gtoAnalyze] OpenAI API key not configured');
+      return res.status(503).json({ 
+        error: 'Service unavailable',
+        details: 'AI service not configured'
+      });
+    }
+
     // Deduzir crédito (se não for premium)
     if (!isPremium) {
       await deductCredit(userId, 'analise');
@@ -150,16 +164,24 @@ Write in a clear, educational tone in Portuguese.`;
 
     const explanation = completion.choices[0]?.message?.content || 'Erro ao gerar explicação.';
 
+    console.log('[gtoAnalyze] Explanation generated successfully');
+    
     return res.json({
       ok: true,
       explanation,
     });
 
   } catch (error: any) {
-    console.error('Range Explanation Error:', error);
+    console.error('[gtoAnalyze] Range Explanation Error:', error);
+    console.error('[gtoAnalyze] Error details:', {
+      message: error.message,
+      stack: error.stack,
+      code: error.code,
+    });
+    
     return res.status(500).json({ 
       error: 'Failed to explain range',
-      details: error.message 
+      details: error.message || 'Internal server error'
     });
   }
 });

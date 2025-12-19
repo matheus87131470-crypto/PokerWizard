@@ -325,24 +325,34 @@ export default function Ranges() {
                         }),
                       });
 
+                      console.log('Response status:', response.status);
+                      
                       if (response.ok) {
                         const data = await response.json();
-                        setExplanation(data.explanation);
-                        // Atualizar créditos do usuário
-                        if (auth.user && !isPremium) {
-                          auth.refreshUser();
+                        console.log('Explanation received:', data);
+                        
+                        if (data.explanation) {
+                          setExplanation(data.explanation);
+                          // Atualizar créditos do usuário
+                          if (auth.user && !isPremium) {
+                            auth.refreshUser();
+                          }
+                        } else {
+                          setExplanation('❌ Resposta inválida do servidor.');
                         }
                       } else {
                         const errorData = await response.json().catch(() => ({}));
+                        console.error('Error response:', errorData);
+                        
                         if (errorData.error === 'no_credits') {
                           setShowPaywall(true);
                         } else {
-                          setExplanation('❌ Erro ao gerar explicação. Tente novamente.');
+                          setExplanation(`❌ Erro: ${errorData.error || errorData.details || 'Tente novamente'}`);
                         }
                       }
-                    } catch (error) {
+                    } catch (error: any) {
                       console.error('Range explanation error:', error);
-                      setExplanation('❌ Erro ao conectar com o servidor.');
+                      setExplanation(`❌ Erro: ${error.message || 'Falha ao conectar'}`);
                     } finally {
                       setLoadingExplanation(false);
                     }
