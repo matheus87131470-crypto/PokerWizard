@@ -731,22 +731,60 @@ export default function TrainerV2() {
       const fullBoard = generateBoard(5, holeCards); // Gera board completo UMA VEZ
       const streets: Street[] = ['PREFLOP', 'FLOP', 'TURN', 'RIVER'];
       
-      const hands: Hand[] = streets.map((street, i) => {
-        let board: string[] = [];
-        if (street === 'FLOP') board = fullBoard.slice(0, 3);  // Primeiras 3
-        if (street === 'TURN') board = fullBoard.slice(0, 4);  // Primeiras 4
-        if (street === 'RIVER') board = fullBoard.slice(0, 5); // Todas 5
+      // Analisar cada street com IA GPT-4
+      const hands: Hand[] = await Promise.all(
+        streets.map(async (street, i) => {
+          let board: string[] = [];
+          if (street === 'FLOP') board = fullBoard.slice(0, 3);
+          if (street === 'TURN') board = fullBoard.slice(0, 4);
+          if (street === 'RIVER') board = fullBoard.slice(0, 5);
 
-        return {
-          street,
-          holeCards,
-          board,
-          stack: 32,
-          pot: street === 'PREFLOP' ? 1.5 : 5.0,
-          availableActions: getAvailableActions(street),
-          correctAction: getCorrectAction(street, config.heroPosition as Position),
-        };
-      });
+          const pot = street === 'PREFLOP' ? 1.5 : 5.0;
+          const stack = 32;
+
+          // Call backend para análise GTO
+          let correctAction: Action = 'FOLD';
+          try {
+            const response = await fetch(`${API_URL}/api/gto-analyze/practice`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+              },
+              body: JSON.stringify({
+                holeCards,
+                board,
+                position: config.heroPosition,
+                street,
+                spot: config.spot,
+                stack,
+                pot,
+              }),
+            });
+
+            if (response.ok) {
+              const data = await response.json();
+              correctAction = data.action as Action;
+            } else {
+              console.warn(`GTO analysis failed for ${street}, using fallback`);
+              correctAction = getCorrectAction(street, config.heroPosition as Position);
+            }
+          } catch (error) {
+            console.error('GTO API error:', error);
+            correctAction = getCorrectAction(street, config.heroPosition as Position);
+          }
+
+          return {
+            street,
+            holeCards,
+            board,
+            stack,
+            pot,
+            availableActions: getAvailableActions(street),
+            correctAction,
+          };
+        })
+      );
 
       setSession({
         config: config as PracticeConfig,
