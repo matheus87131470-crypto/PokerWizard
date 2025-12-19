@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import PaywallOverlay from '../components/PaywallOverlay';
 import CreditWarningBanner from '../components/CreditWarningBanner';
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://pokerwizard-api.onrender.com';
+const API_URL = (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_API_URL) || 'https://pokerwizard-api.onrender.com';
 
 // ===== TIPOS =====
 type Position = 'UTG' | 'HJ' | 'CO' | 'BTN' | 'SB' | 'BB';

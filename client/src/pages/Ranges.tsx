@@ -128,6 +128,8 @@ export default function Ranges() {
   const [matrixMode, setMatrixMode] = useState<'simple' | 'advanced'>('simple');
   const [stackSize, setStackSize] = useState<10 | 20 | 40 | 100>(40);
   const [confidence, setConfidence] = useState<number>(82);
+  const [format, setFormat] = useState<'CASH' | 'MTT'>('CASH');
+  const [field, setField] = useState<'recreativo' | 'regulares'>('regulares');
 
   // Verificar status premium e créditos (igual ao Analyze)
   const isPremium = user?.premium || (user as any)?.statusPlano === 'premium';
@@ -147,6 +149,27 @@ export default function Ranges() {
   }, [activePosition]);
 
   const stats = calculateRangeStats(hands);
+
+  // Combos por tipo de mão (aproximação padrão):
+  // Pares = 6, Suited = 4, Offsuit = 12
+  function combosFor(hand: string): number {
+    const isPair = hand.length === 2 && hand[0] === hand[1];
+    const isSuited = hand.endsWith('s');
+    const isOffsuit = hand.endsWith('o');
+    if (isPair) return 6;
+    if (isSuited) return 4;
+    if (isOffsuit) return 12;
+    // Sem sufixo: tratar como suited por simplicidade
+    return 4;
+  }
+
+  const totalCombos = hands.reduce((acc, h) => acc + combosFor(h.hand), 0);
+  const comboStats = {
+    allin: hands.filter(h => h.action === 'allin').reduce((a, h) => a + combosFor(h.hand), 0),
+    raise: hands.filter(h => h.action === 'raise').reduce((a, h) => a + combosFor(h.hand), 0),
+    call: hands.filter(h => h.action === 'call').reduce((a, h) => a + combosFor(h.hand), 0),
+    fold: hands.filter(h => h.action === 'fold').reduce((a, h) => a + combosFor(h.hand), 0),
+  };
 
   // Segments para o RangeBar
   const rangeSegments: RangeSegment[] = [
@@ -223,7 +246,7 @@ export default function Ranges() {
           </p>
         </div>
 
-        {/* Cenário + Toggle simples/avançado + Stack size */}
+        {/* Cenário + Toggle simples/avançado + Stack size + Contexto */}
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
           {(['RFI', '3bet', 'vs3bet'] as const).map(s => (
             <button
@@ -294,6 +317,42 @@ export default function Ranges() {
                   cursor: 'pointer'
                 }}
               >{ss}bb</button>
+            ))}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginLeft: 8 }}>
+            <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Formato:</span>
+            {(['CASH','MTT'] as const).map(f => (
+              <button key={f}
+                onClick={() => setFormat(f)}
+                style={{
+                  padding: '6px 10px',
+                  background: format === f ? 'rgba(14,165,233,0.2)' : 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.12)',
+                  color: format === f ? '#0ea5e9' : 'var(--text-secondary)',
+                  borderRadius: 8,
+                  fontSize: 12,
+                  fontWeight: 700,
+                  cursor: 'pointer'
+                }}
+              >{f}</button>
+            ))}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginLeft: 8 }}>
+            <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Field:</span>
+            {(['regulares','recreativo'] as const).map(fl => (
+              <button key={fl}
+                onClick={() => setField(fl)}
+                style={{
+                  padding: '6px 10px',
+                  background: field === fl ? 'rgba(234,179,8,0.2)' : 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.12)',
+                  color: field === fl ? '#eab308' : 'var(--text-secondary)',
+                  borderRadius: 8,
+                  fontSize: 12,
+                  fontWeight: 700,
+                  cursor: 'pointer'
+                }}
+              >{fl}</button>
             ))}
           </div>
         </div>
@@ -431,6 +490,138 @@ export default function Ranges() {
             </div>
           </div>
 
+          {/* Ações (estilo GTO Wizard) */}
+          <div className="card" style={{ padding: 20, marginBottom: 20 }}>
+            <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 700 }}>🎯 Ações</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 12 }}>
+              {[
+                { label: 'All-in', color: '#7f1d1d', percent: totalCombos ? (comboStats.allin / totalCombos * 100) : 0, combos: comboStats.allin },
+                { label: 'Raise 3', color: '#b91c1c', percent: totalCombos ? (comboStats.raise / totalCombos * 100) : 0, combos: comboStats.raise },
+                { label: 'Fold', color: '#1e3a8a', percent: totalCombos ? (comboStats.fold / totalCombos * 100) : 0, combos: comboStats.fold },
+              ].map((row, i) => (
+                <div key={i} style={{
+                  display: 'grid',
+                  gridTemplateColumns: '120px 1fr 120px',
+                  alignItems: 'center',
+                  gap: 12,
+                }}>
+                  <div style={{
+                    background: row.color,
+                    color: 'white',
+                    padding: '10px 12px',
+                    borderRadius: 8,
+                    fontWeight: 800,
+                    textAlign: 'center'
+                  }}>{row.label}</div>
+                  <div style={{ height: 12, background: 'rgba(255,255,255,0.08)', borderRadius: 999 }}>
+                    <div style={{ width: `${row.percent.toFixed(1)}%`, height: '100%', background: row.color, borderRadius: 999 }} />
+                  </div>
+                  <div style={{ color: 'var(--text-secondary)', fontSize: 12, textAlign: 'right' }}>
+                    {row.percent.toFixed(1)}% · {row.combos} combos
+                  </div>
+                </div>
+              ))}
+              {/* Call separado */}
+              <div style={{
+                display: 'grid', gridTemplateColumns: '120px 1fr 120px', alignItems: 'center', gap: 12,
+                marginTop: 4,
+              }}>
+                <div style={{
+                  background: '#166534', color: 'white', padding: '10px 12px', borderRadius: 8, fontWeight: 800, textAlign: 'center'
+                }}>Call</div>
+                <div style={{ height: 12, background: 'rgba(255,255,255,0.08)', borderRadius: 999 }}>
+                  <div style={{ width: `${(totalCombos ? (comboStats.call / totalCombos * 100) : 0).toFixed(1)}%`, height: '100%', background: '#166534', borderRadius: 999 }} />
+                </div>
+                <div style={{ color: 'var(--text-secondary)', fontSize: 12, textAlign: 'right' }}>
+                  {(totalCombos ? (comboStats.call / totalCombos * 100) : 0).toFixed(1)}% · {comboStats.call} combos
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Hands (detalhe da mão selecionada) */}
+          <div className="card" style={{ padding: 20, marginBottom: 20 }}>
+            <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 700 }}>🃏 Hands</h3>
+            {!selectedHand ? (
+              <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Selecione uma mão na matriz para ver o mix.</div>
+            ) : (
+              (() => {
+                const hd = hands.find(h => h.hand === selectedHand);
+                const combos = combosFor(selectedHand);
+                const mix = hd?.mix || { allin: 0, raise: 0, call: 0, fold: 0 };
+                const rows = [
+                  { label: 'Allin 200', color: '#7f1d1d', p: mix.allin || 0 },
+                  { label: 'Raise 3', color: '#b91c1c', p: mix.raise || 0 },
+                  { label: 'Call', color: '#166534', p: mix.call || 0 },
+                  { label: 'Fold', color: '#1e3a8a', p: mix.fold || 0 },
+                ];
+                return (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {rows.map((r, i) => (
+                      <div key={i} style={{ display: 'grid', gridTemplateColumns: '120px 1fr 120px', gap: 12, alignItems: 'center' }}>
+                        <div style={{ background: r.color, color: '#fff', fontWeight: 800, padding: '10px 12px', borderRadius: 8, textAlign: 'center' }}>{r.label}</div>
+                        <div style={{ height: 12, background: 'rgba(255,255,255,0.08)', borderRadius: 999 }}>
+                          <div style={{ width: `${r.p.toFixed(1)}%`, height: '100%', background: r.color, borderRadius: 999 }} />
+                        </div>
+                        <div style={{ color: 'var(--text-secondary)', fontSize: 12, textAlign: 'right' }}>
+                          {r.p.toFixed(1)}% · {(Math.round(combos * r.p / 100))} combos
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()
+            )}
+          </div>
+
+          {/* Blockers + Equity chart */}
+          <div className="card" style={{ padding: 20 }}>
+            <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 700 }}>🛡️ Blockers & Equity</h3>
+            {!selectedHand ? (
+              <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Selecione uma mão para ver bloqueadores e equity.</div>
+            ) : (
+              (() => {
+                const ranks = selectedHand.slice(0,2).split('');
+                const hasSuited = selectedHand.endsWith('s');
+                const info = [
+                  { k: 'Bloqueia pares altos', v: (ranks.includes('A') || ranks.includes('K')) ? 'Parcial' : 'Baixo' },
+                  { k: 'Bloqueia broadways', v: (ranks.some(r => ['A','K','Q','J','T'].includes(r))) ? 'Médio' : 'Baixo' },
+                  { k: 'Conectividade', v: (['A','K','Q','J','T','9','8','7','6','5','4','3','2'].indexOf(ranks[0]) - ['A','K','Q','J','T','9','8','7','6','5','4','3','2'].indexOf(ranks[1]) <= 2) ? 'Boa' : 'Média' },
+                  { k: 'Suited', v: hasSuited ? 'Sim' : 'Não' },
+                ];
+                const hd = hands.find(h => h.hand === selectedHand);
+                const mix = hd?.mix || { allin: 0, raise: 0, call: 0, fold: 0 };
+                const equityBars = [
+                  { label: 'Valor/Agressão', color: '#b91c1c', val: Math.min(100, (mix.raise || 0) + (mix.allin || 0)) },
+                  { label: 'Jogabilidade', color: '#166534', val: Math.min(100, (mix.call || 0) + (hasSuited ? 15 : 5)) },
+                  { label: 'Passividade', color: '#1e3a8a', val: mix.fold || 0 },
+                ];
+                return (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 12 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                      {info.map((it, i) => (
+                        <div key={i} style={{ padding: 10, border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8 }}>
+                          <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{it.k}</div>
+                          <div style={{ fontSize: 13, fontWeight: 700 }}>{it.v}</div>
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{ marginTop: 4 }}>
+                      {equityBars.map((b, i) => (
+                        <div key={i} style={{ marginBottom: 10 }}>
+                          <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 6 }}>{b.label}</div>
+                          <div style={{ height: 10, background: 'rgba(255,255,255,0.08)', borderRadius: 999 }}>
+                            <div style={{ width: `${b.val.toFixed(1)}%`, height: '100%', background: b.color, borderRadius: 999 }} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()
+            )}
+          </div>
+
           {/* Legenda */}
           <div className="card" style={{ padding: 20 }}>
             <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 700 }}>🎨 Legenda</h3>
@@ -488,6 +679,11 @@ export default function Ranges() {
                           scenario,
                           rangeData: hands.filter(h => h.action !== 'fold'),
                           stats,
+                          context: {
+                            format,
+                            field,
+                            stackSize,
+                          },
                         }),
                       });
 

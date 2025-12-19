@@ -98,7 +98,7 @@
 
 /* Contador Free (normal) */
 .credit-counter.free {
-  /* Cursor pointer para indicar que é clicável */
+  cursor: pointer;
 }
 
 .credit-counter.free:hover {

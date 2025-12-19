@@ -85,7 +85,7 @@ REASON: [brief explanation]`;
 router.post('/range', authMiddleware, async (req: any, res: any) => {
   try {
     const userId = req.userId;
-    const { position, scenario, rangeData, stats } = req.body;
+    const { position, scenario, rangeData, stats, context } = req.body;
 
     if (!position || !scenario || !rangeData) {
       return res.status(400).json({ error: 'Missing required fields' });
@@ -121,27 +121,34 @@ router.post('/range', authMiddleware, async (req: any, res: any) => {
     const totalHands = rangeData.length;
 
     const scenarioText = scenario === 'RFI' ? 'Open Raise' : scenario === '3bet' ? '3-Bet' : 'vs 3-Bet';
+    const formatText = context?.format === 'MTT' ? 'Torneio (MTT)' : 'Cash Game';
+    const fieldText = context?.field === 'recreativo' ? 'Field recreativo' : 'Field com regulares';
+    const stackText = `${context?.stackSize ?? '—'}bb`;
 
-    const prompt = `You are a GTO poker expert. Explain the strategic reasoning behind this poker range in Portuguese (Brazil).
+    const prompt = `Você é um especialista em poker GTO. Explique o raciocínio por trás deste range em Português (Brasil), sem gerar um novo range.
 
-Position: ${position}
-Scenario: ${scenarioText}
-Total hands in range: ${totalHands}
-Sample hands: ${rangeHands}
+  Posição: ${position}
+  Cenário: ${scenarioText}
+  Formato: ${formatText}
+  Field: ${fieldText}
+  Stack efetivo: ${stackText}
 
-Statistics:
-- All-in: ${stats.allin} hands
-- Raise: ${stats.raise} hands
-- Call: ${stats.call} hands
-- Opening Range: ${stats.openingRange}%
+  Total de mãos no range: ${totalHands}
+  Exemplos: ${rangeHands}
 
-Provide a detailed explanation (150-200 words) covering:
-1. Why this range makes sense for ${position} position
-2. Key strategic concepts (position, equity, fold equity)
-3. How to adjust this range based on opponent tendencies
-4. Common mistakes players make from this position
+  Estatísticas:
+  - All-in: ${stats.allin} mãos
+  - Raise: ${stats.raise} mãos
+  - Call: ${stats.call} mãos
+  - Range de abertura: ${stats.openingRange}%
 
-Write in a clear, educational tone in Portuguese.`;
+  Diretrizes da resposta (150–220 palavras):
+  1) Por que este range faz sentido para ${position} neste cenário.
+  2) Conceitos-chave: posição, equidade, fold equity, jogabilidade.
+  3) Ajustes contextuais (apenas explicação): como adaptar levemente contra ${fieldText}, e diferenças entre ${formatText}; mencione impacto de ${stackText} sem alterar o range base.
+  4) Erros comuns.
+
+  Importante: NÃO gere frequências novas nem lista de mãos; forneça apenas explicação e princípios.`;
 
     // Gerar explicação
     let explanation = '';
@@ -151,7 +158,7 @@ Write in a clear, educational tone in Portuguese.`;
         const completion = await openai.chat.completions.create({
           model: 'gpt-4',
           messages: [
-            { role: 'system', content: 'You are a professional poker coach explaining GTO ranges in Portuguese. Be detailed but accessible.' },
+            { role: 'system', content: 'Você é um coach profissional de poker. Explique ranges GTO em Português, detalhado mas acessível. Não modifique o range; foque em princípios e ajustes contextuais.' },
             { role: 'user', content: prompt }
           ],
           temperature: 0.7,
@@ -167,6 +174,9 @@ Write in a clear, educational tone in Portuguese.`;
     // Fallback se IA não disponível ou falhou
     if (!explanation) {
       const scenarioText = scenario === 'RFI' ? 'Open Raise' : scenario === '3bet' ? '3-Bet' : 'vs 3-Bet';
+      const formatText = context?.format === 'MTT' ? 'Torneio (MTT)' : 'Cash Game';
+      const fieldText = context?.field === 'recreativo' ? 'field recreativo' : 'field com regulares';
+      const stackText = `${context?.stackSize ?? '—'}bb`;
       const freq = Number(stats?.openingRange ?? 0);
       explanation = `Este range de ${position} em ${scenarioText} prioriza valor e jogabilidade.
 Em posições iniciais, focamos em mãos com boa equidade e baixa dominância, reduzindo offsuit marginais. À medida que avançamos (CO/BTN), incorporamos mais suited connectors e broadways, explorando posição e fold equity.
@@ -174,7 +184,7 @@ Em posições iniciais, focamos em mãos com boa equidade e baixa dominância, r
 Pontos-chave:
 - Valor: pares médios-altos (TT+) e broadways fortes (AK, AQ) compõem a base.
 - Mix: mãos suited ganham frequência de raise/call pela jogabilidade pós-flop; offsuit marginais reduzem.
-- Ajustes: contra oponentes que pagam demais, aumente o componente de valor; contra quem folda muito, amplie steals com suited.
+    - Ajustes contextuais (${formatText}, ${fieldText}, ${stackText}): contra quem paga demais, aumente o componente de valor; contra quem folda muito, amplie steals com suited. Em MTT, com antes e stacks menores, valoriza-se fold equity e ranges um pouco mais lineares, sem alterar a espinha dorsal.
 - Erros comuns: abrir demais offsuit fracos sem posição; subestimar defesa com suited conectados.
 
 Abertura estimada: ~${freq}% do baralho. Use esse guia como referência prática quando não houver solver.`;
@@ -192,10 +202,10 @@ Abertura estimada: ~${freq}% do baralho. Use esse guia como referência prática
     });
     // Em caso de erro inesperado, tente retornar fallback básico
     try {
-      const { position, scenario, stats } = req.body || {};
+      const { position, scenario, stats, context } = req.body || {};
       const scenarioText = scenario === 'RFI' ? 'Open Raise' : scenario === '3bet' ? '3-Bet' : 'vs 3-Bet';
       const freq = Number(stats?.openingRange ?? 0);
-      const explanation = `Resumo rápido de ${position} em ${scenarioText}: priorize valor, evite offsuit marginais fora de posição, e dê preferência a mãos suited com jogabilidade. Abertura referência: ~${freq}%.`;
+      const explanation = `Resumo rápido de ${position} em ${scenarioText}: priorize valor, evite offsuit marginais fora de posição, e dê preferência a mãos suited com jogabilidade. Em ${context?.format === 'MTT' ? 'MTT' : 'cash'}, ajuste levemente a agressão conforme ${context?.field === 'recreativo' ? 'field recreativo' : 'regulares'} e ${context?.stackSize ?? '—'}bb sem alterar o range base. Abertura referência: ~${freq}%.`;
       return res.json({ ok: true, explanation });
     } catch (_) {
       return res.status(500).json({ 
