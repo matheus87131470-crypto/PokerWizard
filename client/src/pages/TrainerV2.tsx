@@ -9,8 +9,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import PaywallOverlay from '../components/PaywallOverlay';
-import CreditWarningBanner from '../components/CreditWarningBanner';
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://pokerwizard-api.onrender.com';
 
@@ -517,9 +515,6 @@ export default function TrainerV2() {
   const auth = useAuth();
   const navigate = useNavigate();
 
-  const usosTrainer = (auth.user as any)?.usosTrainer ?? 5;
-  const isPremium = auth.user?.premium || (auth.user as any)?.statusPlano === 'premium';
-
   const [stage, setStage] = useState<PracticeStage>('SETUP');
   const [config, setConfig] = useState<Partial<PracticeConfig>>({
     gameType: 'CASH',
@@ -529,69 +524,16 @@ export default function TrainerV2() {
   const [session, setSession] = useState<PracticeSession | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // Validação para iniciar
+  // Validação para iniciar (apenas campos obrigatórios)
   const canStart = !!(
     config.heroPosition &&
     config.gameType &&
     config.stakes &&
-    config.spot &&
-    (isPremium || usosTrainer > 0)
+    config.spot
   );
 
-  // ===== VALIDAR CRÉDITOS (sem consumir ainda) =====
-  const validateCredits = async (): Promise<boolean> => {
-    if (isPremium) return true;
-
-    try {
-      const res = await fetch(`${API_URL}/api/trainer/hand`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${auth.token}`,
-        },
-      });
-
-      if (res.status === 403) {
-        return false;
-      }
-
-      const data = await res.json();
-      return data.ok;
-    } catch {
-      return false;
-    }
-  };
-
-  // ===== CONSUMIR CRÉDITO (após completar a sessão) =====
-  const consumeCredit = async (): Promise<boolean> => {
-    if (isPremium) return true;
-
-    try {
-      const res = await fetch(`${API_URL}/api/trainer/generate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${auth.token}`,
-        },
-        body: JSON.stringify({
-          table: '6MAX',
-          position: config.heroPosition,
-          gameType: config.gameType,
-          street: 'Pré-flop',
-          action: 'Raise',
-        }),
-      });
-
-      if (res.status === 403) {
-        return false;
-      }
-
-      if (auth.refreshUser) await auth.refreshUser();
-      return true;
-    } catch {
-      return false;
-    }
-  };
+  // Removido: validateCredits e consumeCredit
+  // Practice é 100% gratuito - sem validação de créditos
 
   // ===== INICIAR TREINO =====
   const handleStartPractice = async () => {
@@ -600,14 +542,6 @@ export default function TrainerV2() {
     setLoading(true);
     
     try {
-      // Apenas VALIDA créditos (não consome ainda)
-      const allowed = await validateCredits();
-      
-      if (!allowed) {
-        setLoading(false);
-        return;
-      }
-
       // Gerar 4 mãos (preflop, flop, turn, river)
       const holeCards = generateHoleCards();
       const streets: Street[] = ['PREFLOP', 'FLOP', 'TURN', 'RIVER'];
@@ -690,8 +624,6 @@ export default function TrainerV2() {
   };
 
   const handleNext = async () => {
-    // Consumir crédito AQUI (após completar sessão anterior)
-    await consumeCredit();
     await handleStartPractice();
   };
 
@@ -723,60 +655,34 @@ export default function TrainerV2() {
   }
 
   return (
-    <PaywallOverlay requiredCredits={1} creditType="trainer">
-      <div style={{ minHeight: '100vh' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '20px' }}>
-          <CreditWarningBanner
-            credits={usosTrainer}
-            isPremium={isPremium}
-            onUpgrade={() => navigate('/premium')}
+    <div style={{ minHeight: '100vh' }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '20px' }}>
+        {/* RENDERIZAÇÃO POR STAGE */}
+        {stage === 'SETUP' && (
+          <PracticeSetup
+            config={config}
+            setConfig={setConfig}
+            onStart={handleStartPractice}
+            loading={loading}
+            canStart={canStart}
           />
+        )}
 
-          {/* DEBUG VISUAL (temporário) */}
-          <div style={{ 
-            position: 'fixed', 
-            bottom: 20, 
-            right: 20, 
-            background: 'rgba(0,0,0,0.8)', 
-            padding: 12, 
-            borderRadius: 8, 
-            fontSize: 11,
-            opacity: 0.5,
-            zIndex: 1000,
-          }}>
-            <div>Stage: <strong>{stage}</strong></div>
-            <div>Credits: <strong>{usosTrainer}</strong></div>
-            <div>Position: <strong>{config.heroPosition || '—'}</strong></div>
-            <div>Premium: <strong>{isPremium ? 'Yes' : 'No'}</strong></div>
-          </div>
+        {stage === 'HAND' && session && (
+          <PracticeTable
+            session={session}
+            onAction={handleAction}
+          />
+        )}
 
-          {/* RENDERIZAÇÃO POR STAGE */}
-          {stage === 'SETUP' && (
-            <PracticeSetup
-              config={config}
-              setConfig={setConfig}
-              onStart={handleStartPractice}
-              loading={loading}
-              canStart={canStart}
-            />
-          )}
-
-          {stage === 'HAND' && session && (
-            <PracticeTable
-              session={session}
-              onAction={handleAction}
-            />
-          )}
-
-          {stage === 'FEEDBACK' && session && (
-            <PracticeFeedback
-              session={session}
-              onRepeat={handleRepeat}
-              onNext={handleNext}
-            />
-          )}
-        </div>
+        {stage === 'FEEDBACK' && session && (
+          <PracticeFeedback
+            session={session}
+            onRepeat={handleRepeat}
+            onNext={handleNext}
+          />
+        )}
       </div>
-    </PaywallOverlay>
+    </div>
   );
 }
