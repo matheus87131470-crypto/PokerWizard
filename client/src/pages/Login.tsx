@@ -13,6 +13,8 @@ export default function Login() {
   const [error, setError] = useState('');
   const [emailError, setEmailError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [googleReady, setGoogleReady] = useState<null | boolean>(null);
+  const [googleMsg, setGoogleMsg] = useState<string>('');
   const navigate = useNavigate();
   const auth = useAuth();
 
@@ -64,6 +66,32 @@ export default function Login() {
       setLoading(false);
     }
   };
+
+  // Status do Google OAuth (debug)
+  React.useEffect(() => {
+    const apiBase = window.location.hostname.includes('localhost')
+      ? 'http://localhost:3000'
+      : 'https://pokerwizard-api.onrender.com';
+    (async () => {
+      try {
+        const resp = await fetch(`${apiBase}/api/auth/google-debug`);
+        if (!resp.ok) throw new Error(String(resp.status));
+        const json = await resp.json();
+        const ready = !!json?.googleOAuth?.ready;
+        setGoogleReady(ready);
+        const parts: string[] = [];
+        parts.push(ready ? '✅ Pronto' : '⚠️ Pendente');
+        if (json?.googleOAuth) {
+          parts.push(`Callback: ${json.googleOAuth.callbackUrl || 'N/A'}`);
+          parts.push(`ClientUrl: ${json.googleOAuth.clientUrl || 'N/A'}`);
+        }
+        setGoogleMsg(parts.join(' • '));
+      } catch (err: any) {
+        setGoogleReady(false);
+        setGoogleMsg(`⚠️ Não foi possível verificar (${err?.message || 'erro'})`);
+      }
+    })();
+  }, []);
 
   return (
     <div
@@ -274,6 +302,11 @@ export default function Login() {
           </svg>
           Continuar com Google
         </button>
+
+        {/* Status Google OAuth */}
+        <div style={{ marginTop: 10, fontSize: 12, color: googleReady ? '#22c55e' : '#eab308', textAlign: 'center' }}>
+          {googleReady === null ? 'Verificando integração Google…' : googleMsg}
+        </div>
 
         {/* Alternar Login ↔ Registro */}
         <div
