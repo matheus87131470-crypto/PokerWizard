@@ -697,12 +697,13 @@ export default function Trainer() {
     setLastResult(null);
   };
   
-  const handleAction = (action: Action) => {
+  const handleAction = async (action: Action) => {
     if (!currentHand) return;
     
     const correct = getCorrectAction(currentHand, config.heroPosition, config.preflopAction);
     const isCorrect = action === correct.action;
     
+    // Primeiro mostra a explicação local imediata
     setLastResult({
       correct: isCorrect,
       explanation: correct.explanation,
@@ -725,6 +726,31 @@ export default function Trainer() {
       accuracy: newAccuracy,
       correct: isCorrect,
     }]);
+
+    // Solicita análise com IA do backend (explicação didática)
+    try {
+      const scenario = {
+        position: config.heroPosition,
+        heroCards: [currentHand.card1, currentHand.card2],
+        board: [],
+        villainRange: 'Desconhecido',
+        correctAction: correct.action,
+      };
+      const resp = await fetch(`${API_URL}/api/trainer/ai-analysis`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ scenario, chosenAction: action })
+      });
+      const data = await resp.json().catch(() => ({}));
+      if (data?.ok && data?.analysis) {
+        setLastResult({
+          correct: isCorrect,
+          explanation: data.analysis,
+        });
+      }
+    } catch (err) {
+      console.warn('[Trainer] IA analysis fallback:', (err as any)?.message || err);
+    }
   };
   
   const nextHand = () => {
