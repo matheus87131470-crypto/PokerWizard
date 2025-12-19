@@ -16,8 +16,7 @@ services:
       - key: BASE_URL
         value: https://pokerwizard-api.onrender.com
       - key: CLIENT_URL
-        # Atualize para a URL pública do frontend (ex.: https://pokerwizard.pages.dev)
-        value: https://pokerwizard.pages.dev
+        value: https://poker.pokio.online
       - key: JWT_SECRET
         generateValue: true
       - key: OPENAI_API_KEY
