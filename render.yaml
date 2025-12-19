@@ -1,0 +1,33 @@
+services:
+  - type: web
+    name: pokerwizard-api
+    env: node
+    rootDir: server
+    plan: free
+    region: oregon
+    buildCommand: npm install; npm run build
+    startCommand: npm run start
+    branch: main
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: 18
+      - key: BASE_URL
+        value: https://pokerwizard-api.onrender.com
+      - key: CLIENT_URL
+        # Atualize para a URL pública do frontend (ex.: https://pokerwizard.pages.dev)
+        value: https://pokerwizard.pages.dev
+      - key: JWT_SECRET
+        generateValue: true
+      - key: OPENAI_API_KEY
+        # Defina no painel do Render
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_CALLBACK_URL
+        value: https://pokerwizard-api.onrender.com/api/auth/google/callback
+      - key: DATABASE_URL
+        sync: false
