@@ -1290,13 +1290,11 @@ export default function App() {
         <Layout>
           <Routes>
             <Route path="/" element={<Home />} />
-            {/* Rotas protegidas - requerem login */}
-            <Route path="/trainer" element={<ProtectedRoute><TrainerV2 /></ProtectedRoute>} />
-            <Route path="/analyze" element={<ProtectedRoute><Analyze /></ProtectedRoute>} />
-            <Route path="/ranges" element={<ProtectedRoute><Ranges /></ProtectedRoute>} />
-            <Route path="/player-analysis" element={<ProtectedRoute><PlayerAnalysis /></ProtectedRoute>} />
-            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-            {/* Páginas públicas */}
+            {/* Páginas públicas - todos podem ver, mas precisam login para usar */}
+            <Route path="/trainer" element={<TrainerV2 />} />
+            <Route path="/analyze" element={<Analyze />} />
+            <Route path="/ranges" element={<Ranges />} />
+            <Route path="/player-analysis" element={<PlayerAnalysis />} />
             <Route path="/analysis" element={<Analysis />} />
             <Route path="/features" element={<Features />} />
             <Route path="/solutions" element={<Solutions />} />
@@ -1304,9 +1302,11 @@ export default function App() {
             <Route path="/google-success" element={<GoogleSuccess />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/premium" element={<Premium />} />
-            <Route path="/upgrade-success" element={<ProtectedRoute><UpgradeSuccess /></ProtectedRoute>} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
+            {/* Rotas protegidas - só para usuários logados */}
+            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+            <Route path="/upgrade-success" element={<ProtectedRoute><UpgradeSuccess /></ProtectedRoute>} />
           
           </Routes>
         </Layout>
