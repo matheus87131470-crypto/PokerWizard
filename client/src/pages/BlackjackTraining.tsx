@@ -881,6 +881,524 @@ function HandBuilder({
   );
 }
 
+// ===== DECISION SCREEN =====
+function DecisionScreen({
+  scenario,
+  config,
+  onDecision,
+}: {
+  scenario: HandScenario;
+  config: SessionConfig;
+  onDecision: (action: Action) => void;
+}) {
+  const { playerCards, dealerCard, removedCards, probabilities } = scenario;
+  const { value: playerValue, isSoft } = calculateHandValue(playerCards);
+  const runningCount = calculateRunningCount([...removedCards]);
+  const totalCards = config.deckCount * 52;
+  const usedCards = removedCards.length;
+  const decksRemaining = (totalCards - usedCards) / 52;
+  const trueCount = calculateTrueCount(runningCount, decksRemaining);
+
+  const isPair = playerCards.length === 2 && playerCards[0].rank === playerCards[1].rank;
+  const canDouble = playerCards.length === 2;
+  const canSplit = isPair;
+
+  return (
+    <div style={{ maxWidth: 1000, margin: '40px auto', padding: '20px' }}>
+      <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 24, color: '#f8fafc' }}>
+        🎯 Sua Decisão
+      </h2>
+
+      {/* Contadores */}
+      <div style={{
+        display: 'flex',
+        gap: 16,
+        marginBottom: 24,
+        padding: '16px 20px',
+        background: 'rgba(15, 23, 42, 0.6)',
+        borderRadius: 10,
+        border: '1px solid rgba(100, 116, 139, 0.3)',
+      }}>
+        <div style={{ flex: 1, textAlign: 'center' }}>
+          <div style={{ fontSize: 10, color: '#94a3b8', marginBottom: 4 }}>Running Count</div>
+          <div style={{ fontSize: 20, fontWeight: 800, color: runningCount > 0 ? '#10b981' : runningCount < 0 ? '#ef4444' : '#64748b' }}>
+            {runningCount >= 0 ? '+' : ''}{runningCount}
+          </div>
+        </div>
+        <div style={{ flex: 1, textAlign: 'center' }}>
+          <div style={{ fontSize: 10, color: '#94a3b8', marginBottom: 4 }}>True Count</div>
+          <div style={{ fontSize: 20, fontWeight: 800, color: '#8b5cf6' }}>
+            {trueCount >= 0 ? '+' : ''}{trueCount.toFixed(1)}
+          </div>
+        </div>
+        <div style={{ flex: 1, textAlign: 'center' }}>
+          <div style={{ fontSize: 10, color: '#94a3b8', marginBottom: 4 }}>Decks Left</div>
+          <div style={{ fontSize: 18, fontWeight: 700, color: '#60a5fa' }}>
+            {decksRemaining.toFixed(1)}
+          </div>
+        </div>
+      </div>
+
+      {/* Mesa */}
+      <div className="card" style={{ padding: 40, marginBottom: 24 }}>
+        {/* Dealer */}
+        <div style={{ marginBottom: 40 }}>
+          <div style={{ fontSize: 13, color: '#94a3b8', marginBottom: 12, fontWeight: 600 }}>
+            🎰 Dealer - {dealerCard.value}
+          </div>
+          <div style={{ display: 'flex', gap: 12 }}>
+            <BlackjackCard card={dealerCard} />
+          </div>
+        </div>
+
+        {/* Player */}
+        <div>
+          <div style={{ fontSize: 13, color: '#94a3b8', marginBottom: 12, fontWeight: 600 }}>
+            👤 Você - Total: {playerValue} {isSoft && '(Soft)'}
+          </div>
+          <div style={{ display: 'flex', gap: 12 }}>
+            {playerCards.map((card, i) => (
+              <BlackjackCard key={i} card={card} />
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Probabilidades */}
+      {probabilities && (
+        <div className="card" style={{ padding: 32, marginBottom: 24, background: 'rgba(139, 92, 246, 0.05)' }}>
+          <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 20, color: '#c084fc' }}>
+            📊 Probabilidades Calculadas
+          </h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+            <div style={{ textAlign: 'center', padding: 16, background: 'rgba(16, 185, 129, 0.1)', borderRadius: 8, border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+              <div style={{ fontSize: 11, color: '#6ee7b7', marginBottom: 6, fontWeight: 600 }}>VITÓRIA</div>
+              <div style={{ fontSize: 24, fontWeight: 800, color: '#10b981' }}>{probabilities.winChance.toFixed(1)}%</div>
+            </div>
+            <div style={{ textAlign: 'center', padding: 16, background: 'rgba(234, 179, 8, 0.1)', borderRadius: 8, border: '1px solid rgba(234, 179, 8, 0.3)' }}>
+              <div style={{ fontSize: 11, color: '#fde047', marginBottom: 6, fontWeight: 600 }}>EMPATE</div>
+              <div style={{ fontSize: 24, fontWeight: 800, color: '#eab308' }}>{probabilities.tieChance.toFixed(1)}%</div>
+            </div>
+            <div style={{ textAlign: 'center', padding: 16, background: 'rgba(239, 68, 68, 0.1)', borderRadius: 8, border: '1px solid rgba(239, 68, 68, 0.3)' }}>
+              <div style={{ fontSize: 11, color: '#fca5a5', marginBottom: 6, fontWeight: 600 }}>DERROTA</div>
+              <div style={{ fontSize: 24, fontWeight: 800, color: '#ef4444' }}>{probabilities.loseChance.toFixed(1)}%</div>
+            </div>
+            <div style={{ textAlign: 'center', padding: 16, background: 'rgba(139, 92, 246, 0.1)', borderRadius: 8, border: '1px solid rgba(139, 92, 246, 0.3)' }}>
+              <div style={{ fontSize: 11, color: '#c4b5fd', marginBottom: 6, fontWeight: 600 }}>EV ESTIMADO</div>
+              <div style={{ fontSize: 24, fontWeight: 800, color: probabilities.expectedValue >= 0 ? '#8b5cf6' : '#f97316' }}>
+                {probabilities.expectedValue >= 0 ? '+' : ''}{probabilities.expectedValue.toFixed(3)}
+              </div>
+            </div>
+          </div>
+          <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 16, textAlign: 'center', lineHeight: 1.5 }}>
+            * Probabilidades baseadas em {config.deckCount} baralho(s) com {usedCards} carta(s) já removida(s)
+          </p>
+        </div>
+      )}
+
+      {/* Ações */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16 }}>
+        <button onClick={() => onDecision('HIT')} style={{
+          padding: '20px',
+          background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+          border: 'none',
+          borderRadius: 12,
+          color: '#fff',
+          fontSize: 16,
+          fontWeight: 700,
+          cursor: 'pointer',
+          boxShadow: '0 6px 20px rgba(59, 130, 246, 0.3)',
+        }}>
+          🃏 HIT
+        </button>
+        <button onClick={() => onDecision('STAND')} style={{
+          padding: '20px',
+          background: 'linear-gradient(135deg, #10b981, #059669)',
+          border: 'none',
+          borderRadius: 12,
+          color: '#fff',
+          fontSize: 16,
+          fontWeight: 700,
+          cursor: 'pointer',
+          boxShadow: '0 6px 20px rgba(16, 185, 129, 0.3)',
+        }}>
+          ✋ STAND
+        </button>
+        <button onClick={() => onDecision('DOUBLE')} disabled={!canDouble} style={{
+          padding: '20px',
+          background: canDouble ? 'linear-gradient(135deg, #f59e0b, #d97706)' : '#334155',
+          border: 'none',
+          borderRadius: 12,
+          color: '#fff',
+          fontSize: 16,
+          fontWeight: 700,
+          cursor: canDouble ? 'pointer' : 'not-allowed',
+          opacity: canDouble ? 1 : 0.5,
+          boxShadow: canDouble ? '0 6px 20px rgba(245, 158, 11, 0.3)' : 'none',
+        }}>
+          💰 DOUBLE {!canDouble && '(Indisponível)'}
+        </button>
+        <button onClick={() => onDecision('SPLIT')} disabled={!canSplit} style={{
+          padding: '20px',
+          background: canSplit ? 'linear-gradient(135deg, #8b5cf6, #7c3aed)' : '#334155',
+          border: 'none',
+          borderRadius: 12,
+          color: '#fff',
+          fontSize: 16,
+          fontWeight: 700,
+          cursor: canSplit ? 'pointer' : 'not-allowed',
+          opacity: canSplit ? 1 : 0.5,
+          boxShadow: canSplit ? '0 6px 20px rgba(139, 92, 246, 0.3)' : 'none',
+        }}>
+          ✂️ SPLIT {!canSplit && '(Indisponível)'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ===== FEEDBACK SCREEN =====
+function FeedbackScreen({
+  scenario,
+  userAction,
+  config,
+  onContinue,
+}: {
+  scenario: HandScenario;
+  userAction: Action;
+  config: SessionConfig;
+  onContinue: () => void;
+}) {
+  const { playerCards, dealerCard, removedCards } = scenario;
+  const { value: playerValue, isSoft } = calculateHandValue(playerCards);
+  const runningCount = calculateRunningCount([...removedCards]);
+  const totalCards = config.deckCount * 52;
+  const usedCards = removedCards.length;
+  const decksRemaining = (totalCards - usedCards) / 52;
+  const trueCount = calculateTrueCount(runningCount, decksRemaining);
+
+  const { action: correctAction, explanation } = getOptimalAction(playerCards, dealerCard, trueCount);
+  const isCorrect = userAction === correctAction;
+
+  return (
+    <div style={{ maxWidth: 900, margin: '40px auto', padding: '20px' }}>
+      <div className="card" style={{
+        padding: 48,
+        textAlign: 'center',
+        background: isCorrect
+          ? 'linear-gradient(145deg, rgba(16, 185, 129, 0.1), rgba(10, 15, 36, 0.95))'
+          : 'linear-gradient(145deg, rgba(239, 68, 68, 0.1), rgba(10, 15, 36, 0.95))',
+        border: `2px solid ${isCorrect ? 'rgba(16, 185, 129, 0.5)' : 'rgba(239, 68, 68, 0.5)'}`,
+      }}>
+        {/* Ícone */}
+        <div style={{
+          width: 100,
+          height: 100,
+          margin: '0 auto 24px',
+          background: isCorrect
+            ? 'linear-gradient(135deg, #10b981, #059669)'
+            : 'linear-gradient(135deg, #ef4444, #dc2626)',
+          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: 48,
+          boxShadow: isCorrect
+            ? '0 12px 32px rgba(16, 185, 129, 0.4)'
+            : '0 12px 32px rgba(239, 68, 68, 0.4)',
+        }}>
+          {isCorrect ? '✓' : '✗'}
+        </div>
+
+        <h2 style={{ fontSize: 28, fontWeight: 700, marginBottom: 12, color: '#f8fafc' }}>
+          {isCorrect ? '🎉 Decisão Perfeita!' : '📚 Oportunidade de Aprendizado'}
+        </h2>
+
+        {/* Comparação */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: 24,
+          marginTop: 32,
+          marginBottom: 32,
+        }}>
+          <div style={{
+            padding: 24,
+            background: 'rgba(15, 23, 42, 0.6)',
+            borderRadius: 12,
+            border: `2px solid ${isCorrect ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
+          }}>
+            <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 8, fontWeight: 600 }}>SUA DECISÃO</div>
+            <div style={{ fontSize: 32, fontWeight: 800, color: isCorrect ? '#10b981' : '#ef4444' }}>
+              {userAction}
+            </div>
+          </div>
+          <div style={{
+            padding: 24,
+            background: 'rgba(15, 23, 42, 0.6)',
+            borderRadius: 12,
+            border: '2px solid rgba(139, 92, 246, 0.3)',
+          }}>
+            <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 8, fontWeight: 600 }}>DECISÃO ÓTIMA</div>
+            <div style={{ fontSize: 32, fontWeight: 800, color: '#8b5cf6' }}>
+              {correctAction}
+            </div>
+          </div>
+        </div>
+
+        {/* Mão */}
+        <div style={{
+          padding: 24,
+          background: 'rgba(15, 23, 42, 0.4)',
+          borderRadius: 12,
+          marginBottom: 24,
+        }}>
+          <div style={{ fontSize: 13, color: '#94a3b8', marginBottom: 16, fontWeight: 600 }}>
+            Você: {playerValue} {isSoft && '(Soft)'} vs Dealer: {dealerCard.value} | TC: {trueCount >= 0 ? '+' : ''}{trueCount.toFixed(1)}
+          </div>
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+            {playerCards.map((card, i) => (
+              <BlackjackCard key={i} card={card} />
+            ))}
+            <div style={{ margin: '0 12px', fontSize: 32, color: '#64748b' }}>vs</div>
+            <BlackjackCard card={dealerCard} />
+          </div>
+        </div>
+
+        {/* Explicação */}
+        <div style={{
+          padding: 24,
+          background: 'rgba(139, 92, 246, 0.1)',
+          borderRadius: 12,
+          border: '1px solid rgba(139, 92, 246, 0.3)',
+          textAlign: 'left',
+        }}>
+          <h3 style={{ fontSize: 14, fontWeight: 700, color: '#c084fc', marginBottom: 12 }}>
+            💡 Explicação Educacional
+          </h3>
+          <p style={{ fontSize: 14, color: '#e2e8f0', lineHeight: 1.7, margin: 0 }}>
+            {explanation}
+          </p>
+        </div>
+
+        {/* Botão Continuar */}
+        <button onClick={onContinue} style={{
+          width: '100%',
+          padding: '18px',
+          marginTop: 32,
+          background: 'linear-gradient(135deg, #8b5cf6, #a855f7)',
+          border: 'none',
+          borderRadius: 12,
+          color: '#fff',
+          fontSize: 16,
+          fontWeight: 700,
+          cursor: 'pointer',
+          boxShadow: '0 6px 20px rgba(139, 92, 246, 0.4)',
+        }}>
+          Continuar →
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ===== RESULTS SCREEN =====
+function ResultsScreen({
+  stats,
+  onRestart,
+  onExit,
+}: {
+  stats: SessionStats;
+  onRestart: () => void;
+  onExit: () => void;
+}) {
+  const navigate = useNavigate();
+
+  const getGrade = (accuracy: number) => {
+    if (accuracy >= 95) return { letter: 'S', color: '#a855f7', label: 'PERFEITO' };
+    if (accuracy >= 85) return { letter: 'A', color: '#10b981', label: 'EXCELENTE' };
+    if (accuracy >= 70) return { letter: 'B', color: '#3b82f6', label: 'BOM' };
+    if (accuracy >= 50) return { letter: 'C', color: '#f59e0b', label: 'REGULAR' };
+    return { letter: 'D', color: '#ef4444', label: 'PRECISA PRATICAR' };
+  };
+
+  const grade = getGrade(stats.accuracy);
+
+  // Análise de erros por tipo
+  const wrongDecisions = stats.history.filter(h => !h.isCorrect);
+  const commonMistakes: Record<Action, number> = { HIT: 0, STAND: 0, DOUBLE: 0, SPLIT: 0 };
+  wrongDecisions.forEach(h => {
+    commonMistakes[h.correctAction]++;
+  });
+
+  return (
+    <div style={{ maxWidth: 900, margin: '40px auto', padding: '20px' }}>
+      <h2 style={{ fontSize: 28, fontWeight: 700, marginBottom: 32, textAlign: 'center', color: '#f8fafc' }}>
+        📊 Resultados da Sessão
+      </h2>
+
+      {/* Grade */}
+      <div className="card" style={{
+        padding: 48,
+        textAlign: 'center',
+        marginBottom: 32,
+        background: `linear-gradient(145deg, ${grade.color}15, rgba(10, 15, 36, 0.95))`,
+        border: `2px solid ${grade.color}`,
+      }}>
+        <div style={{
+          width: 120,
+          height: 120,
+          margin: '0 auto 24px',
+          background: `linear-gradient(135deg, ${grade.color}, ${grade.color}dd)`,
+          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: 64,
+          fontWeight: 800,
+          color: '#fff',
+          boxShadow: `0 12px 32px ${grade.color}66`,
+        }}>
+          {grade.letter}
+        </div>
+        <h3 style={{ fontSize: 24, fontWeight: 700, color: grade.color, marginBottom: 8 }}>
+          {grade.label}
+        </h3>
+        <div style={{ fontSize: 48, fontWeight: 800, color: '#f8fafc', marginBottom: 8 }}>
+          {stats.accuracy.toFixed(1)}%
+        </div>
+        <div style={{ fontSize: 14, color: '#94a3b8' }}>
+          {stats.correctDecisions} / {stats.totalHands} decisões corretas
+        </div>
+      </div>
+
+      {/* Estatísticas Detalhadas */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 32 }}>
+        <div className="card" style={{ padding: 24, textAlign: 'center' }}>
+          <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 8, fontWeight: 600 }}>TOTAL DE MÃOS</div>
+          <div style={{ fontSize: 32, fontWeight: 800, color: '#60a5fa' }}>{stats.totalHands}</div>
+        </div>
+        <div className="card" style={{ padding: 24, textAlign: 'center', background: 'rgba(16, 185, 129, 0.05)' }}>
+          <div style={{ fontSize: 12, color: '#6ee7b7', marginBottom: 8, fontWeight: 600 }}>CORRETAS</div>
+          <div style={{ fontSize: 32, fontWeight: 800, color: '#10b981' }}>{stats.correctDecisions}</div>
+        </div>
+        <div className="card" style={{ padding: 24, textAlign: 'center', background: 'rgba(239, 68, 68, 0.05)' }}>
+          <div style={{ fontSize: 12, color: '#fca5a5', marginBottom: 8, fontWeight: 600 }}>ERROS</div>
+          <div style={{ fontSize: 32, fontWeight: 800, color: '#ef4444' }}>{stats.wrongDecisions}</div>
+        </div>
+      </div>
+
+      {/* Análise de Erros */}
+      {stats.wrongDecisions > 0 && (
+        <div className="card" style={{ padding: 32, marginBottom: 32 }}>
+          <h3 style={{ fontSize: 18, fontWeight: 700, color: '#f8fafc', marginBottom: 20 }}>
+            🎯 Oportunidades de Melhoria
+          </h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16 }}>
+            {Object.entries(commonMistakes)
+              .filter(([_, count]) => count > 0)
+              .sort((a, b) => b[1] - a[1])
+              .map(([action, count]) => (
+                <div key={action} style={{
+                  padding: 16,
+                  background: 'rgba(15, 23, 42, 0.6)',
+                  borderRadius: 10,
+                  border: '1px solid rgba(100, 116, 139, 0.3)',
+                }}>
+                  <div style={{ fontSize: 13, color: '#94a3b8', marginBottom: 6 }}>
+                    Deveria ter usado <strong style={{ color: '#f8fafc' }}>{action}</strong>
+                  </div>
+                  <div style={{ fontSize: 24, fontWeight: 700, color: '#f59e0b' }}>
+                    {count}x
+                  </div>
+                </div>
+              ))}
+          </div>
+          <p style={{ fontSize: 13, color: '#94a3b8', marginTop: 20, lineHeight: 1.6 }}>
+            💡 Foque em praticar essas situações específicas para melhorar sua precisão.
+          </p>
+        </div>
+      )}
+
+      {/* Histórico Recente */}
+      <div className="card" style={{ padding: 32, marginBottom: 32 }}>
+        <h3 style={{ fontSize: 18, fontWeight: 700, color: '#f8fafc', marginBottom: 20 }}>
+          📋 Últimas 5 Mãos
+        </h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {stats.history.slice(-5).reverse().map((hand, i) => {
+            const { value: playerValue } = calculateHandValue(hand.scenario.playerCards);
+            return (
+              <div key={i} style={{
+                padding: 16,
+                background: hand.isCorrect ? 'rgba(16, 185, 129, 0.05)' : 'rgba(239, 68, 68, 0.05)',
+                borderRadius: 8,
+                border: `1px solid ${hand.isCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)'}`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                  <div style={{ fontSize: 20 }}>
+                    {hand.isCorrect ? '✓' : '✗'}
+                  </div>
+                  <div style={{ fontSize: 13, color: '#e2e8f0' }}>
+                    Você: {playerValue} vs Dealer: {hand.scenario.dealerCard.value}
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: 12, fontSize: 12 }}>
+                  <span style={{ color: hand.isCorrect ? '#10b981' : '#ef4444', fontWeight: 700 }}>
+                    {hand.userAction}
+                  </span>
+                  {!hand.isCorrect && (
+                    <>
+                      <span style={{ color: '#64748b' }}>→</span>
+                      <span style={{ color: '#8b5cf6', fontWeight: 700 }}>
+                        {hand.correctAction}
+                      </span>
+                    </>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Ações */}
+      <div style={{ display: 'flex', gap: 16 }}>
+        <button onClick={() => { onExit(); navigate('/'); }} style={{
+          flex: 1,
+          padding: '16px',
+          background: '#334155',
+          border: 'none',
+          borderRadius: 12,
+          color: '#fff',
+          fontSize: 14,
+          fontWeight: 600,
+          cursor: 'pointer',
+        }}>
+          ← Sair
+        </button>
+        <button onClick={onRestart} style={{
+          flex: 2,
+          padding: '18px',
+          background: 'linear-gradient(135deg, #8b5cf6, #a855f7)',
+          border: 'none',
+          borderRadius: 12,
+          color: '#fff',
+          fontSize: 16,
+          fontWeight: 700,
+          cursor: 'pointer',
+          boxShadow: '0 6px 20px rgba(139, 92, 246, 0.4)',
+        }}>
+          🔄 Nova Sessão
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ===== COMPONENTE PRINCIPAL =====
 export default function BlackjackTraining() {
   const auth = useAuth();
@@ -892,6 +1410,15 @@ export default function BlackjackTraining() {
     handsToPlay: 20,
   });
   const [removedCards, setRemovedCards] = useState<Card[]>([]);
+  const [currentScenario, setCurrentScenario] = useState<HandScenario | null>(null);
+  const [userAction, setUserAction] = useState<Action | null>(null);
+  const [stats, setStats] = useState<SessionStats>({
+    totalHands: 0,
+    correctDecisions: 0,
+    wrongDecisions: 0,
+    accuracy: 0,
+    history: [],
+  });
 
   const isPremium = auth.user?.premium || false;
 
@@ -901,6 +1428,15 @@ export default function BlackjackTraining() {
     }
     
     if (config.difficulty === 'ADVANCED') {
+      // Reset stats
+      setStats({
+        totalHands: 0,
+        correctDecisions: 0,
+        wrongDecisions: 0,
+        accuracy: 0,
+        history: [],
+      });
+      setRemovedCards([]);
       setMode('HAND_BUILDER');
     } else {
       // Modo básico: implementar depois
@@ -909,9 +1445,85 @@ export default function BlackjackTraining() {
   };
 
   const handleHandComplete = (scenario: HandScenario) => {
-    // Por enquanto só volta
-    alert('Hand builder completo! Implementar próxima fase.');
+    setCurrentScenario(scenario);
+    setMode('DECISION');
+  };
+
+  const handleDecision = (action: Action) => {
+    if (!currentScenario) return;
+    setUserAction(action);
+    setMode('FEEDBACK');
+  };
+
+  const handleFeedbackContinue = () => {
+    if (!currentScenario || !userAction) return;
+
+    // Calcular contagem para decisão ótima
+    const runningCount = calculateRunningCount([...currentScenario.removedCards]);
+    const totalCards = config.deckCount * 52;
+    const usedCards = currentScenario.removedCards.length;
+    const decksRemaining = (totalCards - usedCards) / 52;
+    const trueCount = calculateTrueCount(runningCount, decksRemaining);
+
+    const { action: correctAction } = getOptimalAction(
+      currentScenario.playerCards,
+      currentScenario.dealerCard,
+      trueCount
+    );
+
+    const isCorrect = userAction === correctAction;
+
+    // Atualizar stats
+    const newStats: SessionStats = {
+      totalHands: stats.totalHands + 1,
+      correctDecisions: stats.correctDecisions + (isCorrect ? 1 : 0),
+      wrongDecisions: stats.wrongDecisions + (isCorrect ? 0 : 1),
+      accuracy: 0, // Será calculado abaixo
+      history: [
+        ...stats.history,
+        {
+          scenario: currentScenario,
+          userAction,
+          correctAction,
+          isCorrect,
+        },
+      ],
+    };
+
+    newStats.accuracy = (newStats.correctDecisions / newStats.totalHands) * 100;
+    setStats(newStats);
+
+    // Atualizar cartas removidas
+    setRemovedCards([...currentScenario.removedCards]);
+
+    // Verificar se atingiu limite de mãos ou cut card
+    const penetration = usedCards / totalCards;
+    if (newStats.totalHands >= config.handsToPlay || penetration >= config.cutCardPenetration) {
+      setMode('RESULTS');
+    } else {
+      setMode('HAND_BUILDER');
+    }
+  };
+
+  const handleRestart = () => {
+    setStats({
+      totalHands: 0,
+      correctDecisions: 0,
+      wrongDecisions: 0,
+      accuracy: 0,
+      history: [],
+    });
+    setRemovedCards([]);
+    setCurrentScenario(null);
+    setUserAction(null);
+    setMode('HAND_BUILDER');
+  };
+
+  const handleExit = () => {
     setMode('SETUP');
+    setRemovedCards([]);
+    setCurrentScenario(null);
+    setUserAction(null);
   };
 
   // Paywall check
@@ -928,6 +1540,18 @@ export default function BlackjackTraining() {
 
   if (mode === 'HAND_BUILDER') {
     return <HandBuilder config={config} onComplete={handleHandComplete} removedCards={removedCards} />;
+  }
+
+  if (mode === 'DECISION' && currentScenario) {
+    return <DecisionScreen scenario={currentScenario} config={config} onDecision={handleDecision} />;
+  }
+
+  if (mode === 'FEEDBACK' && currentScenario && userAction) {
+    return <FeedbackScreen scenario={currentScenario} userAction={userAction} config={config} onContinue={handleFeedbackContinue} />;
+  }
+
+  if (mode === 'RESULTS') {
+    return <ResultsScreen stats={stats} onRestart={handleRestart} onExit={handleExit} />;
   }
 
   return null;
