@@ -16,6 +16,7 @@ import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 import TrainerV2 from './pages/TrainerV2';
 import BlackjackTrainer from './pages/BlackjackTrainer';
+import BlackjackCardCounting from './pages/BlackjackCardCounting';
 import GoogleSuccess from './pages/GoogleSuccess';
 import ProtectedRoute from './components/ProtectedRoute';
 import CookieConsent from './components/CookieConsent';
@@ -175,6 +176,7 @@ function Layout({ children }: { children: React.ReactNode }) {
           <NavLink to="/" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Dashboard</NavLink>
           <NavLink to="/trainer" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>🎯 Practice</NavLink>
           <NavLink to="/blackjack" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>♠️ Blackjack</NavLink>
+          <NavLink to="/card-counting" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>🎰 Card Count</NavLink>
           <NavLink to="/analyze" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>🔍 Analyze</NavLink>
           <NavLink to="/ranges" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>📊 Ranges</NavLink>
           <NavLink 
@@ -1016,6 +1018,53 @@ function Home() {
             </button>
           </div>
 
+          {/* Card 1.6 - Card Counting - Neon Red/Gold */}
+          <div className="card" style={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            padding: 24,
+            minHeight: 280,
+            justifyContent: 'space-between',
+            background: 'linear-gradient(145deg, rgba(220, 38, 38, 0.12), rgba(10, 15, 36, 0.95))',
+            border: '1px solid rgba(220, 38, 38, 0.4)',
+            boxShadow: '0 0 40px rgba(220, 38, 38, 0.1), inset 0 1px 0 rgba(220, 38, 38, 0.2)',
+          }}>
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+                <div style={{ fontSize: 36, filter: 'drop-shadow(0 0 10px rgba(220, 38, 38, 0.5))' }}>🎰</div>
+                <span style={{ 
+                  background: 'linear-gradient(135deg, #dc2626, #f59e0b)', 
+                  color: '#fff', 
+                  padding: '4px 10px', 
+                  borderRadius: 6, 
+                  fontSize: 11, 
+                  fontWeight: 700,
+                  boxShadow: '0 0 15px rgba(220, 38, 38, 0.4)',
+                }}>
+                  PRO
+                </span>
+              </div>
+              <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8, color: '#f8fafc' }}>Card Counting</h3>
+              <p style={{ fontSize: 14, color: '#fca5a5', lineHeight: 1.6, marginBottom: 16 }}>
+                Domine o sistema Hi-Lo. Treine contagem de cartas como os profissionais.
+              </p>
+            </div>
+            <button 
+              onClick={() => navigate('/card-counting')}
+              className="btn" 
+              style={{ 
+                width: '100%', 
+                padding: '12px',
+                background: 'linear-gradient(135deg, #dc2626, #f59e0b)',
+                color: '#fff',
+                fontWeight: 600,
+                boxShadow: '0 0 20px rgba(220, 38, 38, 0.3)',
+              }}
+            >
+              Treinar Contagem →
+            </button>
+          </div>
+
           {/* Card 2 - Analyze - Neon Pink */}
           <div className="card" style={{ 
             display: 'flex', 
@@ -1342,6 +1391,7 @@ export default function App() {
             {/* Páginas públicas - todos podem ver, mas precisam login para usar */}
             <Route path="/trainer" element={<TrainerV2 />} />
             <Route path="/blackjack" element={<BlackjackTrainer />} />
+            <Route path="/card-counting" element={<BlackjackCardCounting />} />
             <Route path="/analyze" element={<Analyze />} />
             <Route path="/ranges" element={<Ranges />} />
             <Route path="/player-analysis" element={<PlayerAnalysis />} />
