@@ -16,6 +16,7 @@ import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 import TrainerV2 from './pages/TrainerV2';
 import BlackjackTraining from './pages/BlackjackTraining';
+import BlackjackPro from './pages/BlackjackPro';
 import GoogleSuccess from './pages/GoogleSuccess';
 import ProtectedRoute from './components/ProtectedRoute';
 import CookieConsent from './components/CookieConsent';
@@ -175,6 +176,7 @@ function Layout({ children }: { children: React.ReactNode }) {
           <NavLink to="/" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Dashboard</NavLink>
           <NavLink to="/trainer" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>🎯 Practice</NavLink>
           <NavLink to="/blackjack" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>🃏 Blackjack</NavLink>
+          <NavLink to="/bj-pro" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>🎰 BJ Pro</NavLink>
           <NavLink to="/analyze" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>🔍 Analyze</NavLink>
           <NavLink to="/ranges" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>📊 Ranges</NavLink>
           <NavLink 
@@ -1031,6 +1033,53 @@ function Home() {
             </button>
           </div>
 
+          {/* Card 1.6 - BJ Pro - Premium Neon Red/Gold */}
+          <div className="card" style={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            padding: 24,
+            minHeight: 280,
+            justifyContent: 'space-between',
+            background: 'linear-gradient(145deg, rgba(220, 38, 38, 0.12), rgba(10, 15, 36, 0.95))',
+            border: '2px solid rgba(220, 38, 38, 0.5)',
+            boxShadow: '0 0 40px rgba(220, 38, 38, 0.15), inset 0 1px 0 rgba(220, 38, 38, 0.3)',
+          }}>
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+                <div style={{ fontSize: 36, filter: 'drop-shadow(0 0 10px rgba(220, 38, 38, 0.5))' }}>🎰</div>
+                <span style={{ 
+                  background: 'linear-gradient(135deg, #dc2626, #f59e0b)', 
+                  color: '#fff', 
+                  padding: '4px 10px', 
+                  borderRadius: 6, 
+                  fontSize: 11, 
+                  fontWeight: 700,
+                  boxShadow: '0 0 15px rgba(220, 38, 38, 0.4)',
+                }}>
+                  PREMIUM
+                </span>
+              </div>
+              <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8, color: '#f8fafc' }}>🎰 BJ Pro</h3>
+              <p style={{ fontSize: 14, color: '#fca5a5', lineHeight: 1.6, marginBottom: 16 }}>
+                Simulador profissional. Controle total, probabilidades em tempo real, cálculo de EV e contagem integrada.
+              </p>
+            </div>
+            <button 
+              onClick={() => navigate('/bj-pro')}
+              className="btn" 
+              style={{ 
+                width: '100%', 
+                padding: '12px',
+                background: 'linear-gradient(135deg, #dc2626, #f59e0b)',
+                color: '#fff',
+                fontWeight: 600,
+                boxShadow: '0 0 20px rgba(220, 38, 38, 0.3)',
+              }}
+            >
+              🎰 Manual Training →
+            </button>
+          </div>
+
           {/* Card 2 - Analyze - Neon Pink */}
           <div className="card" style={{ 
             display: 'flex', 
@@ -1357,6 +1406,7 @@ export default function App() {
             {/* Páginas públicas - todos podem ver, mas precisam login para usar */}
             <Route path="/trainer" element={<TrainerV2 />} />
             <Route path="/blackjack" element={<BlackjackTraining />} />
+            <Route path="/bj-pro" element={<BlackjackPro />} />
             <Route path="/analyze" element={<Analyze />} />
             <Route path="/ranges" element={<Ranges />} />
             <Route path="/player-analysis" element={<PlayerAnalysis />} />
