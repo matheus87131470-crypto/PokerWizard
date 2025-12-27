@@ -15,7 +15,6 @@ import ForgotPassword from './pages/ForgotPassword';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 import TrainerV2 from './pages/TrainerV2';
-import BlackjackTraining from './pages/BlackjackTraining';
 import BlackjackPro from './pages/BlackjackPro';
 import GoogleSuccess from './pages/GoogleSuccess';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -175,7 +174,6 @@ function Layout({ children }: { children: React.ReactNode }) {
           {/* Navegação Principal - Modelo GTO Wizard */}
           <NavLink to="/" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Dashboard</NavLink>
           <NavLink to="/trainer" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>🎯 Practice</NavLink>
-          <NavLink to="/blackjack" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>🃏 Blackjack</NavLink>
           <NavLink to="/bj-pro" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>🎰 BJ Pro</NavLink>
           <NavLink to="/analyze" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>🔍 Analyze</NavLink>
           <NavLink to="/ranges" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>📊 Ranges</NavLink>
@@ -971,68 +969,6 @@ function Home() {
             </button>
           </div>
 
-          {/* Card 1.5 - Blackjack Training Unificado */}
-          <div className="card" style={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
-            padding: 24,
-            minHeight: 280,
-            justifyContent: 'space-between',
-            background: 'linear-gradient(145deg, rgba(139, 92, 246, 0.12), rgba(10, 15, 36, 0.95))',
-            border: '1px solid rgba(139, 92, 246, 0.4)',
-            boxShadow: '0 0 40px rgba(139, 92, 246, 0.1), inset 0 1px 0 rgba(139, 92, 246, 0.2)',
-          }}>
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
-                <div style={{ fontSize: 36, filter: 'drop-shadow(0 0 10px rgba(139, 92, 246, 0.5))' }}>🃏</div>
-                <div style={{ display: 'flex', gap: 6 }}>
-                  <span style={{ 
-                    background: 'linear-gradient(135deg, #10b981, #059669)', 
-                    color: '#fff', 
-                    padding: '4px 8px', 
-                    borderRadius: 6, 
-                    fontSize: 10, 
-                    fontWeight: 700,
-                  }}>
-                    GRÁTIS
-                  </span>
-                  <span style={{ 
-                    background: 'linear-gradient(135deg, #8b5cf6, #ec4899)', 
-                    color: '#fff', 
-                    padding: '4px 8px', 
-                    borderRadius: 6, 
-                    fontSize: 10, 
-                    fontWeight: 700,
-                    boxShadow: '0 0 15px rgba(139, 92, 246, 0.4)',
-                  }}>
-                    PRO
-                  </span>
-                </div>
-              </div>
-              <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8, color: '#f8fafc' }}>🃏 Blackjack Training</h3>
-              <p style={{ fontSize: 13, color: '#c4b5fd', lineHeight: 1.6, marginBottom: 12 }}>
-                <strong style={{ color: '#10b981' }}>Modo Básico:</strong> Estratégia básica de blackjack
-              </p>
-              <p style={{ fontSize: 13, color: '#c4b5fd', lineHeight: 1.6, marginBottom: 0 }}>
-                <strong style={{ color: '#a855f7' }}>🔥 Modo Avançado (PRO):</strong> Entrada manual, probabilidades reais, contagem integrada
-              </p>
-            </div>
-            <button 
-              onClick={() => navigate('/blackjack')}
-              className="btn" 
-              style={{ 
-                width: '100%', 
-                padding: '12px',
-                background: 'linear-gradient(135deg, #8b5cf6, #a855f7)',
-                color: '#fff',
-                fontWeight: 600,
-                boxShadow: '0 0 20px rgba(139, 92, 246, 0.3)',
-              }}
-            >
-              🃏 Treinar Blackjack →
-            </button>
-          </div>
-
           {/* Card 1.6 - BJ Pro - Premium Neon Red/Gold */}
           <div className="card" style={{ 
             display: 'flex', 
@@ -1405,7 +1341,6 @@ export default function App() {
             <Route path="/" element={<Home />} />
             {/* Páginas públicas - todos podem ver, mas precisam login para usar */}
             <Route path="/trainer" element={<TrainerV2 />} />
-            <Route path="/blackjack" element={<BlackjackTraining />} />
             <Route path="/bj-pro" element={<BlackjackPro />} />
             <Route path="/analyze" element={<Analyze />} />
             <Route path="/ranges" element={<Ranges />} />
