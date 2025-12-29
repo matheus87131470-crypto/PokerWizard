@@ -67,18 +67,53 @@ export function usePaywall(token: string | null): UsePaywallReturn {
       });
       
       if (!res.ok) {
+        console.warn('[usePaywall] API retornou status', res.status);
         throw new Error('Falha ao buscar status de usos');
       }
       
       const data = await res.json();
+      console.log('[usePaywall] ✅ Dados carregados da API:', data);
       setUsageStatus(data);
     } catch (err: any) {
+      console.error('[usePaywall] ❌ Erro na API:', err.message);
+      console.log('[usePaywall] 🔄 Usando fallback do localStorage');
       setError(err.message);
-      console.error('[usePaywall] Erro:', err);
+      
+      // Criar usageStatus baseado no localStorage como fallback
+      const isLocalPremium = checkLocalStoragePremium();
+      if (isLocalPremium) {
+        console.log('[usePaywall] ✅ Usuário identificado como PRO via localStorage');
+        setUsageStatus({
+          isPremium: true,
+          statusPlano: 'premium',
+          freeCredits: -1,
+          freeCreditsLimit: FREE_CREDITS_LIMIT,
+          blocked: false,
+          message: 'Premium ativo (offline)',
+          features: [],
+          totalRemaining: -1,
+          anyBlocked: false,
+          allBlocked: false
+        });
+      }
     } finally {
       setLoading(false);
     }
   }, [token]);
+
+  // Função auxiliar para verificar localStorage
+  const checkLocalStoragePremium = useCallback((): boolean => {
+    try {
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        return user?.isPremium === true || user?.statusPlano === 'premium';
+      }
+    } catch (err) {
+      console.error('[usePaywall] Erro ao ler localStorage:', err);
+    }
+    return false;
+  }, []);
 
   // Buscar status ao montar
   useEffect(() => {
@@ -134,7 +169,22 @@ export function usePaywall(token: string | null): UsePaywallReturn {
 
   // Valores derivados para fácil acesso
   const freeCredits = usageStatus?.freeCredits ?? FREE_CREDITS_LIMIT;
-  const isPremium = usageStatus?.isPremium ?? false;
+  
+  // Se usageStatus não carregou, verificar localStorage
+  const isPremium = usageStatus 
+    ? usageStatus.isPremium 
+    : checkLocalStoragePremium();
+
+  // Debug
+  useEffect(() => {
+    console.log('🔍 [usePaywall] Status:', {
+      hasUsageStatus: !!usageStatus,
+      apiIsPremium: usageStatus?.isPremium,
+      localStoragePremium: checkLocalStoragePremium(),
+      finalIsPremium: isPremium,
+      error
+    });
+  }, [usageStatus, isPremium, error, checkLocalStoragePremium]);
 
   return {
     usageStatus,
