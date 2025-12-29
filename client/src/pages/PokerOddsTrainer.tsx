@@ -15,6 +15,44 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { usePaywall } from '../hooks/usePaywall';
 
+// ===== VERIFICAÇÃO ROBUSTA DE STATUS PRO =====
+function checkIsReallyPremium(): boolean {
+  try {
+    // 1. Verificar localStorage user
+    const userStr = localStorage.getItem('pokerwizard_user') || localStorage.getItem('user');
+    if (userStr) {
+      const user = JSON.parse(userStr);
+      console.log('🔍 [checkIsReallyPremium] User do localStorage:', user);
+      
+      // Verificar múltiplos campos possíveis
+      if (user.premium === true) return true;
+      if (user.isPremium === true) return true;
+      if (user.plan === 'PRO') return true;
+      if (user.plan === 'premium') return true;
+      if (user.statusPlano === 'premium') return true;
+      if (user.subscription?.status === 'active') return true;
+    }
+
+    // 2. Verificar token decodificado
+    const token = localStorage.getItem('pokerwizard_token') || localStorage.getItem('token');
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        console.log('🔍 [checkIsReallyPremium] Token payload:', payload);
+        if (payload.premium === true) return true;
+        if (payload.isPremium === true) return true;
+        if (payload.plan === 'PRO') return true;
+      } catch (e) {
+        console.warn('[checkIsReallyPremium] Erro ao decodificar token:', e);
+      }
+    }
+  } catch (err) {
+    console.error('[checkIsReallyPremium] Erro:', err);
+  }
+  
+  return false;
+}
+
 // ===== TIPOS =====
 type Rank = 'A' | 'K' | 'Q' | 'J' | 'T' | '9' | '8' | '7' | '6' | '5' | '4' | '3' | '2';
 type Suit = '♠' | '♥' | '♦' | '♣';
@@ -943,10 +981,7 @@ function PlayingScreen({
           )}
 
           {/* Upgrade to PRO (FREE users ONLY) */}
-          {!isPremium && heroCards.length === 2 && (() => {
-            console.log('🚨 Renderizando card de upgrade - isPremium:', isPremium, 'heroCards:', heroCards.length);
-            return true;
-          })() && (
+          {!isPremium && heroCards.length === 2 && (
             <div className="card" style={{ 
               padding: 24, 
               background: 'linear-gradient(145deg, rgba(234, 179, 8, 0.15), rgba(10, 15, 36, 0.95))',
@@ -1065,20 +1100,30 @@ function PlayingScreen({
 export default function PokerOddsTrainer() {
   const auth = useAuth();
   const navigate = useNavigate();
-  const { isPremium, usageStatus } = usePaywall(auth.token);
+  const { isPremium: isPremiumFromHook, usageStatus } = usePaywall(auth.token);
   const [gameState, setGameState] = useState<GameState>('SETUP');
   const [config, setConfig] = useState<GameConfig>({
     numPlayers: 6,
   });
 
+  // VERIFICAÇÃO DEFINITIVA: Combinar hook + localStorage
+  const isPremium = isPremiumFromHook || checkIsReallyPremium();
+
   // Debug: verificar status PRO
   useEffect(() => {
-    console.log('🔍 Odds Trainer - Status PRO:', {
-      isPremium,
+    const realCheck = checkIsReallyPremium();
+    console.log('🔍 Odds Trainer - Status PRO FINAL:', {
+      isPremiumFromHook,
+      checkIsReallyPremium: realCheck,
+      FINAL_isPremium: isPremium,
       statusPlano: usageStatus?.statusPlano,
       token: !!auth.token
     });
-  }, [isPremium, usageStatus, auth.token]);
+    
+    if (!isPremium && realCheck) {
+      console.warn('⚠️ CONFLITO: Hook diz FREE mas localStorage diz PRO. Usando PRO.');
+    }
+  }, [isPremium, isPremiumFromHook, usageStatus, auth.token]);
 
   // Verificar autenticação (mesmo padrão do BlackjackPro)
   useEffect(() => {
