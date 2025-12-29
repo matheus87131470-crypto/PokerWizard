@@ -53,6 +53,38 @@ function checkIsReallyPremium(): boolean {
   return false;
 }
 
+// ===== SISTEMA DE CONTAGEM DE ANÁLISES FREE =====
+const FREE_ANALYSES_LIMIT = 10;
+const STORAGE_KEY = 'pokerwizard_odds_analyses_count';
+
+function getAnalysesCount(): number {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    return stored ? parseInt(stored, 10) : 0;
+  } catch {
+    return 0;
+  }
+}
+
+function incrementAnalysesCount(): number {
+  const current = getAnalysesCount();
+  const newCount = current + 1;
+  try {
+    localStorage.setItem(STORAGE_KEY, newCount.toString());
+  } catch (e) {
+    console.error('Erro ao salvar contador:', e);
+  }
+  return newCount;
+}
+
+function resetAnalysesCount(): void {
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch (e) {
+    console.error('Erro ao resetar contador:', e);
+  }
+}
+
 // ===== TIPOS =====
 type Rank = 'A' | 'K' | 'Q' | 'J' | 'T' | '9' | '8' | '7' | '6' | '5' | '4' | '3' | '2';
 type Suit = '♠' | '♥' | '♦' | '♣';
@@ -452,6 +484,134 @@ function CardSelector({
   );
 }
 
+// ===== PAYWALL FREE LIMIT =====
+function PaywallFreeLimitReached({ onUpgrade }: { onUpgrade: () => void }) {
+  return (
+    <div style={{ 
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      background: 'rgba(0, 0, 0, 0.85)',
+      backdropFilter: 'blur(8px)',
+      zIndex: 9999,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 20
+    }}>
+      <div style={{
+        maxWidth: 500,
+        width: '100%',
+        background: 'linear-gradient(145deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.98))',
+        border: '2px solid rgba(239, 68, 68, 0.5)',
+        borderRadius: 16,
+        padding: 40,
+        boxShadow: '0 20px 60px rgba(0, 0, 0, 0.8)',
+      }}>
+        {/* Header */}
+        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>⚠️</div>
+          <h2 style={{ fontSize: 24, fontWeight: 800, color: '#f87171', marginBottom: 12 }}>
+            Limite gratuito atingido
+          </h2>
+          <p style={{ fontSize: 15, color: '#cbd5e1', lineHeight: 1.6 }}>
+            Você já utilizou todas as análises gratuitas disponíveis.
+          </p>
+        </div>
+
+        {/* Upgrade Benefits */}
+        <div style={{ 
+          padding: 24, 
+          background: 'rgba(234, 179, 8, 0.1)', 
+          borderRadius: 12,
+          border: '1px solid rgba(234, 179, 8, 0.3)',
+          marginBottom: 24
+        }}>
+          <h3 style={{ fontSize: 18, fontWeight: 700, color: '#fbbf24', marginBottom: 16, textAlign: 'center' }}>
+            🎯 Desbloqueie acesso completo por apenas R$ 3,50
+          </h3>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {[
+              '✔ Análises ilimitadas',
+              '✔ Probabilidades em tempo real',
+              '✔ IA estratégica avançada',
+              '✔ Precisão máxima (simulações completas)'
+            ].map((benefit, i) => (
+              <div key={i} style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: 12,
+                fontSize: 14,
+                color: '#fcd34d',
+                fontWeight: 600
+              }}>
+                <div style={{ 
+                  width: 20, 
+                  height: 20, 
+                  borderRadius: '50%', 
+                  background: 'rgba(234, 179, 8, 0.2)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 12
+                }}>
+                  ✓
+                </div>
+                {benefit}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* PIX Info */}
+        <div style={{ 
+          padding: 16, 
+          background: 'rgba(59, 130, 246, 0.1)', 
+          borderRadius: 8,
+          marginBottom: 24,
+          textAlign: 'center'
+        }}>
+          <p style={{ fontSize: 13, color: '#93c5fd', margin: 0 }}>
+            💳 <strong>Pagamento via PIX</strong> — acesso imediato
+          </p>
+        </div>
+
+        {/* CTA Button */}
+        <button
+          onClick={onUpgrade}
+          className="btn"
+          style={{
+            width: '100%',
+            padding: '16px',
+            background: 'linear-gradient(135deg, #f59e0b, #fbbf24)',
+            color: '#1f2937',
+            fontSize: 16,
+            fontWeight: 700,
+            borderRadius: 10,
+            border: 'none',
+            cursor: 'pointer',
+            boxShadow: '0 0 30px rgba(234, 179, 8, 0.5)',
+            transition: 'all 0.3s',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-2px)';
+            e.currentTarget.style.boxShadow = '0 0 40px rgba(234, 179, 8, 0.7)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 0 30px rgba(234, 179, 8, 0.5)';
+          }}
+        >
+          🚀 Liberar agora
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ===== TELA DE SETUP =====
 function SetupScreen({
   config,
@@ -632,15 +792,41 @@ function PlayingScreen({
   const [boardCards, setBoardCards] = useState<Card[]>([]);
   const [showHeroSelector, setShowHeroSelector] = useState(true);
   const [showBoardSelector, setShowBoardSelector] = useState(false);
+  const [analysesCount, setAnalysesCount] = useState(getAnalysesCount());
+  const [showPaywall, setShowPaywall] = useState(false);
+  const [hasCountedThisSession, setHasCountedThisSession] = useState(false);
 
   const allUsedCards = [...heroCards, ...boardCards];
+
+  // Verificar limite FREE
+  const isBlocked = !isPremium && analysesCount >= FREE_ANALYSES_LIMIT;
 
   const odds = calculateOdds(heroCards, boardCards, config.numPlayers, [], isPremium);
   const aiInsight = isPremium && heroCards.length === 2 
     ? generateAIInsight(heroCards, boardCards, odds, config.numPlayers)
     : null;
 
+  // Incrementar contador quando usuário FREE faz uma análise completa
+  useEffect(() => {
+    if (!isPremium && heroCards.length === 2 && boardCards.length >= 3 && !hasCountedThisSession && !isBlocked) {
+      const newCount = incrementAnalysesCount();
+      setAnalysesCount(newCount);
+      setHasCountedThisSession(true);
+      console.log(`📊 Análise #${newCount} de ${FREE_ANALYSES_LIMIT} realizada`);
+      
+      // Mostrar paywall se atingir limite
+      if (newCount >= FREE_ANALYSES_LIMIT) {
+        setShowPaywall(true);
+      }
+    }
+  }, [heroCards, boardCards, isPremium, hasCountedThisSession, isBlocked]);
+
   const handleAddHeroCard = (card: Card) => {
+    if (isBlocked) {
+      setShowPaywall(true);
+      return;
+    }
+    
     if (heroCards.length < 2) {
       setHeroCards([...heroCards, card]);
       if (heroCards.length === 1) {
@@ -650,6 +836,11 @@ function PlayingScreen({
   };
 
   const handleAddBoardCard = (card: Card) => {
+    if (isBlocked) {
+      setShowPaywall(true);
+      return;
+    }
+    
     if (boardCards.length < 5) {
       setBoardCards([...boardCards, card]);
       if (boardCards.length === 4) {
@@ -663,6 +854,7 @@ function PlayingScreen({
     setBoardCards([]);
     setShowHeroSelector(true);
     setShowBoardSelector(false);
+    setHasCountedThisSession(false);
   };
 
   return (
@@ -701,6 +893,11 @@ function PlayingScreen({
           </div>
           <p style={{ fontSize: 14, color: '#94a3b8', margin: 0 }}>
             {config.numPlayers} jogadores | Monte Carlo {isPremium ? '2000' : '500'} simulações
+            {!isPremium && analysesCount > 0 && (
+              <span style={{ marginLeft: 12, color: analysesCount >= FREE_ANALYSES_LIMIT ? '#ef4444' : '#fbbf24' }}>
+                • {analysesCount}/{FREE_ANALYSES_LIMIT} análises
+              </span>
+            )}
           </p>
         </div>
         <div style={{ display: 'flex', gap: 12 }}>
@@ -1092,6 +1289,13 @@ function PlayingScreen({
           )}
         </div>
       </div>
+
+      {/* Paywall Free Limit */}
+      {showPaywall && !isPremium && (
+        <PaywallFreeLimitReached 
+          onUpgrade={() => navigate('/premium')} 
+        />
+      )}
     </div>
   );
 }
@@ -1108,6 +1312,14 @@ export default function PokerOddsTrainer() {
 
   // VERIFICAÇÃO DEFINITIVA: Combinar hook + localStorage
   const isPremium = isPremiumFromHook || checkIsReallyPremium();
+
+  // Resetar contador quando virar PRO
+  useEffect(() => {
+    if (isPremium) {
+      resetAnalysesCount();
+      console.log('✅ Contador resetado - Usuário PRO');
+    }
+  }, [isPremium]);
 
   // Debug: verificar status PRO
   useEffect(() => {
