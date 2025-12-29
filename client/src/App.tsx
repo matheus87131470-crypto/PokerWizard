@@ -14,7 +14,7 @@ import Solutions from './pages/Solutions';
 import ForgotPassword from './pages/ForgotPassword';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
-import TrainerV2 from './pages/TrainerV2';
+import PokerOddsTrainer from './pages/PokerOddsTrainer';
 import BlackjackPro from './pages/BlackjackPro';
 import GoogleSuccess from './pages/GoogleSuccess';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -173,7 +173,7 @@ function Layout({ children }: { children: React.ReactNode }) {
         <nav className="app-nav">
           {/* Navegação Principal - Modelo GTO Wizard */}
           <NavLink to="/" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Dashboard</NavLink>
-          <NavLink to="/trainer" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>🎯 Practice</NavLink>
+          <NavLink to="/trainer" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>🧠 Odds Trainer (Beta)</NavLink>
           <NavLink to="/bj-pro" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>🎰 BJ Pro</NavLink>
           <NavLink to="/analyze" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>🔍 Analyze</NavLink>
           <NavLink to="/ranges" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>📊 Ranges</NavLink>
@@ -922,7 +922,7 @@ function Home() {
         </p>
         
         <div className="features-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 }}>
-          {/* Card 1 - Practice (Trainer) - Neon Purple */}
+          {/* Card 1 - Odds Trainer (Beta) - Neon Purple */}
           <div className="card" style={{ 
             display: 'flex', 
             flexDirection: 'column', 
@@ -935,7 +935,7 @@ function Home() {
           }}>
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
-                <div style={{ fontSize: 36, filter: 'drop-shadow(0 0 10px rgba(168, 85, 247, 0.5))' }}>🎯</div>
+                <div style={{ fontSize: 36, filter: 'drop-shadow(0 0 10px rgba(168, 85, 247, 0.5))' }}>🧠</div>
                 <span style={{ 
                   background: 'linear-gradient(135deg, #a855f7, #c084fc)', 
                   color: '#fff', 
@@ -945,12 +945,12 @@ function Home() {
                   fontWeight: 700,
                   boxShadow: '0 0 15px rgba(168, 85, 247, 0.4)',
                 }}>
-                  PRACTICE
+                  BETA
                 </span>
               </div>
-              <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8, color: '#f8fafc' }}>Practice</h3>
+              <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8, color: '#f8fafc' }}>Odds Trainer</h3>
               <p style={{ fontSize: 14, color: '#c4b5fd', lineHeight: 1.6, marginBottom: 16 }}>
-                Treine decisões pré-flop com cenários GTO. Tome decisões e receba feedback instantâneo.
+                Treine decisões reais com cálculo de probabilidades em tempo real. Selecione cartas e veja suas chances mudarem.
               </p>
             </div>
             <button 
@@ -1340,7 +1340,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             {/* Páginas públicas - todos podem ver, mas precisam login para usar */}
-            <Route path="/trainer" element={<TrainerV2 />} />
+            <Route path="/trainer" element={<PokerOddsTrainer />} />
             <Route path="/bj-pro" element={<BlackjackPro />} />
             <Route path="/analyze" element={<Analyze />} />
             <Route path="/ranges" element={<Ranges />} />
