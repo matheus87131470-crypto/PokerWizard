@@ -942,8 +942,11 @@ function PlayingScreen({
             </div>
           )}
 
-          {/* Upgrade to PRO (FREE users) */}
-          {!isPremium && heroCards.length === 2 && (
+          {/* Upgrade to PRO (FREE users ONLY) */}
+          {!isPremium && heroCards.length === 2 && (() => {
+            console.log('🚨 Renderizando card de upgrade - isPremium:', isPremium, 'heroCards:', heroCards.length);
+            return true;
+          })() && (
             <div className="card" style={{ 
               padding: 24, 
               background: 'linear-gradient(145deg, rgba(234, 179, 8, 0.15), rgba(10, 15, 36, 0.95))',
@@ -1062,11 +1065,20 @@ function PlayingScreen({
 export default function PokerOddsTrainer() {
   const auth = useAuth();
   const navigate = useNavigate();
-  const { isPremium } = usePaywall(auth.token);
+  const { isPremium, usageStatus } = usePaywall(auth.token);
   const [gameState, setGameState] = useState<GameState>('SETUP');
   const [config, setConfig] = useState<GameConfig>({
     numPlayers: 6,
   });
+
+  // Debug: verificar status PRO
+  useEffect(() => {
+    console.log('🔍 Odds Trainer - Status PRO:', {
+      isPremium,
+      statusPlano: usageStatus?.statusPlano,
+      token: !!auth.token
+    });
+  }, [isPremium, usageStatus, auth.token]);
 
   // Verificar autenticação (mesmo padrão do BlackjackPro)
   useEffect(() => {
