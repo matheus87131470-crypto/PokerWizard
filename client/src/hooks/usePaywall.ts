@@ -105,9 +105,17 @@ export function usePaywall(token: string | null): UsePaywallReturn {
   const checkLocalStoragePremium = useCallback((): boolean => {
     try {
       const userStr = localStorage.getItem('user');
+      console.log('🔍 [localStorage] user string:', userStr);
+      
       if (userStr) {
         const user = JSON.parse(userStr);
-        return user?.isPremium === true || user?.statusPlano === 'premium';
+        console.log('🔍 [localStorage] user parsed:', user);
+        console.log('🔍 [localStorage] isPremium:', user?.isPremium);
+        console.log('🔍 [localStorage] statusPlano:', user?.statusPlano);
+        
+        const result = user?.isPremium === true || user?.statusPlano === 'premium';
+        console.log('🔍 [localStorage] result:', result);
+        return result;
       }
     } catch (err) {
       console.error('[usePaywall] Erro ao ler localStorage:', err);
