@@ -632,9 +632,35 @@ function PlayingScreen({
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <div>
-          <h1 style={{ fontSize: 28, fontWeight: 800, marginBottom: 4, color: '#f8fafc' }}>
-            🧠 Poker Odds Trainer {!isPremium && <span style={{ fontSize: 16, color: '#94a3b8' }}>(FREE)</span>}
-          </h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
+            <h1 style={{ fontSize: 28, fontWeight: 800, color: '#f8fafc', margin: 0 }}>
+              🧠 Poker Odds Trainer
+            </h1>
+            {isPremium ? (
+              <span style={{
+                background: 'linear-gradient(135deg, #10b981, #6ee7b7)',
+                color: '#064e3b',
+                padding: '6px 12px',
+                borderRadius: 8,
+                fontSize: 12,
+                fontWeight: 700,
+                boxShadow: '0 0 20px rgba(16, 185, 129, 0.4)',
+              }}>
+                ⭐ PRO
+              </span>
+            ) : (
+              <span style={{
+                background: 'rgba(100, 100, 100, 0.3)',
+                color: '#94a3b8',
+                padding: '6px 12px',
+                borderRadius: 8,
+                fontSize: 12,
+                fontWeight: 600,
+              }}>
+                FREE
+              </span>
+            )}
+          </div>
           <p style={{ fontSize: 14, color: '#94a3b8', margin: 0 }}>
             {config.numPlayers} jogadores | Monte Carlo {isPremium ? '2000' : '500'} simulações
           </p>
@@ -808,7 +834,7 @@ function PlayingScreen({
                   <h3 style={{ fontSize: 16, fontWeight: 700, color: '#c084fc', margin: 0 }}>
                     AI Strategic Insight
                   </h3>
-                  <p style={{ fontSize: 12, color: '#a78bfa', margin: 0 }}>Powered by PRO</p>
+                  <p style={{ fontSize: 12, color: '#a78bfa', margin: 0 }}>⭐ Powered by PRO</p>
                 </div>
               </div>
 
@@ -877,6 +903,41 @@ function PlayingScreen({
                 <div style={{ fontSize: 13, color: '#fcd34d', lineHeight: 1.6 }}>
                   {aiInsight.positionAdvice}
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* Welcome PRO (quando não há cartas ainda) */}
+          {isPremium && heroCards.length === 0 && (
+            <div className="card" style={{ 
+              padding: 24, 
+              background: 'linear-gradient(145deg, rgba(16, 185, 129, 0.15), rgba(10, 15, 36, 0.95))',
+              border: '2px solid rgba(16, 185, 129, 0.5)'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+                <div style={{ fontSize: 32 }}>⭐</div>
+                <div>
+                  <h3 style={{ fontSize: 18, fontWeight: 700, color: '#6ee7b7', margin: 0 }}>
+                    Plano PRO Ativo
+                  </h3>
+                  <p style={{ fontSize: 13, color: '#a7f3d0', margin: 0 }}>Experiência completa desbloqueada</p>
+                </div>
+              </div>
+              
+              <p style={{ fontSize: 14, color: '#a7f3d0', lineHeight: 1.6, marginBottom: 16 }}>
+                Você tem acesso total ao <strong>Odds Trainer</strong>, simulações avançadas e insights estratégicos com IA.
+              </p>
+
+              <div style={{ padding: 16, background: 'rgba(16, 185, 129, 0.1)', borderRadius: 8 }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: '#6ee7b7', marginBottom: 8 }}>
+                  ✨ RECURSOS DESBLOQUEADOS
+                </div>
+                <ul style={{ fontSize: 13, color: '#a7f3d0', lineHeight: 1.8, margin: 0, paddingLeft: 20 }}>
+                  <li><strong>🤖 AI Strategic Insights</strong> - Análise em tempo real</li>
+                  <li><strong>⚡ 2000 Simulações</strong> - Precisão máxima</li>
+                  <li><strong>📊 Análise Avançada</strong> - Board texture e posição</li>
+                  <li><strong>🎯 Recomendações Contextuais</strong> - Por cada street</li>
+                </ul>
               </div>
             </div>
           )}
