@@ -13,6 +13,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { usePaywall } from '../hooks/usePaywall';
 
 // ===== TIPOS =====
 type Rank = 'A' | 'K' | 'Q' | 'J' | 'T' | '9' | '8' | '7' | '6' | '5' | '4' | '3' | '2';
@@ -34,6 +35,13 @@ interface HandOdds {
   loseChance: number;
   outs: number;
   explanation: string;
+}
+
+interface AIInsight {
+  recommendation: string; // 'AGGRESSIVE' | 'CAUTIOUS' | 'NEUTRAL' | 'FOLD'
+  reasoning: string;
+  positionAdvice: string;
+  equityAnalysis: string;
 }
 
 // ===== CONSTANTES =====
@@ -110,7 +118,8 @@ function calculateOdds(
   heroCards: Card[],
   boardCards: Card[],
   numPlayers: number,
-  usedCards: Card[]
+  usedCards: Card[],
+  isPremium: boolean = false
 ): HandOdds {
   if (heroCards.length !== 2) {
     return {
@@ -122,7 +131,8 @@ function calculateOdds(
     };
   }
 
-  const simulations = 2000;
+  // FREE: 500 simulações | PRO: 2000 simulações
+  const simulations = isPremium ? 2000 : 500;
   let wins = 0;
   let ties = 0;
   let losses = 0;
@@ -195,6 +205,118 @@ function calculateOdds(
     loseChance: Math.round(loseChance * 10) / 10,
     outs,
     explanation,
+  };
+}
+
+// ===== MÓDULO DE IA ESTRATÉGICA (PRO) =====
+function generateAIInsight(
+  heroCards: Card[],
+  boardCards: Card[],
+  odds: HandOdds,
+  numPlayers: number
+): AIInsight {
+  const { winChance, outs } = odds;
+  const equity = winChance;
+  
+  // Análise de Board Texture
+  const hasPair = boardCards.length >= 2 && 
+    boardCards.some((c, i) => boardCards.slice(i + 1).some(c2 => c.rank === c2.rank));
+  
+  const suits = boardCards.map(c => c.suit);
+  const suitCounts: Record<string, number> = {};
+  suits.forEach(s => suitCounts[s] = (suitCounts[s] || 0) + 1);
+  const maxSuitCount = Math.max(...Object.values(suitCounts), 0);
+  const flushDraw = maxSuitCount >= 3;
+  
+  const ranks = boardCards.map(c => RANK_VALUES[c.rank]).sort((a, b) => b - a);
+  let straightDraw = false;
+  if (ranks.length >= 3) {
+    for (let i = 0; i < ranks.length - 2; i++) {
+      if (ranks[i] - ranks[i + 2] <= 4) {
+        straightDraw = true;
+        break;
+      }
+    }
+  }
+
+  const isDangerous = flushDraw || straightDraw || hasPair;
+  
+  // Hero hand strength
+  const heroRanks = heroCards.map(c => RANK_VALUES[c.rank]);
+  const isPocketPair = heroCards[0].rank === heroCards[1].rank;
+  const isSuited = heroCards[0].suit === heroCards[1].suit;
+  const hasHighCard = Math.max(...heroRanks) >= 12; // Q+
+  
+  // Análise de Equidade
+  let equityAnalysis = '';
+  if (equity >= 65) {
+    equityAnalysis = `Equidade forte (${equity.toFixed(1)}%). Você está favorito contra ${numPlayers - 1} oponente(s).`;
+  } else if (equity >= 45) {
+    equityAnalysis = `Equidade moderada (${equity.toFixed(1)}%). Situação de flip ou slightly ahead.`;
+  } else if (equity >= 25) {
+    equityAnalysis = `Equidade baixa (${equity.toFixed(1)}%). Você precisa de draw ou fold equity.`;
+  } else {
+    equityAnalysis = `Equidade muito baixa (${equity.toFixed(1)}%). Situação desfavorável.`;
+  }
+
+  // Recomendação estratégica
+  let recommendation: string;
+  let reasoning: string;
+  let positionAdvice: string;
+
+  if (boardCards.length === 0) {
+    // Pré-flop
+    if (isPocketPair && heroRanks[0] >= 10) {
+      recommendation = 'AGGRESSIVE';
+      reasoning = 'Premium pocket pair. Alta equidade pré-flop, recomendado raise/3bet.';
+      positionAdvice = 'Em posição tardia, maximize value. Em early, varie entre raise e limp trap.';
+    } else if (hasHighCard && (isSuited || Math.abs(heroRanks[0] - heroRanks[1]) <= 2)) {
+      recommendation = 'AGGRESSIVE';
+      reasoning = 'Mão premium/strong. Boa equidade contra ranges amplos.';
+      positionAdvice = 'Open raise em qualquer posição. Considere 3bet contra opens tardios.';
+    } else if (equity >= 40) {
+      recommendation = 'NEUTRAL';
+      reasoning = 'Mão jogável, mas não premium. Equidade razoável multiway.';
+      positionAdvice = 'Open raise em late position. Fold/call em early vs raises.';
+    } else {
+      recommendation = 'CAUTIOUS';
+      reasoning = 'Mão fraca. Baixa equidade contra ranges tight.';
+      positionAdvice = 'Fold em early/middle. Considere steal em BTN/CO vs folds.';
+    }
+  } else {
+    // Post-flop
+    if (equity >= 65 && !isDangerous) {
+      recommendation = 'AGGRESSIVE';
+      reasoning = `Alta equidade (${equity.toFixed(1)}%) em board relativamente seco. Value bet/raise recomendado.`;
+      positionAdvice = 'Construa pot. Bet for value e protection. Não slow play contra múltiplos oponentes.';
+    } else if (equity >= 65 && isDangerous) {
+      recommendation = 'AGGRESSIVE';
+      reasoning = `Alta equidade (${equity.toFixed(1)}%) mas board perigoso (${flushDraw ? 'flush draw' : ''}${straightDraw ? ' straight draw' : ''}). Proteja sua mão.`;
+      positionAdvice = 'Bet forte para negar odds a draws. Não dê cartas grátis.';
+    } else if (equity >= 45 && outs >= 8) {
+      recommendation = 'NEUTRAL';
+      reasoning = `Equidade moderada (${equity.toFixed(1)}%) com ~${outs} outs. Situação de semi-bluff ou call.`;
+      positionAdvice = 'Considere semi-bluff em posição. Call se pot odds favorecerem. Fold OOP vs aggression.';
+    } else if (equity >= 30 && outs >= 12) {
+      recommendation = 'AGGRESSIVE';
+      reasoning = `Draw forte com ${outs}+ outs. Semi-bluff tem fold equity + equity realizável.`;
+      positionAdvice = 'Semi-bluff agressivo, especialmente in position. Capitalize fold equity.';
+    } else if (equity < 30 && outs < 6) {
+      recommendation = 'FOLD';
+      reasoning = `Baixa equidade (${equity.toFixed(1)}%) e poucos outs. Investimento não justificado.`;
+      positionAdvice = 'Fold vs bet. Não invista mais chips sem implied odds claros.';
+    } else {
+      recommendation = 'CAUTIOUS';
+      reasoning = `Equidade marginal (${equity.toFixed(1)}%). Situação depende de pot odds e ranges oponentes.`;
+      positionAdvice = 'Call se pot odds favorecerem. Fold vs raises. Considere check behind OOP.';
+    }
+  }
+
+  return {
+    recommendation,
+    reasoning,
+    positionAdvice,
+    equityAnalysis,
   };
 }
 
@@ -297,11 +419,14 @@ function SetupScreen({
   config,
   setConfig,
   onStart,
+  isPremium,
 }: {
   config: GameConfig;
   setConfig: (config: GameConfig) => void;
   onStart: () => void;
+  isPremium: boolean;
 }) {
+  const navigate = useNavigate();
   return (
     <div style={{ maxWidth: 600, margin: '0 auto' }}>
       {/* Header */}
@@ -374,15 +499,67 @@ function SetupScreen({
       {/* Como Funciona */}
       <div className="card" style={{ padding: 24, marginBottom: 24, background: 'rgba(59, 130, 246, 0.05)' }}>
         <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 16, color: '#60a5fa' }}>
-          📚 Como Funciona
+          📚 Recursos Disponíveis
         </h3>
-        <ul style={{ fontSize: 13, color: '#93c5fd', lineHeight: 1.8, margin: 0, paddingLeft: 20 }}>
-          <li>Selecione manualmente suas 2 cartas (HERO)</li>
-          <li>Adicione cartas do board conforme o jogo avança (Flop/Turn/River)</li>
-          <li>Veja as probabilidades atualizarem em tempo real via Monte Carlo</li>
-          <li>Estude suas chances de vitória/empate/derrota</li>
-          <li>Análise os outs e tome decisões informadas</li>
-        </ul>
+        
+        {isPremium ? (
+          <>
+            <div style={{ padding: 12, background: 'rgba(16, 185, 129, 0.1)', borderRadius: 8, marginBottom: 12, border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#6ee7b7', marginBottom: 6 }}>
+                ✅ PLANO PRO ATIVO
+              </div>
+              <ul style={{ fontSize: 12, color: '#93c5fd', lineHeight: 1.8, margin: 0, paddingLeft: 20 }}>
+                <li><strong>🤖 AI Strategic Insights</strong> - Análise estratégica em tempo real</li>
+                <li><strong>⚡ 2000 Simulações Monte Carlo</strong> - Máxima precisão</li>
+                <li><strong>🎯 Análise Posicional Avançada</strong> - Board texture e ranges</li>
+                <li><strong>📊 Equidade Profunda</strong> - Recomendações contextuais</li>
+              </ul>
+            </div>
+          </>
+        ) : (
+          <>
+            <div style={{ padding: 12, background: 'rgba(234, 179, 8, 0.1)', borderRadius: 8, marginBottom: 12, border: '1px solid rgba(234, 179, 8, 0.3)' }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#fbbf24', marginBottom: 6 }}>
+                📦 PLANO FREE
+              </div>
+              <ul style={{ fontSize: 12, color: '#fcd34d', lineHeight: 1.8, margin: 0, paddingLeft: 20 }}>
+                <li>✅ Odds básicas (Win/Tie/Lose)</li>
+                <li>✅ 500 simulações Monte Carlo</li>
+                <li>✅ Cálculo de outs aproximado</li>
+                <li>🔒 AI Insights (somente PRO)</li>
+                <li>🔒 Análise estratégica avançada (somente PRO)</li>
+              </ul>
+            </div>
+
+            <button
+              onClick={() => navigate('/premium')}
+              className="btn"
+              style={{
+                width: '100%',
+                padding: '12px',
+                background: 'linear-gradient(135deg, #f59e0b, #fbbf24)',
+                color: '#1f2937',
+                fontWeight: 700,
+                fontSize: 14,
+                marginBottom: 16,
+              }}
+            >
+              ⚡ Upgrade para PRO
+            </button>
+          </>
+        )}
+
+        <div style={{ padding: 12, background: 'rgba(59, 130, 246, 0.05)', borderRadius: 8 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#60a5fa', marginBottom: 6 }}>
+            📚 Como Usar
+          </div>
+          <ul style={{ fontSize: 12, color: '#93c5fd', lineHeight: 1.8, margin: 0, paddingLeft: 20 }}>
+            <li>Selecione suas 2 cartas (HERO)</li>
+            <li>Adicione cartas do board (Flop/Turn/River)</li>
+            <li>Veja as probabilidades atualizarem em tempo real</li>
+            {isPremium && <li>Analise os insights de IA para decisões estratégicas</li>}
+          </ul>
+        </div>
       </div>
 
       {/* Botão Iniciar */}
@@ -406,10 +583,13 @@ function SetupScreen({
 function PlayingScreen({
   config,
   onExit,
+  isPremium,
 }: {
   config: GameConfig;
   onExit: () => void;
+  isPremium: boolean;
 }) {
+  const navigate = useNavigate();
   const [heroCards, setHeroCards] = useState<Card[]>([]);
   const [boardCards, setBoardCards] = useState<Card[]>([]);
   const [showHeroSelector, setShowHeroSelector] = useState(true);
@@ -417,7 +597,10 @@ function PlayingScreen({
 
   const allUsedCards = [...heroCards, ...boardCards];
 
-  const odds = calculateOdds(heroCards, boardCards, config.numPlayers, []);
+  const odds = calculateOdds(heroCards, boardCards, config.numPlayers, [], isPremium);
+  const aiInsight = isPremium && heroCards.length === 2 
+    ? generateAIInsight(heroCards, boardCards, odds, config.numPlayers)
+    : null;
 
   const handleAddHeroCard = (card: Card) => {
     if (heroCards.length < 2) {
@@ -450,10 +633,10 @@ function PlayingScreen({
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <div>
           <h1 style={{ fontSize: 28, fontWeight: 800, marginBottom: 4, color: '#f8fafc' }}>
-            🧠 Poker Odds Trainer
+            🧠 Poker Odds Trainer {!isPremium && <span style={{ fontSize: 16, color: '#94a3b8' }}>(FREE)</span>}
           </h1>
           <p style={{ fontSize: 14, color: '#94a3b8', margin: 0 }}>
-            {config.numPlayers} jogadores | Monte Carlo Simulation
+            {config.numPlayers} jogadores | Monte Carlo {isPremium ? '2000' : '500'} simulações
           </p>
         </div>
         <div style={{ display: 'flex', gap: 12 }}>
@@ -615,6 +798,136 @@ function PlayingScreen({
               </div>
             </div>
           )}
+
+          {/* AI Insights (PRO) */}
+          {aiInsight && (
+            <div className="card" style={{ padding: 24, background: 'linear-gradient(145deg, rgba(139, 92, 246, 0.15), rgba(10, 15, 36, 0.95))', border: '2px solid rgba(139, 92, 246, 0.5)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+                <div style={{ fontSize: 24 }}>🤖</div>
+                <div>
+                  <h3 style={{ fontSize: 16, fontWeight: 700, color: '#c084fc', margin: 0 }}>
+                    AI Strategic Insight
+                  </h3>
+                  <p style={{ fontSize: 12, color: '#a78bfa', margin: 0 }}>Powered by PRO</p>
+                </div>
+              </div>
+
+              {/* Recomendação Principal */}
+              <div style={{ 
+                padding: 16, 
+                background: aiInsight.recommendation === 'AGGRESSIVE' ? 'rgba(16, 185, 129, 0.15)' :
+                           aiInsight.recommendation === 'FOLD' ? 'rgba(239, 68, 68, 0.15)' :
+                           aiInsight.recommendation === 'CAUTIOUS' ? 'rgba(234, 179, 8, 0.15)' :
+                           'rgba(59, 130, 246, 0.15)',
+                borderRadius: 8,
+                marginBottom: 16,
+                border: `2px solid ${
+                  aiInsight.recommendation === 'AGGRESSIVE' ? 'rgba(16, 185, 129, 0.5)' :
+                  aiInsight.recommendation === 'FOLD' ? 'rgba(239, 68, 68, 0.5)' :
+                  aiInsight.recommendation === 'CAUTIOUS' ? 'rgba(234, 179, 8, 0.5)' :
+                  'rgba(59, 130, 246, 0.5)'
+                }`
+              }}>
+                <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 6, 
+                  color: aiInsight.recommendation === 'AGGRESSIVE' ? '#6ee7b7' :
+                         aiInsight.recommendation === 'FOLD' ? '#f87171' :
+                         aiInsight.recommendation === 'CAUTIOUS' ? '#fbbf24' :
+                         '#60a5fa'
+                }}>
+                  RECOMENDAÇÃO
+                </div>
+                <div style={{ fontSize: 20, fontWeight: 800, 
+                  color: aiInsight.recommendation === 'AGGRESSIVE' ? '#10b981' :
+                         aiInsight.recommendation === 'FOLD' ? '#ef4444' :
+                         aiInsight.recommendation === 'CAUTIOUS' ? '#f59e0b' :
+                         '#3b82f6'
+                }}>
+                  {aiInsight.recommendation === 'AGGRESSIVE' && '🔥 AGRESSIVO'}
+                  {aiInsight.recommendation === 'FOLD' && '🚫 FOLD'}
+                  {aiInsight.recommendation === 'CAUTIOUS' && '⚠️ CAUTELOSO'}
+                  {aiInsight.recommendation === 'NEUTRAL' && '⚖️ NEUTRO'}
+                </div>
+              </div>
+
+              {/* Análise de Equidade */}
+              <div style={{ padding: 16, background: 'rgba(139, 92, 246, 0.1)', borderRadius: 8, marginBottom: 12 }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: '#a78bfa', marginBottom: 6 }}>
+                  📊 ANÁLISE DE EQUIDADE
+                </div>
+                <div style={{ fontSize: 13, color: '#c4b5fd', lineHeight: 1.6 }}>
+                  {aiInsight.equityAnalysis}
+                </div>
+              </div>
+
+              {/* Raciocínio */}
+              <div style={{ padding: 16, background: 'rgba(59, 130, 246, 0.1)', borderRadius: 8, marginBottom: 12 }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: '#60a5fa', marginBottom: 6 }}>
+                  💭 RACIOCÍNIO ESTRATÉGICO
+                </div>
+                <div style={{ fontSize: 13, color: '#93c5fd', lineHeight: 1.6 }}>
+                  {aiInsight.reasoning}
+                </div>
+              </div>
+
+              {/* Conselho Posicional */}
+              <div style={{ padding: 16, background: 'rgba(234, 179, 8, 0.1)', borderRadius: 8 }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: '#fbbf24', marginBottom: 6 }}>
+                  🎯 CONSELHO POSICIONAL
+                </div>
+                <div style={{ fontSize: 13, color: '#fcd34d', lineHeight: 1.6 }}>
+                  {aiInsight.positionAdvice}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Upgrade to PRO (FREE users) */}
+          {!isPremium && heroCards.length === 2 && (
+            <div className="card" style={{ 
+              padding: 24, 
+              background: 'linear-gradient(145deg, rgba(234, 179, 8, 0.15), rgba(10, 15, 36, 0.95))',
+              border: '2px solid rgba(234, 179, 8, 0.5)'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+                <div style={{ fontSize: 32 }}>🔒</div>
+                <div>
+                  <h3 style={{ fontSize: 18, fontWeight: 700, color: '#fbbf24', margin: 0 }}>
+                    Desbloqueie AI Insights
+                  </h3>
+                  <p style={{ fontSize: 13, color: '#fcd34d', margin: 0 }}>Análise estratégica em tempo real</p>
+                </div>
+              </div>
+              
+              <p style={{ fontSize: 14, color: '#fcd34d', lineHeight: 1.6, marginBottom: 16 }}>
+                Com <strong>PokerWizard PRO</strong>, você tem acesso a:
+              </p>
+
+              <ul style={{ fontSize: 13, color: '#fcd34d', lineHeight: 1.8, marginBottom: 20, paddingLeft: 20 }}>
+                <li><strong>🤖 AI Strategic Insights</strong> - Recomendações em tempo real</li>
+                <li><strong>🎯 Análise Posicional</strong> - Conselho por posição na mesa</li>
+                <li><strong>📊 Equidade Avançada</strong> - Board texture e range analysis</li>
+                <li><strong>⚡ 2000 Simulações</strong> - Precisão 4x maior (vs 500 FREE)</li>
+                <li><strong>📈 Histórico de Mãos</strong> - Revise suas decisões</li>
+                <li><strong>🎲 Modo Mesa Real</strong> - Simule cenários complexos</li>
+              </ul>
+
+              <button
+                onClick={() => navigate('/premium')}
+                className="btn"
+                style={{
+                  width: '100%',
+                  padding: '14px',
+                  background: 'linear-gradient(135deg, #f59e0b, #fbbf24)',
+                  color: '#1f2937',
+                  fontWeight: 700,
+                  fontSize: 15,
+                  boxShadow: '0 0 30px rgba(234, 179, 8, 0.4)',
+                }}
+              >
+                ⚡ Upgrade para PRO
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Sidebar - Seletor de Cartas */}
@@ -688,6 +1001,7 @@ function PlayingScreen({
 export default function PokerOddsTrainer() {
   const auth = useAuth();
   const navigate = useNavigate();
+  const { isPremium } = usePaywall(auth.token);
   const [gameState, setGameState] = useState<GameState>('SETUP');
   const [config, setConfig] = useState<GameConfig>({
     numPlayers: 6,
@@ -711,6 +1025,7 @@ export default function PokerOddsTrainer() {
           config={config}
           setConfig={setConfig}
           onStart={() => setGameState('PLAYING')}
+          isPremium={isPremium}
         />
       )}
 
@@ -718,6 +1033,7 @@ export default function PokerOddsTrainer() {
         <PlayingScreen
           config={config}
           onExit={() => setGameState('SETUP')}
+          isPremium={isPremium}
         />
       )}
     </div>
