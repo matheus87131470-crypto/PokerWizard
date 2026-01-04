@@ -176,7 +176,6 @@ function Layout({ children }: { children: React.ReactNode }) {
           <NavLink to="/" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Dashboard</NavLink>
           <NavLink to="/trainer" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>🧠 Odds Trainer</NavLink>
           <NavLink to="/bj-pro" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>🎰 BJ Pro</NavLink>
-          <NavLink to="/results" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>📊 Resultados</NavLink>
           <NavLink to="/analyze" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>🔍 Analyze</NavLink>
           <NavLink to="/ranges" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>📊 Ranges</NavLink>
           <NavLink 
@@ -199,6 +198,7 @@ function Layout({ children }: { children: React.ReactNode }) {
               EM BREVE
             </span>
           </NavLink>
+          <NavLink to="/results" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>📊 Resultados</NavLink>
             <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             {auth.user ? (
               <>

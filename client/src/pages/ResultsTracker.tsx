@@ -17,6 +17,40 @@ export default function ResultsTracker() {
   const { isPremium } = usePaywall(token);
   const navigate = useNavigate();
 
+  // Verificação PRO robusta (múltiplas fontes)
+  const checkIsReallyPremium = (): boolean => {
+    // 1. Hook usePaywall
+    if (isPremium) return true;
+
+    // 2. localStorage user object
+    try {
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        const userData = JSON.parse(storedUser);
+        if (userData.premium || userData.isPremium || userData.plan === 'PRO' || 
+            userData.plan === 'premium' || userData.statusPlano === 'premium' ||
+            userData.subscription?.status === 'active') {
+          return true;
+        }
+      }
+    } catch (e) {
+      console.error('Erro ao verificar localStorage:', e);
+    }
+
+    // 3. User do contexto (com casting para any para evitar erros de tipo)
+    if (user) {
+      const userAny = user as any;
+      if (userAny.premium || userAny.isPremium || userAny.plan === 'PRO' || 
+          userAny.plan === 'premium' || userAny.statusPlano === 'premium') {
+        return true;
+      }
+    }
+
+    return false;
+  };
+
+  const isReallyPremium = checkIsReallyPremium();
+
   // Estados
   const [gains, setGains] = useState('');
   const [losses, setLosses] = useState('');
@@ -121,25 +155,25 @@ export default function ResultsTracker() {
 
   const todayPercentage = calculatePercentage(todayNet, todayGains, todayLosses);
 
-  // Cores baseadas no resultado
+  // Cores baseadas no resultado - AZUL → ROXO NEON
   const getColors = (net: number) => {
     if (net > 0) {
       return {
-        primary: '#10b981', // Verde
-        secondary: '#a855f7', // Roxo
-        glow: '0 0 20px rgba(16, 185, 129, 0.5), 0 0 40px rgba(168, 85, 247, 0.3)'
+        primary: '#3b82f6', // Azul
+        secondary: '#8b5cf6', // Roxo neon
+        glow: '0 0 25px rgba(59, 130, 246, 0.6), 0 0 50px rgba(139, 92, 246, 0.4), 0 0 75px rgba(168, 85, 247, 0.2)'
       };
     } else if (net < 0) {
       return {
         primary: '#ef4444', // Vermelho
         secondary: '#a855f7', // Roxo
-        glow: '0 0 20px rgba(239, 68, 68, 0.5), 0 0 40px rgba(168, 85, 247, 0.3)'
+        glow: '0 0 25px rgba(239, 68, 68, 0.6), 0 0 50px rgba(168, 85, 247, 0.4)'
       };
     } else {
       return {
-        primary: '#a855f7', // Roxo neutro
-        secondary: '#7c3aed',
-        glow: '0 0 20px rgba(168, 85, 247, 0.4), 0 0 40px rgba(124, 58, 237, 0.2)'
+        primary: '#8b5cf6', // Roxo neon neutro
+        secondary: '#a855f7',
+        glow: '0 0 25px rgba(139, 92, 246, 0.5), 0 0 50px rgba(168, 85, 247, 0.3)'
       };
     }
   };
@@ -181,7 +215,8 @@ export default function ResultsTracker() {
         />
         <defs>
           <linearGradient id="gradient-profit" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#10b981" />
+            <stop offset="0%" stopColor="#3b82f6" />
+            <stop offset="50%" stopColor="#8b5cf6" />
             <stop offset="100%" stopColor="#a855f7" />
           </linearGradient>
           <linearGradient id="gradient-loss" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -203,17 +238,17 @@ export default function ResultsTracker() {
         <p style={{ fontSize: 15, color: '#94a3b8', lineHeight: 1.6 }}>
           Acompanhe seus ganhos e perdas com visualização inteligente
         </p>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginTop: 8, padding: '6px 16px', background: isPremium ? 'rgba(16, 185, 129, 0.15)' : 'rgba(107, 114, 128, 0.15)', borderRadius: 20, border: `1px solid ${isPremium ? 'rgba(16, 185, 129, 0.3)' : 'rgba(107, 114, 128, 0.3)'}` }}>
-          <span style={{ fontSize: 12, fontWeight: 600, color: isPremium ? '#10b981' : '#6b7280' }}>
-            {isPremium ? '⭐ PRO' : 'FREE'}
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginTop: 8, padding: '6px 16px', background: isReallyPremium ? 'rgba(16, 185, 129, 0.15)' : 'rgba(107, 114, 128, 0.15)', borderRadius: 20, border: `1px solid ${isReallyPremium ? 'rgba(16, 185, 129, 0.3)' : 'rgba(107, 114, 128, 0.3)'}` }}>
+          <span style={{ fontSize: 12, fontWeight: 600, color: isReallyPremium ? '#10b981' : '#6b7280' }}>
+            {isReallyPremium ? '⭐ PRO' : 'FREE'}
           </span>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 24, marginBottom: 32 }}>
-        {/* Input Card */}
-        <div className="card" style={{ padding: 24 }}>
+      {/* Main Content - ORDEM CORRETA: Input primeiro, depois gráfico */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 24, marginBottom: 32 }}>
+        {/* Input Card - PRIORIDADE NO TOPO */}
+        <div className="card" style={{ padding: 24, maxWidth: 600, margin: '0 auto', width: '100%' }}>
           <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 20, color: '#f8fafc' }}>
             💰 Nova Sessão
           </h3>
@@ -307,8 +342,8 @@ export default function ResultsTracker() {
           </div>
         </div>
 
-        {/* Progress Ring Card - Resultado do Dia */}
-        <div className="card" style={{ padding: 24, textAlign: 'center' }}>
+        {/* Progress Ring Card - Resultado do Dia - ABAIXO DO INPUT */}
+        <div className="card" style={{ padding: 32, textAlign: 'center', maxWidth: 600, margin: '0 auto', width: '100%' }}>
           <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 20, color: '#f8fafc' }}>
             📅 Resultado Hoje
           </h3>
@@ -344,7 +379,7 @@ export default function ResultsTracker() {
       </div>
 
       {/* PRO Features - Histórico Semanal/Mensal */}
-      {isPremium ? (
+      {isReallyPremium ? (
         <div className="card" style={{ padding: 24, marginBottom: 32 }}>
           <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 20, color: '#f8fafc' }}>
             📈 Histórico PRO
@@ -376,7 +411,7 @@ export default function ResultsTracker() {
             </div>
           </div>
         </div>
-      ) : (
+      ) : !isReallyPremium ? (
         <div className="card" style={{ padding: 24, marginBottom: 32, background: 'linear-gradient(145deg, rgba(168, 85, 247, 0.1), rgba(124, 58, 237, 0.05))', border: '1px solid rgba(168, 85, 247, 0.3)' }}>
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: 48, marginBottom: 16 }}>🔒</div>
@@ -416,7 +451,7 @@ export default function ResultsTracker() {
             </button>
           </div>
         </div>
-      )}
+      ) : null}
 
       {/* Histórico de Sessões */}
       {todayResults.length > 0 && (
