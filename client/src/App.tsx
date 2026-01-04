@@ -16,6 +16,7 @@ import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 import PokerOddsTrainer from './pages/PokerOddsTrainer';
 import BlackjackPro from './pages/BlackjackPro';
+import ResultsTracker from './pages/ResultsTracker';
 import GoogleSuccess from './pages/GoogleSuccess';
 import ProtectedRoute from './components/ProtectedRoute';
 import CookieConsent from './components/CookieConsent';
@@ -175,6 +176,7 @@ function Layout({ children }: { children: React.ReactNode }) {
           <NavLink to="/" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Dashboard</NavLink>
           <NavLink to="/trainer" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>🧠 Odds Trainer</NavLink>
           <NavLink to="/bj-pro" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>🎰 BJ Pro</NavLink>
+          <NavLink to="/results" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>📊 Resultados</NavLink>
           <NavLink to="/analyze" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>🔍 Analyze</NavLink>
           <NavLink to="/ranges" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>📊 Ranges</NavLink>
           <NavLink 
@@ -1110,7 +1112,54 @@ function Home() {
             </button>
           </div>
 
-          {/* Card 4 - Análise de Jogadores - EM BREVE - Neon Cyan */}
+          {/* Card 4 - Controle de Resultados - Neon Yellow/Orange */}
+          <div className="card" style={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            padding: 24,
+            minHeight: 280,
+            justifyContent: 'space-between',
+            background: 'linear-gradient(145deg, rgba(251, 146, 60, 0.12), rgba(10, 15, 36, 0.95))',
+            border: '1px solid rgba(251, 146, 60, 0.4)',
+            boxShadow: '0 0 40px rgba(251, 146, 60, 0.1), inset 0 1px 0 rgba(251, 146, 60, 0.2)',
+          }}>
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+                <div style={{ fontSize: 36, filter: 'drop-shadow(0 0 10px rgba(251, 146, 60, 0.5))' }}>📊</div>
+                <span style={{ 
+                  background: 'linear-gradient(135deg, #fb923c, #f59e0b)', 
+                  color: '#fff', 
+                  padding: '4px 10px', 
+                  borderRadius: 6, 
+                  fontSize: 11, 
+                  fontWeight: 700,
+                  boxShadow: '0 0 15px rgba(251, 146, 60, 0.4)',
+                }}>
+                  TRACK
+                </span>
+              </div>
+              <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8, color: '#f8fafc' }}>Controle de Resultados</h3>
+              <p style={{ fontSize: 14, color: '#fbbf24', lineHeight: 1.6, marginBottom: 16 }}>
+                Monitore seus ganhos e perdas com gráficos animados. Controle emocional e disciplina.
+              </p>
+            </div>
+            <button 
+              onClick={() => navigate('/results')}
+              className="btn" 
+              style={{ 
+                width: '100%', 
+                padding: '12px',
+                background: 'linear-gradient(135deg, #fb923c, #f59e0b)',
+                color: '#fff',
+                fontWeight: 600,
+                boxShadow: '0 0 20px rgba(251, 146, 60, 0.3)',
+              }}
+            >
+              Ver Resultados →
+            </button>
+          </div>
+
+          {/* Card 5 - Análise de Jogadores - EM BREVE - Neon Cyan */}
           <div 
             className="card" 
             onClick={() => navigate('/player-analysis')}
@@ -1342,6 +1391,7 @@ export default function App() {
             {/* Páginas públicas - todos podem ver, mas precisam login para usar */}
             <Route path="/trainer" element={<PokerOddsTrainer />} />
             <Route path="/bj-pro" element={<BlackjackPro />} />
+            <Route path="/results" element={<ResultsTracker />} />
             <Route path="/analyze" element={<Analyze />} />
             <Route path="/ranges" element={<Ranges />} />
             <Route path="/player-analysis" element={<PlayerAnalysis />} />
