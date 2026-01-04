@@ -630,7 +630,7 @@ function SetupScreen({
       {/* Header */}
       <div style={{ textAlign: 'center', marginBottom: 32 }}>
         <h1 style={{ fontSize: 32, fontWeight: 800, marginBottom: 12, color: '#f8fafc' }}>
-          🧠 Poker Odds Trainer (Beta)
+          🧠 Poker Odds Trainer
         </h1>
         <p style={{ fontSize: 15, color: '#94a3b8', lineHeight: 1.6 }}>
           Treine decisões reais com cálculo de probabilidades em tempo real.

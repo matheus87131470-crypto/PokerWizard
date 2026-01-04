@@ -173,7 +173,7 @@ function Layout({ children }: { children: React.ReactNode }) {
         <nav className="app-nav">
           {/* Navegação Principal - Modelo GTO Wizard */}
           <NavLink to="/" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>Dashboard</NavLink>
-          <NavLink to="/trainer" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>🧠 Odds Trainer (Beta)</NavLink>
+          <NavLink to="/trainer" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>🧠 Odds Trainer</NavLink>
           <NavLink to="/bj-pro" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>🎰 BJ Pro</NavLink>
           <NavLink to="/analyze" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>🔍 Analyze</NavLink>
           <NavLink to="/ranges" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>📊 Ranges</NavLink>
@@ -922,7 +922,7 @@ function Home() {
         </p>
         
         <div className="features-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 }}>
-          {/* Card 1 - Odds Trainer (Beta) - Neon Purple */}
+          {/* Card 1 - Odds Trainer - Neon Purple */}
           <div className="card" style={{ 
             display: 'flex', 
             flexDirection: 'column', 
