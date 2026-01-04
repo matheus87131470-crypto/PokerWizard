@@ -186,6 +186,19 @@ router.get('/me', authMiddleware, async (req: AuthRequest, res: Response) => {
 router.get('/usage-status', authMiddleware, getUsageStatus);
 
 /**
+ * HEALTH CHECK - Mantém servidor ativo e detecta wake-up
+ * /api/auth/health
+ */
+router.get('/health', (_req, res: Response) => {
+  res.status(200).json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    service: 'pokerwizard-auth'
+  });
+});
+
+/**
  * DEBUG: Verificar configuração do Google OAuth
  * /api/auth/google-debug
  */
