@@ -155,25 +155,28 @@ export default function ResultsTracker() {
 
   const todayPercentage = calculatePercentage(todayNet, todayGains, todayLosses);
 
-  // Cores baseadas no resultado - AZUL → ROXO NEON
+  // Cores baseadas no resultado - ROXO NEON IGUAL ANÁLISE DE JOGADORES
   const getColors = (net: number) => {
     if (net > 0) {
       return {
-        primary: '#3b82f6', // Azul
-        secondary: '#8b5cf6', // Roxo neon
-        glow: '0 0 25px rgba(59, 130, 246, 0.6), 0 0 50px rgba(139, 92, 246, 0.4), 0 0 75px rgba(168, 85, 247, 0.2)'
+        primary: '#a855f7', // Roxo neon principal
+        secondary: '#ec4899', // Rosa neon
+        tertiary: '#f472b6', // Rosa claro
+        glow: '0 0 30px rgba(168, 85, 247, 0.7), 0 0 60px rgba(236, 72, 153, 0.5), 0 0 90px rgba(244, 114, 182, 0.3)'
       };
     } else if (net < 0) {
       return {
         primary: '#ef4444', // Vermelho
         secondary: '#a855f7', // Roxo
-        glow: '0 0 25px rgba(239, 68, 68, 0.6), 0 0 50px rgba(168, 85, 247, 0.4)'
+        tertiary: '#ec4899', // Rosa
+        glow: '0 0 30px rgba(239, 68, 68, 0.7), 0 0 60px rgba(168, 85, 247, 0.4)'
       };
     } else {
       return {
-        primary: '#8b5cf6', // Roxo neon neutro
-        secondary: '#a855f7',
-        glow: '0 0 25px rgba(139, 92, 246, 0.5), 0 0 50px rgba(168, 85, 247, 0.3)'
+        primary: '#8b5cf6', // Roxo médio neutro
+        secondary: '#a855f7', // Roxo neon
+        tertiary: '#6d28d9', // Roxo escuro
+        glow: '0 0 30px rgba(139, 92, 246, 0.6), 0 0 60px rgba(168, 85, 247, 0.4)'
       };
     }
   };
@@ -203,7 +206,7 @@ export default function ResultsTracker() {
           cy={size / 2}
           r={radius}
           fill="none"
-          stroke={`url(#gradient-${todayNet >= 0 ? 'profit' : 'loss'})`}
+          stroke={`url(#gradient-${todayNet > 0 ? 'profit' : todayNet < 0 ? 'loss' : 'neutral'})`}
           strokeWidth={strokeWidth}
           strokeDasharray={circumference}
           strokeDashoffset={offset}
@@ -214,14 +217,19 @@ export default function ResultsTracker() {
           }}
         />
         <defs>
-          <linearGradient id="gradient-profit" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#3b82f6" />
-            <stop offset="50%" stopColor="#8b5cf6" />
-            <stop offset="100%" stopColor="#a855f7" />
+          <linearGradient id="gradient-profit" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#a855f7" />
+            <stop offset="50%" stopColor="#ec4899" />
+            <stop offset="100%" stopColor="#f472b6" />
           </linearGradient>
           <linearGradient id="gradient-loss" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#ef4444" />
             <stop offset="100%" stopColor="#a855f7" />
+          </linearGradient>
+          <linearGradient id="gradient-neutral" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#8b5cf6" />
+            <stop offset="50%" stopColor="#a855f7" />
+            <stop offset="100%" stopColor="#6d28d9" />
           </linearGradient>
         </defs>
       </svg>
