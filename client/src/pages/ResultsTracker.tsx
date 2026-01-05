@@ -479,7 +479,7 @@ export default function ResultsTracker() {
 
   // Gráfico de Evolução (estilo profissional igual foto)
   const EvolutionChart = ({ data, isBlurred }: { data: SessionResult[]; isBlurred: boolean }) => {
-    const [hoveredPoint, setHoveredPoint] = useState<{ index: number; x: number; y: number; value: number } | null>(null);
+    const [hoveredPoint, setHoveredPoint] = useState<{ index: number; x: number; y: number; value: number; date: string; sessionData: SessionResult } | null>(null);
 
     if (data.length === 0) {
       return (
@@ -640,6 +640,19 @@ export default function ResultsTracker() {
                 <line key={y} x1="0" y1={y} x2="100" y2={y} stroke="rgba(168, 85, 247, 0.08)" strokeWidth="0.3" />
               ))}
               
+              {/* 📏 Linha vertical de referência ao passar o mouse */}
+              {hoveredPoint && (
+                <line
+                  x1={points[hoveredPoint.index].x}
+                  y1="0"
+                  x2={points[hoveredPoint.index].x}
+                  y2="100"
+                  stroke="rgba(168, 85, 247, 0.4)"
+                  strokeWidth="0.5"
+                  strokeDasharray="3,3"
+                />
+              )}
+              
               {/* 📏 Linha de referência tracejada (saldo inicial) */}
               <line
                 x1="0"
@@ -691,7 +704,14 @@ export default function ResultsTracker() {
                       if (rect) {
                         const xPos = rect.left + (p.x / 100) * rect.width;
                         const yPos = rect.top + (p.y / 100) * rect.height;
-                        setHoveredPoint({ index: i, x: xPos, y: yPos, value: p.data.accumulated });
+                        setHoveredPoint({ 
+                          index: i, 
+                          x: xPos, 
+                          y: yPos, 
+                          value: p.data.accumulated,
+                          date: p.data.date,
+                          sessionData: p.data
+                        });
                       }
                     }}
                   />
@@ -713,26 +733,56 @@ export default function ResultsTracker() {
           </div>
         </div>
 
-        {/* Tooltip flutuante (fora do SVG) */}
+        {/* Tooltip flutuante aprimorado (estilo foto) */}
         {hoveredPoint && (
           <div style={{
             position: 'fixed',
             left: hoveredPoint.x,
-            top: hoveredPoint.y - 50,
+            top: hoveredPoint.y - 80,
             transform: 'translateX(-50%)',
-            background: 'rgba(236, 72, 153, 0.95)',
-            padding: '8px 16px',
-            borderRadius: 8,
-            fontSize: 14,
-            fontWeight: 700,
+            background: 'rgba(15, 23, 42, 0.98)',
+            padding: '12px 16px',
+            borderRadius: 10,
+            fontSize: 13,
             color: '#fff',
             whiteSpace: 'nowrap',
-            boxShadow: '0 4px 20px rgba(236, 72, 153, 0.6)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(168, 85, 247, 0.4)',
             pointerEvents: 'none',
             zIndex: 9999,
-            border: '1px solid rgba(255, 255, 255, 0.2)'
+            border: '1px solid rgba(168, 85, 247, 0.3)'
           }}>
-            {hoveredPoint.value >= 0 ? '+' : ''}{hoveredPoint.value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+            {/* Valor principal */}
+            <div style={{ 
+              fontSize: 18, 
+              fontWeight: 800, 
+              color: hoveredPoint.value >= 0 ? '#10b981' : '#ef4444',
+              marginBottom: 6
+            }}>
+              {hoveredPoint.value >= 0 ? '+' : ''}{hoveredPoint.value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+            </div>
+            
+            {/* Informações da sessão */}
+            <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 2 }}>
+              Sessão #{hoveredPoint.index + 1}
+            </div>
+            <div style={{ fontSize: 12, color: '#c4b5fd', fontWeight: 600 }}>
+              {hoveredPoint.date}
+            </div>
+            
+            {/* Resultado da sessão específica */}
+            {hoveredPoint.sessionData && (
+              <div style={{ 
+                marginTop: 8, 
+                paddingTop: 8, 
+                borderTop: '1px solid rgba(168, 85, 247, 0.2)',
+                fontSize: 11,
+                color: '#a78bfa'
+              }}>
+                Resultado: <strong style={{ color: hoveredPoint.sessionData.net >= 0 ? '#10b981' : '#ef4444' }}>
+                  {hoveredPoint.sessionData.net >= 0 ? '+' : ''}{hoveredPoint.sessionData.net.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                </strong>
+              </div>
+            )}
           </div>
         )}
 
