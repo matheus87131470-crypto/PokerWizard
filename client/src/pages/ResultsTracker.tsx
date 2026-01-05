@@ -516,21 +516,21 @@ export default function ResultsTracker() {
 
     // 🎨 Configurações de estilo por variante
     const styles = variant === 'analytics' ? {
-      // 📊 ANALYTICS: Visual profissional para histórico/análise
-      lineColor: totalProfit >= 0 ? '#10b981' : '#ef4444',
-      lineWidth: '2',
+      // 📊 ANALYTICS: Visual empresarial/corporativo
+      lineColor: totalProfit >= 0 ? '#3b82f6' : '#ef4444',
+      lineWidth: '1.5',
       lineGlow: false,
-      areaOpacity: 0.05,
-      areaColor: totalProfit >= 0 ? '#10b981' : '#ef4444',
-      gridOpacity: 0.06,
-      gridColor: '#94a3b8',
-      pointRadius: { normal: 1.2, hover: 1.8, last: 1.5 },
-      pointOpacity: 1,
+      areaOpacity: 0.03,
+      areaColor: totalProfit >= 0 ? '#3b82f6' : '#ef4444',
+      gridOpacity: 0.04,
+      gridColor: '#475569',
+      pointRadius: { normal: 0.8, hover: 1.3, last: 1 },
+      pointOpacity: 0.9,
       background: 'transparent',
-      legendBg: 'rgba(148, 163, 184, 0.04)',
-      legendBorder: 'rgba(148, 163, 184, 0.12)',
-      tooltipBg: 'rgba(30, 41, 59, 0.98)',
-      tooltipBorder: 'rgba(148, 163, 184, 0.3)'
+      legendBg: 'rgba(15, 23, 42, 0.3)',
+      legendBorder: 'rgba(71, 85, 105, 0.25)',
+      tooltipBg: 'rgba(15, 23, 42, 0.95)',
+      tooltipBorder: 'rgba(71, 85, 105, 0.4)'
     } : {
       // ✨ HIGHLIGHT: Visual emocional para destaque/progressão
       lineGradient: true,
@@ -608,41 +608,52 @@ export default function ResultsTracker() {
 
     return (
       <div style={{ position: 'relative', filter: isBlurred ? 'blur(8px)' : 'none', transition: 'filter 0.3s ease' }}>
-        {/* 📊 Micro-legenda */}
+        {/* Header Empresarial */}
         <div style={{ 
           display: 'flex', 
           justifyContent: 'space-between', 
           alignItems: 'center',
-          marginBottom: 16,
-          padding: '12px 16px',
+          marginBottom: 20,
+          padding: '16px 20px',
           background: styles.legendBg,
-          borderRadius: 8,
+          borderRadius: 10,
           border: `1px solid ${styles.legendBorder}`
         }}>
           <div>
-            <span style={{ fontSize: 12, color: '#94a3b8', marginRight: 8 }}>Resultado atual:</span>
+            <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 5, textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>
+              Saldo Acumulado
+            </div>
             <strong style={{ 
-              fontSize: 16, 
+              fontSize: 22, 
               fontWeight: 700,
-              color: totalProfit >= 0 ? '#10b981' : '#ef4444'
+              color: totalProfit >= 0 ? '#3b82f6' : '#ef4444'
             }}>
               {totalProfit >= 0 ? '+' : ''}{totalProfit.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
             </strong>
           </div>
-          <div>
-            <span style={{ fontSize: 12, color: '#94a3b8', marginRight: 8 }}>Período:</span>
-            <strong style={{ fontSize: 14, fontWeight: 600, color: variant === 'analytics' ? '#64748b' : '#a855f7' }}>
-              {daysDiff === 0 ? 'Hoje' : `Últimos ${daysDiff} ${daysDiff === 1 ? 'dia' : 'dias'}`}
-            </strong>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 5, fontWeight: 600 }}>
+              {chartData.length - 1} {chartData.length - 1 === 1 ? 'sessão' : 'sessões'}
+            </div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: '#64748b' }}>
+              {daysDiff === 0 ? 'Hoje' : `${daysDiff} ${daysDiff === 1 ? 'dia' : 'dias'}`}
+            </div>
           </div>
         </div>
 
-        {/* Grid e gráfico - Fluido sem card */}
-        <div style={{ position: 'relative', background: 'transparent', padding: '24px 0' }}>
+        {/* Área do Gráfico */}
+        <div style={{ position: 'relative', background: 'rgba(15, 23, 42, 0.2)', padding: '28px 0 28px 0', borderRadius: 12, border: '1px solid rgba(71, 85, 105, 0.2)' }}>
           {/* Eixo Y */}
-          <div style={{ position: 'absolute', left: 0, top: 24, bottom: 50, width: 60, display: 'flex', flexDirection: 'column-reverse', justifyContent: 'space-between' }}>
+          <div style={{ position: 'absolute', left: 0, top: 28, bottom: 56, width: 70, display: 'flex', flexDirection: 'column-reverse', justifyContent: 'space-between', paddingLeft: 16 }}>
             {yLabels.map((value, i) => (
-              <div key={i} style={{ fontSize: 11, color: value === 0 ? '#94a3b8' : '#6b7280', textAlign: 'right', paddingRight: 8, fontWeight: value === 0 ? 700 : 500 }}>
+              <div key={i} style={{ 
+                fontSize: 10, 
+                color: value === 0 ? '#cbd5e1' : '#64748b', 
+                textAlign: 'right', 
+                paddingRight: 12, 
+                fontWeight: value === 0 ? 600 : 400,
+                fontFamily: 'monospace'
+              }}>
                 {Math.abs(value) >= 1000 
                   ? `${value < 0 ? '-' : ''}${(Math.abs(value) / 1000).toFixed(1)}K` 
                   : value === 0 
@@ -654,10 +665,10 @@ export default function ResultsTracker() {
           </div>
 
           {/* SVG Chart Container */}
-          <div style={{ marginLeft: 60, marginRight: 16, position: 'relative' }}>
+          <div style={{ marginLeft: 70, marginRight: 24, position: 'relative' }}>
             <svg 
               width="100%" 
-              height="300" 
+              height="320" 
               viewBox="0 0 100 100" 
               preserveAspectRatio="none" 
               style={{ display: 'block' }}
