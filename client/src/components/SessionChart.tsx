@@ -138,17 +138,44 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
   // Path da linha (sem suavização artificial)
   const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
 
-  // Área preenchida
-  const areaPath = `M 0 ${zeroY} ${points.map((p) => `L ${p.x} ${p.y}`).join(' ')} L 100 ${zeroY} Z`;
+  // Área preenchida - sempre parte da base (y=100) quando positivo, do topo (y=0) quando negativo
+  const areaPath = dataMin >= 0 
+    ? `M 0 100 ${points.map((p) => `L ${p.x} ${p.y}`).join(' ')} L 100 100 Z`
+    : dataMax <= 0
+    ? `M 0 0 ${points.map((p) => `L ${p.x} ${p.y}`).join(' ')} L 100 0 Z`
+    : `M 0 ${zeroY} ${points.map((p) => `L ${p.x} ${p.y}`).join(' ')} L 100 ${zeroY} Z`;
 
   // Labels do eixo Y (valores de lucro acumulado)
-  const yLabels = [
-    { value: maxValue, y: 0 },
-    { value: maxValue * 0.5, y: 25 },
-    { value: 0, y: zeroY },
-    { value: minValue * 0.5, y: 75 },
-    { value: minValue, y: 100 }
-  ].filter(l => Math.abs(l.value) > 10);
+  let yLabels;
+  
+  if (dataMin >= 0) {
+    // Apenas valores positivos - zero na base
+    yLabels = [
+      { value: maxValue, y: 0 },
+      { value: maxValue * 0.75, y: 25 },
+      { value: maxValue * 0.5, y: 50 },
+      { value: maxValue * 0.25, y: 75 },
+      { value: 0, y: 100 }
+    ];
+  } else if (dataMax <= 0) {
+    // Apenas valores negativos - zero no topo
+    yLabels = [
+      { value: 0, y: 0 },
+      { value: minValue * 0.25, y: 25 },
+      { value: minValue * 0.5, y: 50 },
+      { value: minValue * 0.75, y: 75 },
+      { value: minValue, y: 100 }
+    ];
+  } else {
+    // Valores positivos e negativos - zero no meio
+    yLabels = [
+      { value: maxValue, y: 0 },
+      { value: maxValue * 0.5, y: 25 },
+      { value: 0, y: zeroY },
+      { value: minValue * 0.5, y: 75 },
+      { value: minValue, y: 100 }
+    ];
+  }
 
   // Labels do eixo X (número de dias)
   const totalDays = chartData.length;
