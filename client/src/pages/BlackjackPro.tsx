@@ -494,11 +494,11 @@ function PaywallScreen({ onBack }: { onBack: () => void }) {
         </p>
       </div>
 
-      <div className="card" style={{
-        padding: 48,
+      <div style={{
+        padding: '48px 5%',
         textAlign: 'center',
-        background: 'linear-gradient(145deg, rgba(139, 92, 246, 0.05), rgba(15, 23, 42, 0.95))',
-        border: '2px solid rgba(139, 92, 246, 0.4)',
+        width: '100%',
+        marginBottom: 32
       }}>
         <div style={{
           width: 100,
