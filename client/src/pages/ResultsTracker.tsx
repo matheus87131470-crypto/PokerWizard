@@ -596,11 +596,13 @@ export default function ResultsTracker() {
       });
     }
 
-    // Grid Y labels
+    // Grid Y labels - escala granular em incrementos de 1.5K
     const yLabels = [];
-    const numLabels = 5;
-    for (let i = 0; i <= numLabels; i++) {
-      const value = maxValue + padding - (i * (range + 2 * padding) / numLabels);
+    const step = 1500; // Incremento de R$ 1.500
+    const startValue = Math.floor(minValue / step) * step; // Arredondar para baixo
+    const endValue = Math.ceil(maxValue / step) * step; // Arredondar para cima
+    
+    for (let value = startValue; value <= endValue; value += step) {
       yLabels.push(value);
     }
 
@@ -638,10 +640,15 @@ export default function ResultsTracker() {
         {/* Grid e gráfico - Fluido sem card */}
         <div style={{ position: 'relative', background: 'transparent', padding: '24px 0' }}>
           {/* Eixo Y */}
-          <div style={{ position: 'absolute', left: 0, top: 24, bottom: 50, width: 60, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div style={{ position: 'absolute', left: 0, top: 24, bottom: 50, width: 60, display: 'flex', flexDirection: 'column-reverse', justifyContent: 'space-between' }}>
             {yLabels.map((value, i) => (
-              <div key={i} style={{ fontSize: 11, color: '#6b7280', textAlign: 'right', paddingRight: 8 }}>
-                {value >= 1000 ? `R$${(value / 1000).toFixed(1)}K` : `R$${value.toFixed(0)}`}
+              <div key={i} style={{ fontSize: 11, color: value === 0 ? '#94a3b8' : '#6b7280', textAlign: 'right', paddingRight: 8, fontWeight: value === 0 ? 700 : 500 }}>
+                {Math.abs(value) >= 1000 
+                  ? `${value < 0 ? '-' : ''}${(Math.abs(value) / 1000).toFixed(1)}K` 
+                  : value === 0 
+                  ? '0' 
+                  : `${value}`
+                }
               </div>
             ))}
           </div>
@@ -705,16 +712,20 @@ export default function ResultsTracker() {
                 )}
               </defs>
 
-              {/* Grid horizontal lines */}
-              {[0, 25, 50, 75, 100].map((y) => (
+              {/* Grid horizontal lines - alinhadas com labels Y */}
+              {yLabels.map((value) => (
                 <line 
-                  key={y} 
+                  key={value} 
                   x1="0" 
-                  y1={y} 
+                  y1={getY(value)} 
                   x2="100" 
-                  y2={y} 
-                  stroke={`rgba(${styles.gridColor === '#94a3b8' ? '148, 163, 184' : '168, 85, 247'}, ${styles.gridOpacity})`}
-                  strokeWidth="0.3" 
+                  y2={getY(value)} 
+                  stroke={value === 0 
+                    ? 'rgba(148, 163, 184, 0.3)' 
+                    : `rgba(${styles.gridColor === '#94a3b8' ? '148, 163, 184' : '168, 85, 247'}, ${styles.gridOpacity})`
+                  }
+                  strokeWidth={value === 0 ? "0.5" : "0.3"} 
+                  strokeDasharray={value === 0 ? "2,2" : "none"}
                 />
               ))}
               
@@ -730,17 +741,6 @@ export default function ResultsTracker() {
                   strokeDasharray="3,3"
                 />
               )}
-              
-              {/* 📏 Linha de referência tracejada (saldo inicial) */}
-              <line
-                x1="0"
-                y1={getY(referenceValue)}
-                x2="100"
-                y2={getY(referenceValue)}
-                stroke="rgba(148, 163, 184, 0.25)"
-                strokeWidth="0.4"
-                strokeDasharray="2,2"
-              />
               
               {/* Área sob a linha */}
               {variant === 'analytics' ? (
