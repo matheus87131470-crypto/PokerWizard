@@ -327,7 +327,7 @@ export default function ResultsTracker() {
     const offset = circumference - (animatedPercentage / 100) * circumference;
 
     return (
-      <div style={{ position: 'relative', width: size, height: size * 0.65, margin: '0 auto', overflow: 'hidden' }}>
+      <div style={{ position: 'relative', width: '100%', maxWidth: size, height: size * 0.65, margin: '0 auto', overflow: 'visible', padding: '40px 0' }}>
         {/* Círculos decorativos de fundo com glow */}
         <div style={{
           position: 'absolute',
@@ -855,8 +855,8 @@ export default function ResultsTracker() {
 
       {/* 2️⃣ BARRA CIRCULAR DE PROGRESSO */}
       {sessions.length > 0 && (
-        <div className="card" style={{ padding: 32, maxWidth: 600, margin: '0 auto 32px', width: '100%', textAlign: 'center' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+        <div style={{ padding: '40px 20px', maxWidth: 800, margin: '0 auto 32px', width: '100%', textAlign: 'center', background: 'transparent' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32, flexWrap: 'wrap', gap: 12 }}>
             <h3 style={{ fontSize: 18, fontWeight: 700, color: '#f8fafc' }}>
               🎯 Progresso da Meta (Ciclo #{cycleNumber})
             </h3>
@@ -923,7 +923,7 @@ export default function ResultsTracker() {
 
           {/* Editor de Meta */}
           {isEditingGoal && (
-            <div style={{ marginBottom: 24, padding: 16, background: 'rgba(168, 85, 247, 0.1)', borderRadius: 12, border: '1px solid rgba(168, 85, 247, 0.3)' }}>
+            <div style={{ marginBottom: 32, padding: 20, background: 'rgba(168, 85, 247, 0.08)', borderRadius: 16, border: '1px solid rgba(168, 85, 247, 0.2)', maxWidth: 400, margin: '0 auto 32px' }}>
               <div style={{ display: 'flex', gap: 12, alignItems: 'center', justifyContent: 'center' }}>
                 <input
                   type="number"
@@ -976,9 +976,9 @@ export default function ResultsTracker() {
           />
           
           {/* Informações da Meta */}
-          <div style={{ marginTop: 24, display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ marginTop: 32, display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 600, margin: '32px auto 0' }}>
             {/* Texto Principal */}
-            <div style={{ fontSize: 15, fontWeight: 700, color: progressPercentage >= 100 ? '#10b981' : '#a855f7' }}>
+            <div style={{ fontSize: 16, fontWeight: 700, color: progressPercentage >= 100 ? '#10b981' : '#a855f7', textAlign: 'center' }}>
               {progressPercentage >= 100 ? (
                 <>🎉 Meta atingida! Parabéns!</>
               ) : (
@@ -987,16 +987,16 @@ export default function ResultsTracker() {
             </div>
 
             {/* Valores */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 8 }}>
-              <div style={{ padding: 12, background: 'rgba(168, 85, 247, 0.1)', borderRadius: 10, border: '1px solid rgba(168, 85, 247, 0.3)' }}>
-                <div style={{ fontSize: 11, color: '#a855f7', fontWeight: 600, marginBottom: 6 }}>RESULTADO ATUAL</div>
-                <div style={{ fontSize: 20, fontWeight: 900, color: totalAccumulated >= 0 ? '#10b981' : '#ef4444' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+              <div style={{ padding: 20, background: 'rgba(16, 185, 129, 0.08)', borderRadius: 12, border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+                <div style={{ fontSize: 12, color: '#10b981', fontWeight: 600, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>RESULTADO ATUAL</div>
+                <div style={{ fontSize: 24, fontWeight: 900, color: totalAccumulated >= 0 ? '#10b981' : '#ef4444' }}>
                   {totalAccumulated >= 0 ? '+' : ''}{totalAccumulated.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                 </div>
               </div>
-              <div style={{ padding: 12, background: 'rgba(168, 85, 247, 0.1)', borderRadius: 10, border: '1px solid rgba(168, 85, 247, 0.3)' }}>
-                <div style={{ fontSize: 11, color: '#a855f7', fontWeight: 600, marginBottom: 6 }}>META DEFINIDA</div>
-                <div style={{ fontSize: 20, fontWeight: 900, color: '#a855f7' }}>
+              <div style={{ padding: 20, background: 'rgba(168, 85, 247, 0.08)', borderRadius: 12, border: '1px solid rgba(168, 85, 247, 0.2)' }}>
+                <div style={{ fontSize: 12, color: '#a855f7', fontWeight: 600, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>META DEFINIDA</div>
+                <div style={{ fontSize: 24, fontWeight: 900, color: '#a855f7' }}>
                   {userGoal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                 </div>
               </div>
@@ -1004,7 +1004,7 @@ export default function ResultsTracker() {
 
             {/* Quanto falta (se não atingiu) */}
             {progressPercentage < 100 && (
-              <div style={{ fontSize: 13, color: '#94a3b8', marginTop: 4 }}>
+              <div style={{ fontSize: 14, color: '#94a3b8', textAlign: 'center', marginTop: 8 }}>
                 Faltam <strong style={{ color: '#a855f7' }}>{remainingAmount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</strong> para sua meta
               </div>
             )}
