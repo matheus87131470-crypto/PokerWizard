@@ -320,14 +320,14 @@ export default function ResultsTracker() {
       return () => clearInterval(timer);
     }, [percentage]);
 
-    const size = 340;
-    const strokeWidth = 26;
+    const size = 460;
+    const strokeWidth = 32;
     const radius = size / 2 - strokeWidth;
     const circumference = Math.PI * radius;
     const offset = circumference - (animatedPercentage / 100) * circumference;
 
     return (
-      <div style={{ position: 'relative', width: '100%', maxWidth: size, height: size * 0.65, margin: '0 auto', overflow: 'visible', padding: '40px 0' }}>
+      <div style={{ position: 'relative', width: '100%', maxWidth: size, height: size * 0.65, margin: '0 auto', overflow: 'visible', padding: '20px 0' }}>
         {/* Círculos decorativos de fundo com glow */}
         <div style={{
           position: 'absolute',
@@ -408,47 +408,48 @@ export default function ResultsTracker() {
         {/* Texto central */}
         <div style={{ 
           position: 'absolute', 
-          bottom: 25, 
+          bottom: 15, 
           left: '50%', 
           transform: 'translateX(-50%)', 
           textAlign: 'center',
           width: '100%'
         }}>
           <div style={{ 
-            fontSize: 13, 
+            fontSize: 11, 
             color: '#94a3b8', 
             fontWeight: 600,
             letterSpacing: '1px',
-            marginBottom: 10,
+            marginBottom: 4,
             textTransform: 'uppercase'
           }}>
-            Total em Vendas
+            Total
           </div>
           
           <div style={{ 
-            fontSize: 56, 
+            fontSize: 38, 
             fontWeight: 900, 
             color: '#a855f7',
-            textShadow: '0 0 50px rgba(168, 85, 247, 1), 0 0 100px rgba(168, 85, 247, 0.8), 0 0 150px rgba(236, 72, 153, 0.5)',
-            marginBottom: 8,
-            lineHeight: 1,
+            textShadow: '0 0 40px rgba(168, 85, 247, 1), 0 0 80px rgba(168, 85, 247, 0.8), 0 0 120px rgba(236, 72, 153, 0.5)',
+            marginBottom: 2,
+            lineHeight: 1.1,
             animation: 'glow-pulse 3s ease-in-out infinite'
           }}>
             {total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
           </div>
           
           <div style={{ 
-            fontSize: 26, 
+            fontSize: 24, 
             fontWeight: 900, 
             color: '#ec4899',
             textShadow: '0 0 30px rgba(236, 72, 153, 0.9), 0 0 60px rgba(168, 85, 247, 0.6)',
-            marginBottom: 8
+            marginBottom: 2,
+            lineHeight: 1
           }}>
             {animatedPercentage.toFixed(1)}%
           </div>
           
           <div style={{ 
-            fontSize: 12, 
+            fontSize: 11, 
             color: '#6b7280',
             fontWeight: 600
           }}>
