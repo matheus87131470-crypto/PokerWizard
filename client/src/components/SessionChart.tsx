@@ -161,7 +161,7 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
           <strong style={{ 
             fontSize: 24, 
             fontWeight: 700,
-            color: totalProfit >= 0 ? '#3b82f6' : '#ef4444'
+            color: '#a855f7'
           }}>
             {totalProfit >= 0 ? '+' : ''}{totalProfit.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
           </strong>
@@ -177,8 +177,8 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
                   fontSize: 10,
                   fontWeight: 600,
                   color: period === p ? '#fff' : '#94a3b8',
-                  background: period === p ? 'rgba(59, 130, 246, 0.2)' : 'transparent',
-                  border: period === p ? '1px solid rgba(59, 130, 246, 0.4)' : '1px solid transparent',
+                  background: period === p ? 'rgba(168, 85, 247, 0.15)' : 'transparent',
+                  border: period === p ? '1px solid rgba(168, 85, 247, 0.4)' : '1px solid transparent',
                   borderRadius: 5,
                   cursor: 'pointer',
                   transition: 'all 0.15s'
@@ -254,13 +254,13 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
         >
           <defs>
             <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor={totalProfit >= 0 ? "#3b82f6" : "#ef4444"} stopOpacity="0.25" />
-              <stop offset="50%" stopColor={totalProfit >= 0 ? "#3b82f6" : "#ef4444"} stopOpacity="0.1" />
-              <stop offset="100%" stopColor={totalProfit >= 0 ? "#3b82f6" : "#ef4444"} stopOpacity="0" />
+              <stop offset="0%" stopColor="#a855f7" stopOpacity="0.12" />
+              <stop offset="50%" stopColor="#a855f7" stopOpacity="0.06" />
+              <stop offset="100%" stopColor="#a855f7" stopOpacity="0" />
             </linearGradient>
           </defs>
 
-          {/* Grid horizontal sutil (estilo SharkScope) */}
+          {/* Grid horizontal quase invisível */}
           {[0, 25, 50, 75, 100].map(y => (
             <line 
               key={y}
@@ -268,8 +268,8 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
               y1={y} 
               x2="100" 
               y2={y} 
-              stroke="rgba(100, 116, 139, 0.08)" 
-              strokeWidth="0.2"
+              stroke="rgba(100, 116, 139, 0.04)" 
+              strokeWidth="0.15"
             />
           ))}
 
@@ -287,42 +287,39 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
           {/* Área preenchida */}
           <path d={areaPath} fill="url(#areaGradient)" />
 
-          {/* Linha principal - sem suavização */}
+          {/* Linha principal roxa */}
           <path
             d={linePath}
             fill="none"
-            stroke={totalProfit >= 0 ? "#3b82f6" : "#ef4444"}
-            strokeWidth="1.5"
+            stroke="#a855f7"
+            strokeWidth="1.8"
             strokeLinecap="round"
             strokeLinejoin="round"
-            opacity="0.9"
+            opacity="1"
           />
 
-          {/* Pontos especiais (dias significativos > R$ 500) */}
-          {points.map((p, i) => {
-            if (!p.data.isSignificant) return null;
-            return (
-              <g key={i}>
-                <circle
-                  cx={p.x}
-                  cy={p.y}
-                  r="2"
-                  fill={p.data.dayNet > 0 ? "#10b981" : "#ef4444"}
-                  stroke="#fff"
-                  strokeWidth="0.6"
-                />
-                <circle
-                  cx={p.x}
-                  cy={p.y}
-                  r="3"
-                  fill="none"
-                  stroke={p.data.dayNet > 0 ? "#10b981" : "#ef4444"}
-                  strokeWidth="0.3"
-                  opacity="0.5"
-                />
-              </g>
-            );
-          })}
+          {/* Apenas o último ponto destacado */}
+          {points.length > 0 && (
+            <g>
+              <circle
+                cx={points[points.length - 1].x}
+                cy={points[points.length - 1].y}
+                r="2.2"
+                fill="#a855f7"
+                stroke="#fff"
+                strokeWidth="0.8"
+              />
+              <circle
+                cx={points[points.length - 1].x}
+                cy={points[points.length - 1].y}
+                r="4"
+                fill="none"
+                stroke="#a855f7"
+                strokeWidth="0.4"
+                opacity="0.6"
+              />
+            </g>
+          )}
 
           {/* Ponto de hover */}
           {hoveredPoint && (
@@ -330,9 +327,9 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
               cx={points[hoveredPoint.index].x}
               cy={points[hoveredPoint.index].y}
               r="2"
-              fill={hoveredPoint.accumulated >= 0 ? "#3b82f6" : "#ef4444"}
+              fill="#a855f7"
               stroke="#fff"
-              strokeWidth="0.5"
+              strokeWidth="0.6"
             />
           )}
 
@@ -408,16 +405,16 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
             top: 50,
             left: `${(hoveredPoint.index / Math.max(points.length - 1, 1)) * 100}%`,
             transform: 'translateX(-50%)',
-            background: 'rgba(10, 15, 36, 0.98)',
-            border: '1px solid rgba(71, 85, 105, 0.5)',
-            padding: '12px 16px',
-            borderRadius: 8,
+            background: 'rgba(0, 0, 0, 0.95)',
+            border: '1px solid rgba(168, 85, 247, 0.3)',
+            padding: '14px 18px',
+            borderRadius: 10,
             fontSize: 11,
             fontWeight: 600,
             whiteSpace: 'nowrap',
             zIndex: 10,
             pointerEvents: 'none',
-            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.4)'
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(168, 85, 247, 0.1)'
           }}>
             {/* Dia */}
             <div style={{ fontSize: 10, color: '#94a3b8', marginBottom: 6, fontWeight: 600 }}>
@@ -428,7 +425,7 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
             <div style={{ 
               fontSize: 13, 
               fontWeight: 700, 
-              color: hoveredPoint.dayNet >= 0 ? '#10b981' : '#ef4444',
+              color: hoveredPoint.dayNet >= 0 ? '#a855f7' : '#f472b6',
               marginBottom: 6
             }}>
               {hoveredPoint.dayNet >= 0 ? '+' : ''}{hoveredPoint.dayNet.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
@@ -440,9 +437,9 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
             {/* Total acumulado */}
             <div style={{ 
               fontSize: 12, 
-              color: hoveredPoint.accumulated >= 0 ? '#3b82f6' : '#ef4444',
+              color: '#a855f7',
               paddingTop: 6,
-              borderTop: '1px solid rgba(71, 85, 105, 0.3)'
+              borderTop: '1px solid rgba(168, 85, 247, 0.2)'
             }}>
               <span style={{ fontSize: 9, color: '#94a3b8', marginRight: 6 }}>Acumulado:</span>
               <strong>
