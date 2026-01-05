@@ -16,6 +16,7 @@ import Terms from './pages/Terms';
 import PokerOddsTrainer from './pages/PokerOddsTrainer';
 import BlackjackPro from './pages/BlackjackPro';
 import ResultsTracker from './pages/ResultsTracker';
+import History from './pages/History';
 import GoogleSuccess from './pages/GoogleSuccess';
 import ProtectedRoute from './components/ProtectedRoute';
 import CookieConsent from './components/CookieConsent';
@@ -178,6 +179,7 @@ function Layout({ children }: { children: React.ReactNode }) {
           <NavLink to="/analyze" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>🔍 Analyze</NavLink>
           <NavLink to="/ranges" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>📊 Ranges</NavLink>
           <NavLink to="/results" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>📊 Controle de Resultados</NavLink>
+          <NavLink to="/history" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>📈 Histórico</NavLink>
             <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             {auth.user ? (
               <>
@@ -1301,6 +1303,7 @@ export default function App() {
             <Route path="/trainer" element={<PokerOddsTrainer />} />
             <Route path="/bj-pro" element={<BlackjackPro />} />
             <Route path="/results" element={<ResultsTracker />} />
+            <Route path="/history" element={<History />} />
             <Route path="/analyze" element={<Analyze />} />
             <Route path="/ranges" element={<Ranges />} />
             <Route path="/analysis" element={<Analysis />} />
