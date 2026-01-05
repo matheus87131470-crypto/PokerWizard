@@ -96,6 +96,25 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
   // Área preenchida tipo SharkScope
   const areaPath = `M 0 ${zeroY} ${points.map((p) => `L ${p.x} ${p.y}`).join(' ')} L 100 ${zeroY} Z`;
 
+  // Labels do eixo Y (valores de lucro)
+  const yLabels = [
+    { value: maxValue, y: 0 },
+    { value: maxValue * 0.5, y: 25 },
+    { value: 0, y: zeroY },
+    { value: minValue * 0.5, y: 75 },
+    { value: minValue, y: 100 }
+  ].filter(l => Math.abs(l.value) > 10); // Só mostrar se significativo
+
+  // Labels do eixo X (número de jogos)
+  const totalGames = chartData.length;
+  const xLabels = [
+    { label: '0', x: 0 },
+    { label: Math.floor(totalGames * 0.25).toString(), x: 25 },
+    { label: Math.floor(totalGames * 0.5).toString(), x: 50 },
+    { label: Math.floor(totalGames * 0.75).toString(), x: 75 },
+    { label: totalGames.toString(), x: 100 }
+  ];
+
   return (
     <div style={{ position: 'relative', filter: isBlurred ? 'blur(8px)' : 'none', transition: 'filter 0.3s ease' }}>
       
@@ -161,11 +180,44 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
         background: 'rgba(15, 23, 42, 0.15)', 
         padding: '16px',
         borderRadius: 8, 
-        border: '1px solid rgba(71, 85, 105, 0.15)'
+        border: '1px solid rgba(71, 85, 105, 0.15)',
+        display: 'flex',
+        gap: 8
       }}>
-        <div style={{ fontSize: 10, color: '#64748b', marginBottom: 12, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-          Lucro Acumulado (por jogo)
+        {/* Labels do eixo Y (esquerda) */}
+        <div style={{ 
+          display: 'flex', 
+          flexDirection: 'column', 
+          justifyContent: 'space-between',
+          paddingTop: 30,
+          paddingBottom: 20,
+          minWidth: 60
+        }}>
+          {yLabels.map((label, i) => (
+            <div 
+              key={i}
+              style={{ 
+                fontSize: 9, 
+                color: '#64748b', 
+                fontWeight: 500,
+                textAlign: 'right'
+              }}
+            >
+              {label.value >= 0 ? '+' : ''}{label.value.toLocaleString('pt-BR', { 
+                style: 'currency', 
+                currency: 'BRL',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+              })}
+            </div>
+          ))}
         </div>
+
+        {/* Área do gráfico */}
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 10, color: '#64748b', marginBottom: 12, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            Lucro Acumulado (por jogo)
+          </div>
         
         <svg 
           width="100%" 
@@ -233,23 +285,29 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
             />
           )}
 
-          {/* Área invisível para capturar hover */}
+          {/* Área invisível para capturar hover - menos sensível */}
           <rect
             x="0"
             y="0"
             width="100"
             height="100"
             fill="transparent"
+            style={{ cursor: 'crosshair' }}
             onMouseMove={(e) => {
               const svg = e.currentTarget.ownerSVGElement;
               if (!svg) return;
               const rect = svg.getBoundingClientRect();
               const x = ((e.clientX - rect.left) / rect.width) * 100;
-              const closestIndex = Math.round((x / 100) * (points.length - 1));
-              const point = points[closestIndex];
-              if (point) {
+              
+              // Reduzir sensibilidade: agrupar pontos em intervalos maiores
+              const samplingRate = Math.max(1, Math.floor(points.length / 50)); // Max 50 pontos detectáveis
+              const closestIndex = Math.round((x / 100) * (points.length - 1) / samplingRate) * samplingRate;
+              const clampedIndex = Math.min(closestIndex, points.length - 1);
+              const point = points[clampedIndex];
+              
+              if (point && (!hoveredPoint || hoveredPoint.index !== clampedIndex)) {
                 setHoveredPoint({ 
-                  index: closestIndex, 
+                  index: clampedIndex, 
                   value: point.data.accumulated,
                   gameNumber: point.data.gameNumber
                 });
@@ -257,6 +315,39 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
             }}
           />
         </svg>
+
+        {/* Labels do eixo X (embaixo) */}
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'space-between',
+          marginTop: 8,
+          paddingLeft: 2,
+          paddingRight: 2
+        }}>
+          {xLabels.map((label, i) => (
+            <div 
+              key={i}
+              style={{ 
+                fontSize: 9, 
+                color: '#64748b', 
+                fontWeight: 500
+              }}
+            >
+              {label.label}
+            </div>
+          ))}
+        </div>
+
+        <div style={{ 
+          fontSize: 8, 
+          color: '#64748b', 
+          textAlign: 'center',
+          marginTop: 4,
+          textTransform: 'uppercase',
+          letterSpacing: '0.5px'
+        }}>
+          Nº de Jogos
+        </div>
 
         {/* Tooltip */}
         {hoveredPoint && (
@@ -280,6 +371,7 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
             <div style={{ fontSize: 9, color: '#94a3b8', marginTop: 2 }}>Jogo #{hoveredPoint.gameNumber}</div>
           </div>
         )}
+        </div>
       </div>
     </div>
   );
