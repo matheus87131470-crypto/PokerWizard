@@ -256,8 +256,8 @@ export default function PlayerAnalysis() {
             <StatCard label="Avg Profit" value={`${MOCK_PLAYER_DATA.avgProfit}%`} icon="📊" />
           </div>
 
-          {/* Gráfico de Ganhos Neon - Flutuante Premium */}
-          <div className="chart-floating" style={{ marginBottom: 32 }}>
+          {/* Gráfico de Ganhos Neon - Flutuante Premium Full Width */}
+          <div className="chart-floating" style={{ marginBottom: 32, maxWidth: 1400, margin: '0 auto 32px', padding: '0 5%' }}>
             <h3 style={{ 
               fontSize: 22, 
               fontWeight: 700, 

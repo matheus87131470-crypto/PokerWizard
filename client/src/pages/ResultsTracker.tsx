@@ -748,13 +748,13 @@ export default function ResultsTracker() {
         </div>
       </div>
 
-      {/* 1️⃣ NOVA SESSÃO - INPUT NO TOPO */}
-      <div className="card" style={{ padding: 24, maxWidth: 600, margin: '0 auto 32px', width: '100%' }}>
-        <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 20, color: '#f8fafc' }}>
+      {/* 1️⃣ NOVA SESSÃO - FULL WIDTH */}
+      <div style={{ padding: '48px 5%', marginBottom: 32, width: '100%' }}>
+        <h3 style={{ fontSize: 22, fontWeight: 700, marginBottom: 32, color: '#f8fafc', textAlign: 'center', textShadow: '0 0 20px rgba(168, 85, 247, 0.3)' }}>
           💰 Nova Sessão
         </h3>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 800, margin: '0 auto' }}>
           {/* Ganhos */}
           <div>
             <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#10b981', marginBottom: 8 }}>
@@ -854,11 +854,11 @@ export default function ResultsTracker() {
         </div>
       </div>
 
-      {/* 2️⃣ BARRA CIRCULAR DE PROGRESSO */}
+      {/* 2️⃣ PROGRESSO DA META - FULL WIDTH */}
       {sessions.length > 0 && (
-        <div style={{ padding: '40px 20px', maxWidth: 800, margin: '0 auto 32px', width: '100%', textAlign: 'center', background: 'transparent' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32, flexWrap: 'wrap', gap: 12 }}>
-            <h3 style={{ fontSize: 18, fontWeight: 700, color: '#f8fafc' }}>
+        <div style={{ padding: '48px 5%', marginBottom: 32, width: '100%' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32, flexWrap: 'wrap', gap: 12, maxWidth: 1200, margin: '0 auto 32px' }}>
+            <h3 style={{ fontSize: 22, fontWeight: 700, color: '#f8fafc', textShadow: '0 0 20px rgba(168, 85, 247, 0.3)' }}>
               🎯 Progresso da Meta (Ciclo #{cycleNumber})
             </h3>
             <div style={{ display: 'flex', gap: 8 }}>
@@ -969,15 +969,17 @@ export default function ResultsTracker() {
           )}
 
           {/* Barra Circular */}
-          <CircularProgressBar 
-            percentage={progressPercentage} 
-            total={totalAccumulated} 
-            goal={userGoal}
-            remaining={remainingAmount}
-          />
+          <div style={{ maxWidth: 600, margin: '0 auto' }}>
+            <CircularProgressBar 
+              percentage={progressPercentage} 
+              total={totalAccumulated} 
+              goal={userGoal}
+              remaining={remainingAmount}
+            />
+          </div>
           
           {/* Informações da Meta */}
-          <div style={{ marginTop: 32, display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 600, margin: '32px auto 0' }}>
+          <div style={{ marginTop: 32, display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 700, margin: '32px auto 0' }}>
             {/* Texto Principal */}
             <div style={{ fontSize: 16, fontWeight: 700, color: progressPercentage >= 100 ? '#10b981' : '#a855f7', textAlign: 'center' }}>
               {progressPercentage >= 100 ? (
@@ -1013,9 +1015,9 @@ export default function ResultsTracker() {
         </div>
       )}
 
-      {/* 3️⃣ GRÁFICO DE EVOLUÇÃO - FLUTUANTE */}
+      {/* 3️⃣ GRÁFICO DE EVOLUÇÃO - FLUTUANTE FULL WIDTH */}
       {sessions.length > 0 && (
-        <div className="chart-floating" style={{ maxWidth: 1000, margin: '0 auto 32px', width: '100%', position: 'relative' }}>
+        <div className="chart-floating" style={{ maxWidth: 1400, margin: '0 auto 32px', width: '100%', padding: '0 5%', position: 'relative' }}>
           <h3 style={{ fontSize: 22, fontWeight: 700, marginBottom: 32, color: '#f8fafc', textAlign: 'center', textShadow: '0 0 20px rgba(168, 85, 247, 0.3)' }}>
             📈 Evolução de Resultados
           </h3>
@@ -1077,14 +1079,14 @@ export default function ResultsTracker() {
         </div>
       )}
 
-      {/* PRO Features - Histórico Semanal/Mensal */}
+      {/* PRO Features - Histórico Semanal/Mensal - FULL WIDTH */}
       {isReallyPremium && sessions.length > 0 && (
-        <div className="card" style={{ padding: 24, marginBottom: 32 }}>
-          <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 20, color: '#f8fafc' }}>
+        <div style={{ padding: '48px 5%', marginBottom: 32, width: '100%' }}>
+          <h3 style={{ fontSize: 22, fontWeight: 700, marginBottom: 32, color: '#f8fafc', textAlign: 'center', textShadow: '0 0 20px rgba(168, 85, 247, 0.3)' }}>
             📈 Histórico PRO
           </h3>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 20, maxWidth: 1200, margin: '0 auto' }}>
             {/* Semanal */}
             <div style={{ padding: 16, background: 'linear-gradient(145deg, rgba(168, 85, 247, 0.1), rgba(124, 58, 237, 0.05))', borderRadius: 10, border: '1px solid rgba(168, 85, 247, 0.3)' }}>
               <div style={{ fontSize: 12, color: '#a855f7', fontWeight: 600, marginBottom: 8 }}>📅 ÚLTIMOS 7 DIAS</div>
