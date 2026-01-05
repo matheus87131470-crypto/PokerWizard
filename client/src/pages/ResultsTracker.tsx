@@ -480,6 +480,7 @@ export default function ResultsTracker() {
   // Gráfico de Evolução - Dual Style: Analytics (profissional) vs Highlight (emocional)
   const EvolutionChart = ({ data, isBlurred, variant = 'analytics' }: { data: SessionResult[]; isBlurred: boolean; variant?: 'analytics' | 'highlight' }) => {
     const [hoveredPoint, setHoveredPoint] = useState<{ index: number; x: number; y: number; value: number; date: string; sessionData: SessionResult } | null>(null);
+    const [period, setPeriod] = useState<'7d' | '30d' | 'all'>('7d');
 
     if (data.length === 0) {
       return (
@@ -490,9 +491,20 @@ export default function ResultsTracker() {
       );
     }
 
+    // Filtrar dados por período
+    const now = Date.now();
+    const dayMs = 24 * 60 * 60 * 1000;
+    let filteredData = data;
+
+    if (period === '7d') {
+      filteredData = data.filter(s => s.timestamp >= now - 7 * dayMs);
+    } else if (period === '30d') {
+      filteredData = data.filter(s => s.timestamp >= now - 30 * dayMs);
+    }
+
     // Calcular valores acumulados - começando do ZERO
     let accumulated = 0;
-    const sessions = data.map(session => {
+    const sessions = filteredData.map(session => {
       accumulated += session.net;
       return { ...session, accumulated };
     }).reverse(); // Mais antigo primeiro
@@ -514,17 +526,17 @@ export default function ResultsTracker() {
     // Calcular totalProfit ANTES de usar em styles
     const totalProfit = chartData[chartData.length - 1].accumulated;
 
-    // 🎨 Configurações de estilo por variante
+    // 🎨 Configurações de estilo por variante - Area Chart Premium
     const styles = variant === 'analytics' ? {
       // 📊 ANALYTICS: Visual empresarial/corporativo
       lineColor: totalProfit >= 0 ? '#3b82f6' : '#ef4444',
-      lineWidth: '1.5',
+      lineWidth: '1.8',
       lineGlow: false,
-      areaOpacity: 0.03,
+      areaOpacity: 0.14,
       areaColor: totalProfit >= 0 ? '#3b82f6' : '#ef4444',
-      gridOpacity: 0.04,
+      gridOpacity: 0.02,
       gridColor: '#475569',
-      pointRadius: { normal: 0.8, hover: 1.3, last: 1 },
+      pointRadius: { normal: 0.6, hover: 1.2, last: 0.9 },
       pointOpacity: 0.9,
       background: 'transparent',
       legendBg: 'rgba(15, 23, 42, 0.3)',
@@ -631,12 +643,36 @@ export default function ResultsTracker() {
               {totalProfit >= 0 ? '+' : ''}{totalProfit.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
             </strong>
           </div>
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 5, fontWeight: 600 }}>
-              {chartData.length - 1} {chartData.length - 1 === 1 ? 'sessão' : 'sessões'}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+            {/* Filtros de Período */}
+            <div style={{ display: 'flex', gap: 6, background: 'rgba(15, 23, 42, 0.4)', padding: 4, borderRadius: 8, border: '1px solid rgba(71, 85, 105, 0.3)' }}>
+              {(['7d', '30d', 'all'] as const).map(p => (
+                <button
+                  key={p}
+                  onClick={() => setPeriod(p)}
+                  style={{
+                    padding: '6px 14px',
+                    fontSize: 11,
+                    fontWeight: 600,
+                    color: period === p ? '#fff' : '#94a3b8',
+                    background: period === p ? 'rgba(59, 130, 246, 0.15)' : 'transparent',
+                    border: period === p ? '1px solid rgba(59, 130, 246, 0.3)' : '1px solid transparent',
+                    borderRadius: 6,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  {p === 'all' ? 'Tudo' : p.toUpperCase()}
+                </button>
+              ))}
             </div>
-            <div style={{ fontSize: 13, fontWeight: 600, color: '#64748b' }}>
-              {daysDiff === 0 ? 'Hoje' : `${daysDiff} ${daysDiff === 1 ? 'dia' : 'dias'}`}
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 5, fontWeight: 600 }}>
+                {chartData.length - 1} {chartData.length - 1 === 1 ? 'sessão' : 'sessões'}
+              </div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: '#64748b' }}>
+                {daysDiff === 0 ? 'Hoje' : `${daysDiff} ${daysDiff === 1 ? 'dia' : 'dias'}`}
+              </div>
             </div>
           </div>
         </div>
