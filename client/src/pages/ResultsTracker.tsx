@@ -937,6 +937,171 @@ export default function ResultsTracker() {
     );
   };
 
+  // 🧠 Analisar padrões e gerar insights baseados em dados
+  const generateInsights = (sessions: SessionResult[]) => {
+    if (sessions.length === 0) return [];
+
+    const insights: Array<{ icon: string; text: string; type: 'neutral' | 'positive' | 'info' }> = [];
+
+    // Ordenar por data (mais antiga primeiro)
+    const sortedSessions = [...sessions].sort((a, b) => a.timestamp - b.timestamp);
+
+    // Calcular métricas
+    const positiveSessions = sortedSessions.filter(s => s.net > 0).length;
+    const negativeSessions = sortedSessions.filter(s => s.net < 0).length;
+    const winRate = (positiveSessions / sessions.length) * 100;
+
+    const totalGains = sortedSessions.reduce((sum, s) => sum + s.gains, 0);
+    const totalLosses = sortedSessions.reduce((sum, s) => sum + s.losses, 0);
+    const avgSession = sortedSessions.reduce((sum, s) => sum + s.net, 0) / sessions.length;
+
+    const bestSession = sortedSessions.reduce((max, s) => s.net > max.net ? s : max);
+    const worstSession = sortedSessions.reduce((min, s) => s.net < min.net ? s : min);
+
+    // Análise de volatilidade
+    const variance = sortedSessions.reduce((sum, s) => sum + Math.pow(s.net - avgSession, 2), 0) / sessions.length;
+    const stdDev = Math.sqrt(variance);
+
+    // Sequências
+    let currentStreak = 0;
+    let maxWinStreak = 0;
+    let maxLossStreak = 0;
+    let currentStreakType: 'win' | 'loss' | null = null;
+
+    sortedSessions.forEach(session => {
+      if (session.net > 0) {
+        if (currentStreakType === 'win') {
+          currentStreak++;
+        } else {
+          currentStreakType = 'win';
+          currentStreak = 1;
+        }
+        maxWinStreak = Math.max(maxWinStreak, currentStreak);
+      } else if (session.net < 0) {
+        if (currentStreakType === 'loss') {
+          currentStreak++;
+        } else {
+          currentStreakType = 'loss';
+          currentStreak = 1;
+        }
+        maxLossStreak = Math.max(maxLossStreak, currentStreak);
+      }
+    });
+
+    // Insight 1: Taxa de acerto
+    if (winRate >= 60) {
+      insights.push({
+        icon: '🎯',
+        text: `Taxa de acerto de ${winRate.toFixed(0)}% indica consistência positiva em ${positiveSessions} de ${sessions.length} sessões.`,
+        type: 'positive'
+      });
+    } else if (winRate >= 40) {
+      insights.push({
+        icon: '📊',
+        text: `Distribuição equilibrada: ${positiveSessions} sessões positivas e ${negativeSessions} negativas (${winRate.toFixed(0)}% de acerto).`,
+        type: 'neutral'
+      });
+    } else {
+      insights.push({
+        icon: '📉',
+        text: `Histórico mostra ${negativeSessions} sessões negativas contra ${positiveSessions} positivas (${winRate.toFixed(0)}% de acerto).`,
+        type: 'neutral'
+      });
+    }
+
+    // Insight 2: Volatilidade
+    const volatilityRatio = stdDev / Math.abs(avgSession) * 100;
+    if (volatilityRatio > 150 && sessions.length >= 5) {
+      insights.push({
+        icon: '📈',
+        text: `Resultados apresentam alta variação entre sessões. Desvio padrão de ${stdDev.toFixed(0)} indica oscilações significativas.`,
+        type: 'info'
+      });
+    } else if (volatilityRatio < 80 && sessions.length >= 5) {
+      insights.push({
+        icon: '📏',
+        text: `Padrão de resultados relativamente estável. Variação média de ${stdDev.toFixed(0)} por sessão.`,
+        type: 'positive'
+      });
+    }
+
+    // Insight 3: Melhor performance
+    if (sessions.length >= 3) {
+      insights.push({
+        icon: '⭐',
+        text: `Melhor resultado registrado: ${bestSession.net >= 0 ? '+' : ''}${bestSession.net.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} em ${bestSession.date}.`,
+        type: 'info'
+      });
+    }
+
+    // Insight 4: Sequências
+    if (maxWinStreak >= 3) {
+      insights.push({
+        icon: '🔥',
+        text: `Maior sequência positiva: ${maxWinStreak} sessões consecutivas com lucro.`,
+        type: 'positive'
+      });
+    }
+    if (maxLossStreak >= 3) {
+      insights.push({
+        icon: '📍',
+        text: `Maior sequência negativa observada: ${maxLossStreak} sessões consecutivas com prejuízo.`,
+        type: 'neutral'
+      });
+    }
+
+    // Insight 5: Média de sessão
+    if (sessions.length >= 5) {
+      const avgFormatted = Math.abs(avgSession).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      if (avgSession > 0) {
+        insights.push({
+          icon: '💰',
+          text: `Média de ${avgFormatted} por sessão baseada em ${sessions.length} registros.`,
+          type: 'positive'
+        });
+      } else if (avgSession < 0) {
+        insights.push({
+          icon: '📌',
+          text: `Média de -${avgFormatted} por sessão ao longo de ${sessions.length} registros.`,
+          type: 'neutral'
+        });
+      }
+    }
+
+    // Insight 6: Proporção ganhos/perdas
+    if (totalGains > 0 && totalLosses > 0) {
+      const ratio = totalGains / totalLosses;
+      if (ratio > 1.5) {
+        insights.push({
+          icon: '✅',
+          text: `Ganhos totais (${totalGains.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}) superam perdas em ${((ratio - 1) * 100).toFixed(0)}%.`,
+          type: 'positive'
+        });
+      } else if (ratio < 0.8) {
+        insights.push({
+          icon: '📋',
+          text: `Perdas totais (${totalLosses.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}) representam ${((1 - ratio) * 100).toFixed(0)}% a mais que ganhos.`,
+          type: 'neutral'
+        });
+      }
+    }
+
+    // Insight 7: Últimas sessões
+    if (sessions.length >= 5) {
+      const lastFive = sortedSessions.slice(-5);
+      const recentPositive = lastFive.filter(s => s.net > 0).length;
+      const trend = recentPositive >= 4 ? 'positiva' : recentPositive <= 1 ? 'negativa' : 'mista';
+      
+      insights.push({
+        icon: '🔄',
+        text: `Últimas 5 sessões mostram tendência ${trend}: ${recentPositive} positivas e ${5 - recentPositive} negativas.`,
+        type: trend === 'positiva' ? 'positive' : 'neutral'
+      });
+    }
+
+    return insights.slice(0, 6); // Máximo 6 insights
+  };
+
   // Progress Ring SVG (mantido para compatibilidade, mas não usado no novo layout)
   const ProgressRing = ({ percentage, size = 240, strokeWidth = 16 }: { percentage: number; size?: number; strokeWidth?: number }) => {
     const radius = (size - strokeWidth) / 2;
@@ -1333,6 +1498,92 @@ export default function ResultsTracker() {
               </button>
             </div>
           )}
+        </div>
+      )}
+
+      {/* 🧠 INSIGHTS INTELIGENTES */}
+      {sessions.length >= 3 && !shouldBlurChart && (
+        <div style={{ maxWidth: 1200, margin: '40px auto 32px', padding: '0 5%' }}>
+          <div style={{ 
+            marginBottom: 24, 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: 12,
+            paddingBottom: 16,
+            borderBottom: '1px solid rgba(148, 163, 184, 0.15)'
+          }}>
+            <div style={{ fontSize: 32 }}>🧠</div>
+            <div>
+              <h3 style={{ fontSize: 22, fontWeight: 700, color: '#f8fafc', marginBottom: 4 }}>
+                Insights Inteligentes
+              </h3>
+              <p style={{ fontSize: 13, color: '#94a3b8', margin: 0 }}>
+                Análise automática baseada em {sessions.length} {sessions.length === 1 ? 'sessão registrada' : 'sessões registradas'}
+              </p>
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 16 }}>
+            {generateInsights(sessions).map((insight, idx) => (
+              <div
+                key={idx}
+                style={{
+                  padding: '18px 20px',
+                  background: insight.type === 'positive' 
+                    ? 'rgba(16, 185, 129, 0.08)' 
+                    : insight.type === 'info'
+                    ? 'rgba(59, 130, 246, 0.08)'
+                    : 'rgba(148, 163, 184, 0.08)',
+                  borderRadius: 12,
+                  border: insight.type === 'positive' 
+                    ? '1px solid rgba(16, 185, 129, 0.2)' 
+                    : insight.type === 'info'
+                    ? '1px solid rgba(59, 130, 246, 0.2)'
+                    : '1px solid rgba(148, 163, 184, 0.15)',
+                  display: 'flex',
+                  gap: 14,
+                  alignItems: 'flex-start',
+                  transition: 'all 0.3s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.15)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+              >
+                <div style={{ fontSize: 28, lineHeight: 1, flexShrink: 0 }}>
+                  {insight.icon}
+                </div>
+                <p style={{ 
+                  fontSize: 14, 
+                  color: '#e2e8f0', 
+                  margin: 0, 
+                  lineHeight: 1.6,
+                  fontWeight: 500
+                }}>
+                  {insight.text}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          {/* Nota de rodapé */}
+          <div style={{ 
+            marginTop: 20, 
+            padding: '12px 16px', 
+            background: 'rgba(59, 130, 246, 0.06)',
+            borderRadius: 8,
+            border: '1px solid rgba(59, 130, 246, 0.15)',
+            fontSize: 12,
+            color: '#94a3b8',
+            textAlign: 'center',
+            lineHeight: 1.5
+          }}>
+            💡 <strong style={{ color: '#3b82f6' }}>Insights baseados exclusivamente em dados históricos.</strong> Não constituem previsões, recomendações ou influência para decisões futuras.
+          </div>
         </div>
       )}
 
