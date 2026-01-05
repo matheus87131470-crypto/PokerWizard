@@ -1074,7 +1074,6 @@ export default function ResultsTracker() {
               </button>
             </div>
           )}
-          </div>
         </div>
       )}
 
