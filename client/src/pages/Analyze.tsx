@@ -171,11 +171,13 @@ Hero?`
         )}
       </div>
 
-      {/* Card Principal */}
-      <div className="card" style={{ padding: 24, marginBottom: 20 }}>
-        <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 700 }}>
+      {/* Card Principal - Full Width */}
+      <div style={{ padding: '48px 5%', marginBottom: 32, width: '100%' }}>
+        <h3 style={{ margin: '0 0 24px', fontSize: 22, fontWeight: 700, textAlign: 'center', color: '#f8fafc', textShadow: '0 0 20px rgba(168, 85, 247, 0.3)' }}>
           📋 Histórico da Mão
         </h3>
+
+        <div style={{ maxWidth: 1000, margin: '0 auto' }}>
 
         <textarea
           value={handHistory}
@@ -264,14 +266,16 @@ UTG raises to 3bb, Hero 3-bets to 9bb...`}
             👑 Assinar Premium - Análises Ilimitadas
           </button>
         )}
+        </div>
       </div>
 
-      {/* Resultado da Análise */}
+      {/* Resultado da Análise - Full Width */}
       {analysis && (
-        <div className="card" style={{ padding: 24, marginBottom: 20 }}>
-          <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 700 }}>
+        <div style={{ padding: '48px 5%', marginBottom: 32, width: '100%' }}>
+          <h3 style={{ margin: '0 0 24px', fontSize: 22, fontWeight: 700, textAlign: 'center', color: '#f8fafc', textShadow: '0 0 20px rgba(168, 85, 247, 0.3)' }}>
             🎯 Análise GTO
           </h3>
+          <div style={{ maxWidth: 1000, margin: '0 auto' }}>
           <div style={{
             padding: 20,
             background: 'rgba(0, 0, 0, 0.3)',
@@ -283,14 +287,16 @@ UTG raises to 3bb, Hero 3-bets to 9bb...`}
           }}>
             {analysis}
           </div>
+          </div>
         </div>
       )}
 
-      {/* Exemplos de Mãos */}
-      <div className="card" style={{ padding: 24 }}>
-        <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 700 }}>
+      {/* Exemplos de Mãos - Full Width */}
+      <div style={{ padding: '48px 5%', width: '100%' }}>
+        <h3 style={{ margin: '0 0 24px', fontSize: 22, fontWeight: 700, textAlign: 'center', color: '#f8fafc', textShadow: '0 0 20px rgba(168, 85, 247, 0.3)' }}>
           💡 Exemplos de Mãos
         </h3>
+        <div style={{ maxWidth: 1000, margin: '0 auto' }}>
         <p style={{ margin: '0 0 16px', color: 'var(--text-secondary)', fontSize: 13 }}>
           Clique em um exemplo para carregar:
         </p>
@@ -332,6 +338,7 @@ UTG raises to 3bb, Hero 3-bets to 9bb...`}
               </div>
             </button>
           ))}
+        </div>
         </div>
       </div>
     </div>
