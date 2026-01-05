@@ -64,6 +64,46 @@ export default function History() {
   const totalLosses = sessions.reduce((acc, s) => acc + s.losses, 0);
   const totalNet = sessions.reduce((acc, s) => acc + s.net, 0);
 
+  // Estatísticas adicionais
+  const sessionsWithProfit = sessions.filter(s => s.net > 0).length;
+  const sessionsWithLoss = sessions.filter(s => s.net < 0).length;
+  const winRate = sessions.length > 0 ? ((sessionsWithProfit / sessions.length) * 100).toFixed(1) : '0';
+  const avgProfit = sessions.length > 0 ? totalNet / sessions.length : 0;
+  const bestSession = sessions.length > 0 ? Math.max(...sessions.map(s => s.net)) : 0;
+  const worstSession = sessions.length > 0 ? Math.min(...sessions.map(s => s.net)) : 0;
+
+  // Dados para gráfico de pizza (Ganhos vs Perdas)
+  const totalGainsPercent = totalGains + totalLosses > 0 ? (totalGains / (totalGains + totalLosses)) * 100 : 50;
+  const totalLossesPercent = 100 - totalGainsPercent;
+
+  // Dados para gráfico de barras (últimos 6 meses)
+  const getLast6Months = () => {
+    const months = [];
+    const now = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      months.push({
+        label: date.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }),
+        month: date.getMonth(),
+        year: date.getFullYear()
+      });
+    }
+    return months;
+  };
+
+  const monthlyData = getLast6Months().map(m => {
+    const sessionsInMonth = sessions.filter(s => {
+      const sessionDate = new Date(s.timestamp);
+      return sessionDate.getMonth() === m.month && sessionDate.getFullYear() === m.year;
+    });
+    const gains = sessionsInMonth.reduce((acc, s) => acc + s.gains, 0);
+    const losses = sessionsInMonth.reduce((acc, s) => acc + s.losses, 0);
+    const net = sessionsInMonth.reduce((acc, s) => acc + s.net, 0);
+    return { ...m, gains, losses, net, count: sessionsInMonth.length };
+  });
+
+  const maxMonthlyValue = Math.max(...monthlyData.map(d => Math.max(d.gains, d.losses)), 1000);
+
   return (
     <div style={{ 
       minHeight: '100vh',
@@ -163,60 +203,354 @@ export default function History() {
 
       {/* Gráfico */}
       {sessions.length > 0 ? (
-        <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 5%', position: 'relative' }}>
-          <SessionChart data={sessions} isBlurred={shouldBlurChart} />
+        <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 5%' }}>
           
-          {/* Paywall */}
-          {shouldBlurChart && (
-            <div style={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              textAlign: 'center',
-              zIndex: 10,
-              background: 'rgba(10, 15, 36, 0.95)',
-              padding: 40,
-              borderRadius: 20,
-              border: '1px solid rgba(168, 85, 247, 0.4)',
-              boxShadow: '0 8px 40px rgba(0, 0, 0, 0.6)',
-              maxWidth: 450
+          {/* Grid de Gráficos Principais */}
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(2, 1fr)', 
+            gap: 24,
+            marginBottom: 40
+          }}>
+            
+            {/* Gráfico 1: Evolução do Saldo */}
+            <div style={{ 
+              background: 'rgba(15, 23, 42, 0.4)',
+              border: '1px solid rgba(71, 85, 105, 0.3)',
+              borderRadius: 16,
+              padding: 24,
+              backdropFilter: 'blur(10px)',
+              gridColumn: '1 / -1',
+              position: 'relative'
             }}>
-              <div style={{ fontSize: 64, marginBottom: 20 }}>🔒</div>
-              <h4 style={{ fontSize: 24, fontWeight: 700, marginBottom: 16, color: '#f8fafc' }}>
-                Limite FREE Atingido
-              </h4>
-              <p style={{ fontSize: 15, color: '#94a3b8', marginBottom: 24, lineHeight: 1.7 }}>
-                Você atingiu o limite de <strong style={{ color: '#a855f7' }}>{FREE_SESSION_LIMIT} sessões</strong>.<br />
-                Faça upgrade para <strong style={{ color: '#a855f7' }}>PRO</strong> e tenha histórico ilimitado com visão completa!
-              </p>
-              <button
-                onClick={() => navigate('/premium')}
-                style={{
-                  padding: '16px 40px',
-                  background: 'linear-gradient(145deg, rgba(168, 85, 247, 0.9), rgba(124, 58, 237, 0.9))',
-                  border: 'none',
-                  borderRadius: 12,
-                  color: '#fff',
-                  fontSize: 16,
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  boxShadow: '0 4px 20px rgba(168, 85, 247, 0.5)'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = '0 6px 30px rgba(168, 85, 247, 0.7)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 4px 20px rgba(168, 85, 247, 0.5)';
-                }}
-              >
-                ⭐ Upgrade para PRO - R$ 3,50
-              </button>
+              <h3 style={{ fontSize: 18, fontWeight: 700, color: '#f8fafc', marginBottom: 20 }}>
+                📈 Evolução do Saldo Acumulado
+              </h3>
+              <SessionChart data={sessions} isBlurred={shouldBlurChart} />
+              
+              {/* Paywall */}
+              {shouldBlurChart && (
+                <div style={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  textAlign: 'center',
+                  zIndex: 10,
+                  background: 'rgba(10, 15, 36, 0.95)',
+                  padding: 40,
+                  borderRadius: 20,
+                  border: '1px solid rgba(168, 85, 247, 0.4)',
+                  boxShadow: '0 8px 40px rgba(0, 0, 0, 0.6)',
+                  maxWidth: 450
+                }}>
+                  <div style={{ fontSize: 64, marginBottom: 20 }}>🔒</div>
+                  <h4 style={{ fontSize: 24, fontWeight: 700, marginBottom: 16, color: '#f8fafc' }}>
+                    Limite FREE Atingido
+                  </h4>
+                  <p style={{ fontSize: 15, color: '#94a3b8', marginBottom: 24, lineHeight: 1.7 }}>
+                    Você atingiu o limite de <strong style={{ color: '#a855f7' }}>{FREE_SESSION_LIMIT} sessões</strong>.<br />
+                    Faça upgrade para <strong style={{ color: '#a855f7' }}>PRO</strong> e tenha histórico ilimitado!
+                  </p>
+                  <button
+                    onClick={() => navigate('/premium')}
+                    style={{
+                      padding: '16px 40px',
+                      background: 'linear-gradient(145deg, rgba(168, 85, 247, 0.9), rgba(124, 58, 237, 0.9))',
+                      border: 'none',
+                      borderRadius: 12,
+                      color: '#fff',
+                      fontSize: 16,
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
+                      boxShadow: '0 4px 20px rgba(168, 85, 247, 0.5)'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-2px)';
+                      e.currentTarget.style.boxShadow = '0 6px 30px rgba(168, 85, 247, 0.7)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = '0 4px 20px rgba(168, 85, 247, 0.5)';
+                    }}
+                  >
+                    ⭐ Upgrade para PRO - R$ 3,50
+                  </button>
+                </div>
+              )}
             </div>
-          )}
+
+            {/* Gráfico 2: Distribuição Ganhos vs Perdas (Pizza) */}
+            <div style={{ 
+              background: 'rgba(15, 23, 42, 0.4)',
+              border: '1px solid rgba(71, 85, 105, 0.3)',
+              borderRadius: 16,
+              padding: 24,
+              backdropFilter: 'blur(10px)'
+            }}>
+              <h3 style={{ fontSize: 16, fontWeight: 700, color: '#f8fafc', marginBottom: 20 }}>
+                💰 Distribuição de Valores
+              </h3>
+              
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 40, marginTop: 30 }}>
+                {/* Donut Chart */}
+                <svg width="180" height="180" viewBox="0 0 180 180">
+                  <defs>
+                    <linearGradient id="gainGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#10b981" />
+                      <stop offset="100%" stopColor="#059669" />
+                    </linearGradient>
+                    <linearGradient id="lossGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#ef4444" />
+                      <stop offset="100%" stopColor="#dc2626" />
+                    </linearGradient>
+                  </defs>
+                  
+                  {/* Background circle */}
+                  <circle cx="90" cy="90" r="70" fill="none" stroke="rgba(71, 85, 105, 0.2)" strokeWidth="30" />
+                  
+                  {/* Gains arc */}
+                  <circle
+                    cx="90"
+                    cy="90"
+                    r="70"
+                    fill="none"
+                    stroke="url(#gainGradient)"
+                    strokeWidth="30"
+                    strokeDasharray={`${(totalGainsPercent / 100) * 440} 440`}
+                    strokeDashoffset="0"
+                    transform="rotate(-90 90 90)"
+                    strokeLinecap="round"
+                  />
+                  
+                  {/* Losses arc */}
+                  <circle
+                    cx="90"
+                    cy="90"
+                    r="70"
+                    fill="none"
+                    stroke="url(#lossGradient)"
+                    strokeWidth="30"
+                    strokeDasharray={`${(totalLossesPercent / 100) * 440} 440`}
+                    strokeDashoffset={`-${(totalGainsPercent / 100) * 440}`}
+                    transform="rotate(-90 90 90)"
+                    strokeLinecap="round"
+                  />
+                  
+                  {/* Center text */}
+                  <text x="90" y="85" textAnchor="middle" fill="#f8fafc" fontSize="24" fontWeight="700">
+                    {winRate}%
+                  </text>
+                  <text x="90" y="105" textAnchor="middle" fill="#94a3b8" fontSize="12" fontWeight="600">
+                    Win Rate
+                  </text>
+                </svg>
+
+                {/* Legend */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                      <div style={{ width: 12, height: 12, borderRadius: 3, background: 'linear-gradient(135deg, #10b981, #059669)' }} />
+                      <span style={{ fontSize: 12, color: '#94a3b8', fontWeight: 600 }}>Ganhos</span>
+                    </div>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: '#10b981', marginLeft: 20 }}>
+                      {totalGainsPercent.toFixed(1)}%
+                    </div>
+                    <div style={{ fontSize: 13, color: '#64748b', marginLeft: 20 }}>
+                      {totalGains.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                      <div style={{ width: 12, height: 12, borderRadius: 3, background: 'linear-gradient(135deg, #ef4444, #dc2626)' }} />
+                      <span style={{ fontSize: 12, color: '#94a3b8', fontWeight: 600 }}>Perdas</span>
+                    </div>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: '#ef4444', marginLeft: 20 }}>
+                      {totalLossesPercent.toFixed(1)}%
+                    </div>
+                    <div style={{ fontSize: 13, color: '#64748b', marginLeft: 20 }}>
+                      {totalLosses.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Gráfico 3: Desempenho Mensal (Barras) */}
+            <div style={{ 
+              background: 'rgba(15, 23, 42, 0.4)',
+              border: '1px solid rgba(71, 85, 105, 0.3)',
+              borderRadius: 16,
+              padding: 24,
+              backdropFilter: 'blur(10px)'
+            }}>
+              <h3 style={{ fontSize: 16, fontWeight: 700, color: '#f8fafc', marginBottom: 20 }}>
+                📊 Desempenho Últimos 6 Meses
+              </h3>
+              
+              <div style={{ marginTop: 30 }}>
+                {monthlyData.map((month, idx) => {
+                  const gainWidth = month.gains > 0 ? (month.gains / maxMonthlyValue) * 100 : 0;
+                  const lossWidth = month.losses > 0 ? (month.losses / maxMonthlyValue) * 100 : 0;
+                  
+                  return (
+                    <div key={idx} style={{ marginBottom: 16 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                        <span style={{ fontSize: 12, color: '#94a3b8', fontWeight: 600, minWidth: 50 }}>
+                          {month.label}
+                        </span>
+                        <span style={{ fontSize: 11, color: '#64748b' }}>
+                          {month.count} {month.count === 1 ? 'sessão' : 'sessões'}
+                        </span>
+                      </div>
+                      
+                      <div style={{ display: 'flex', gap: 4, height: 24 }}>
+                        {/* Barra de Ganhos */}
+                        <div style={{ 
+                          flex: 1,
+                          background: 'rgba(71, 85, 105, 0.2)',
+                          borderRadius: 6,
+                          overflow: 'hidden',
+                          position: 'relative'
+                        }}>
+                          <div style={{
+                            width: `${gainWidth}%`,
+                            height: '100%',
+                            background: 'linear-gradient(90deg, rgba(16, 185, 129, 0.8), rgba(5, 150, 105, 0.9))',
+                            transition: 'width 0.3s ease',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'flex-end',
+                            paddingRight: 8
+                          }}>
+                            {month.gains > 0 && (
+                              <span style={{ fontSize: 10, color: '#fff', fontWeight: 700 }}>
+                                +{(month.gains / 1000).toFixed(1)}k
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        
+                        {/* Barra de Perdas */}
+                        <div style={{ 
+                          flex: 1,
+                          background: 'rgba(71, 85, 105, 0.2)',
+                          borderRadius: 6,
+                          overflow: 'hidden',
+                          position: 'relative'
+                        }}>
+                          <div style={{
+                            width: `${lossWidth}%`,
+                            height: '100%',
+                            background: 'linear-gradient(90deg, rgba(239, 68, 68, 0.8), rgba(220, 38, 38, 0.9))',
+                            transition: 'width 0.3s ease',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'flex-end',
+                            paddingRight: 8
+                          }}>
+                            {month.losses > 0 && (
+                              <span style={{ fontSize: 10, color: '#fff', fontWeight: 700 }}>
+                                -{(month.losses / 1000).toFixed(1)}k
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              
+              {/* Legend */}
+              <div style={{ display: 'flex', gap: 20, marginTop: 20, paddingTop: 16, borderTop: '1px solid rgba(71, 85, 105, 0.2)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <div style={{ width: 12, height: 12, borderRadius: 3, background: 'linear-gradient(90deg, #10b981, #059669)' }} />
+                  <span style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600 }}>Ganhos</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <div style={{ width: 12, height: 12, borderRadius: 3, background: 'linear-gradient(90deg, #ef4444, #dc2626)' }} />
+                  <span style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600 }}>Perdas</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          {/* Estatísticas Detalhadas */}
+          <div style={{
+            background: 'rgba(15, 23, 42, 0.4)',
+            border: '1px solid rgba(71, 85, 105, 0.3)',
+            borderRadius: 16,
+            padding: 24,
+            backdropFilter: 'blur(10px)',
+            marginBottom: 40
+          }}>
+            <h3 style={{ fontSize: 18, fontWeight: 700, color: '#f8fafc', marginBottom: 24 }}>
+              📈 Estatísticas Detalhadas
+            </h3>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 20 }}>
+              
+              <div>
+                <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>
+                  Média por Sessão
+                </div>
+                <div style={{ fontSize: 24, fontWeight: 800, color: avgProfit >= 0 ? '#3b82f6' : '#ef4444' }}>
+                  {avgProfit >= 0 ? '+' : ''}{avgProfit.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                </div>
+              </div>
+
+              <div>
+                <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>
+                  Melhor Sessão
+                </div>
+                <div style={{ fontSize: 24, fontWeight: 800, color: '#10b981' }}>
+                  +{bestSession.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                </div>
+              </div>
+
+              <div>
+                <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>
+                  Pior Sessão
+                </div>
+                <div style={{ fontSize: 24, fontWeight: 800, color: '#ef4444' }}>
+                  {worstSession.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                </div>
+              </div>
+
+              <div>
+                <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>
+                  Sessões com Lucro
+                </div>
+                <div style={{ fontSize: 24, fontWeight: 800, color: '#10b981' }}>
+                  {sessionsWithProfit} <span style={{ fontSize: 16, color: '#64748b' }}>/ {sessions.length}</span>
+                </div>
+              </div>
+
+              <div>
+                <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>
+                  Sessões com Prejuízo
+                </div>
+                <div style={{ fontSize: 24, fontWeight: 800, color: '#ef4444' }}>
+                  {sessionsWithLoss} <span style={{ fontSize: 16, color: '#64748b' }}>/ {sessions.length}</span>
+                </div>
+              </div>
+
+              <div>
+                <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>
+                  Taxa de Vitória
+                </div>
+                <div style={{ fontSize: 24, fontWeight: 800, color: '#3b82f6' }}>
+                  {winRate}%
+                </div>
+              </div>
+
+            </div>
+          </div>
+
         </div>
       ) : (
         <div style={{ 
