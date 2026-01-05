@@ -359,8 +359,8 @@ export default function Ranges() {
         </div>
       </div>
 
-      {/* Tabs de Posição */}
-      <div className="card" style={{ padding: 20, marginBottom: 20 }}>
+      {/* Tabs de Posição - Full Width */}
+      <div style={{ padding: '0 5%', marginBottom: 32, width: '100%' }}>
         <PositionTabs
           positions={['UTG', 'HJ', 'CO', 'BTN', 'SB', 'BB']}
           activePosition={activePosition}
@@ -379,11 +379,11 @@ export default function Ranges() {
         </p>
       </div>
 
-      {/* Layout Principal */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 20 }}>
+      {/* Layout Principal - Full Width */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 32, padding: '0 5%', maxWidth: 1600, margin: '0 auto' }}>
         
         {/* Matrix de Mãos */}
-        <div className="card" style={{ padding: 20 }}>
+        <div style={{ padding: 0 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
             <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>
               🎴 Range de {activePosition}
@@ -464,9 +464,9 @@ export default function Ranges() {
 
         {/* Sidebar - Estatísticas */}
         <div>
-          {/* Stats Card */}
-          <div className="card" style={{ padding: 20, marginBottom: 20 }}>
-            <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 700 }}>📈 Estatísticas</h3>
+          {/* Stats */}
+          <div style={{ padding: '24px 0', marginBottom: 32 }}>
+            <h3 style={{ margin: '0 0 20px', fontSize: 18, fontWeight: 700, color: '#f8fafc' }}>📈 Estatísticas</h3>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <StatRow label="All-in" value={stats.allin} total={hands.length} color="#ec4899" />
@@ -492,8 +492,8 @@ export default function Ranges() {
           </div>
 
           {/* Ações (estilo GTO Wizard) */}
-          <div className="card" style={{ padding: 20, marginBottom: 20 }}>
-            <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 700 }}>🎯 Ações</h3>
+          <div style={{ padding: '24px 0', marginBottom: 32 }}>
+            <h3 style={{ margin: '0 0 20px', fontSize: 18, fontWeight: 700, color: '#f8fafc' }}>🎯 Ações</h3>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 12 }}>
               {[
                 { label: 'All-in', color: '#7f1d1d', percent: totalCombos ? (comboStats.allin / totalCombos * 100) : 0, combos: comboStats.allin },
@@ -541,8 +541,8 @@ export default function Ranges() {
           </div>
 
           {/* Hands (detalhe da mão selecionada) */}
-          <div className="card" style={{ padding: 20, marginBottom: 20 }}>
-            <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 700 }}>🃏 Hands</h3>
+          <div style={{ padding: '24px 0', marginBottom: 32 }}>
+            <h3 style={{ margin: '0 0 20px', fontSize: 18, fontWeight: 700, color: '#f8fafc' }}>🎴 Hands</h3>
             {!selectedHand ? (
               <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Selecione uma mão na matriz para ver o mix.</div>
             ) : (
@@ -576,8 +576,8 @@ export default function Ranges() {
           </div>
 
           {/* Blockers + Equity chart */}
-          <div className="card" style={{ padding: 20 }}>
-            <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 700 }}>🛡️ Blockers & Equity</h3>
+          <div style={{ padding: '24px 0', marginBottom: 32 }}>
+            <h3 style={{ margin: '0 0 20px', fontSize: 18, fontWeight: 700, color: '#f8fafc' }}>🛡️ Blockers & Equity</h3>
             {!selectedHand ? (
               <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Selecione uma mão para ver bloqueadores e equity.</div>
             ) : (
@@ -624,8 +624,8 @@ export default function Ranges() {
           </div>
 
           {/* Legenda */}
-          <div className="card" style={{ padding: 20 }}>
-            <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 700 }}>🎨 Legenda</h3>
+          <div style={{ padding: '24px 0', marginBottom: 32 }}>
+            <h3 style={{ margin: '0 0 20px', fontSize: 18, fontWeight: 700, color: '#f8fafc' }}>🎨 Legenda</h3>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               <LegendItem color="#ec4899" label="All-in" description="Push ou 5bet+" />
@@ -636,8 +636,8 @@ export default function Ranges() {
           </div>
 
           {/* Botão de Explicação com IA */}
-          <div className="card" style={{ padding: 20, marginTop: 20 }}>
-            <h3 style={{ margin: '0 0 12px', fontSize: 16, fontWeight: 700 }}>🧠 Explicação com IA</h3>
+          <div style={{ padding: '24px 0' }}>
+            <h3 style={{ margin: '0 0 16px', fontSize: 18, fontWeight: 700, color: '#f8fafc' }}>🧠 Explicação com IA</h3>
             <p style={{ 
               margin: '0 0 16px', 
               fontSize: 13, 
