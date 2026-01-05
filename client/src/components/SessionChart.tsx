@@ -128,23 +128,42 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
   const getY = (value: number) => ((maxValue - value) / range) * 100;
   const zeroY = getY(0);
 
-  // Pontos do gráfico (1 por sessão)
-  const points = chartData.map((d, i) => ({
-    x: chartData.length === 1 ? 50 : (i / (chartData.length - 1)) * 100,
+  // Adicionar ponto inicial no zero (x=0, accumulated=0)
+  const baseY = dataMin >= 0 ? 100 : dataMax <= 0 ? 0 : zeroY;
+  const initialPoint = {
+    x: 0,
+    y: baseY,
+    data: {
+      dayNumber: 0,
+      date: '',
+      dayNet: 0,
+      dayGains: 0,
+      dayLosses: 0,
+      sessionCount: 0,
+      accumulated: 0,
+      isSignificant: false
+    }
+  };
+
+  // Pontos do gráfico (1 por sessão) - redistribuir X para acomodar ponto inicial
+  const dataPoints = chartData.map((d, i) => ({
+    x: chartData.length === 1 ? 100 : ((i + 1) / chartData.length) * 100,
     y: getY(d.accumulated),
     data: d
   }));
 
-  // Path da linha - sempre começa do zero na base
-  const startY = dataMin >= 0 ? 100 : dataMax <= 0 ? 0 : zeroY;
-  const linePath = `M 0 ${startY} ${points.map((p) => `L ${p.x} ${p.y}`).join(' ')}`;
+  // Combinar ponto inicial + dados reais
+  const points = [initialPoint, ...dataPoints];
 
-  // Área preenchida - sempre parte da base (y=100) quando positivo, do topo (y=0) quando negativo
+  // Path da linha - começa do zero e evolui
+  const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+
+  // Área preenchida
   const areaPath = dataMin >= 0 
-    ? `M 0 100 ${points.map((p) => `L ${p.x} ${p.y}`).join(' ')} L 100 100 Z`
+    ? `M 0 100 ${dataPoints.map((p) => `L ${p.x} ${p.y}`).join(' ')} L 100 100 Z`
     : dataMax <= 0
-    ? `M 0 0 ${points.map((p) => `L ${p.x} ${p.y}`).join(' ')} L 100 0 Z`
-    : `M 0 ${zeroY} ${points.map((p) => `L ${p.x} ${p.y}`).join(' ')} L 100 ${zeroY} Z`;
+    ? `M 0 0 ${dataPoints.map((p) => `L ${p.x} ${p.y}`).join(' ')} L 100 0 Z`
+    : `M 0 ${zeroY} ${dataPoints.map((p) => `L ${p.x} ${p.y}`).join(' ')} L 100 ${zeroY} Z`;
 
   // Labels do eixo Y (valores de lucro acumulado)
   let yLabels;
