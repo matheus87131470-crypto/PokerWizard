@@ -64,8 +64,6 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
 
   const totalProfit = chartData[chartData.length - 1]?.accumulated || 0;
 
-  const totalProfit = chartData[chartData.length - 1]?.accumulated || 0;
-
   // Range do gráfico (baseado em acumulado)
   const values = chartData.map(d => d.accumulated);
   const dataMax = Math.max(...values, 100);
