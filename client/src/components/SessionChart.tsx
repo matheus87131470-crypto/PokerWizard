@@ -18,9 +18,10 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
   const [hoveredPoint, setHoveredPoint] = useState<{ 
     index: number; 
     accumulated: number; 
-    sessionNet: number;
-    sessionNumber: number;
+    dayNet: number;
+    dayNumber: number;
     date: string;
+    sessionCount: number;
   } | null>(null);
   const [period, setPeriod] = useState<'7d' | '30d' | 'all'>('all');
 
@@ -47,18 +48,47 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
   // Ordem cronológica
   const sessions = [...filteredData].sort((a, b) => a.timestamp - b.timestamp);
   
-  // LÓGICA BRIEFING: 1 ponto por sessão, lucro acumulado real
-  const chartData = sessions.map((session, index) => {
-    const accumulated = sessions
+  // AGRUPAMENTO DIÁRIO: agregar sessões do mesmo dia
+  const dailyData = sessions.reduce((acc, session) => {
+    const dateKey = session.date; // Já está no formato DD/MM/YYYY
+    
+    if (!acc[dateKey]) {
+      acc[dateKey] = {
+        date: dateKey,
+        timestamp: session.timestamp,
+        totalNet: 0,
+        totalGains: 0,
+        totalLosses: 0,
+        sessionCount: 0
+      };
+    }
+    
+    acc[dateKey].totalNet += session.net;
+    acc[dateKey].totalGains += session.gains;
+    acc[dateKey].totalLosses += session.losses;
+    acc[dateKey].sessionCount += 1;
+    
+    return acc;
+  }, {} as Record<string, { date: string; timestamp: number; totalNet: number; totalGains: number; totalLosses: number; sessionCount: number }>);
+
+  // Converter para array ordenado por data
+  const dailySessions = Object.values(dailyData).sort((a, b) => a.timestamp - b.timestamp);
+  
+  // LÓGICA BRIEFING: 1 ponto por dia, lucro acumulado real
+  const chartData = dailySessions.map((day, index) => {
+    const accumulated = dailySessions
       .slice(0, index + 1)
-      .reduce((acc, s) => acc + s.net, 0);
+      .reduce((acc, d) => acc + d.totalNet, 0);
     
     return {
-      sessionNumber: index + 1,
-      date: session.date,
-      sessionNet: session.net,
+      dayNumber: index + 1,
+      date: day.date,
+      dayNet: day.totalNet,
+      dayGains: day.totalGains,
+      dayLosses: day.totalLosses,
+      sessionCount: day.sessionCount,
       accumulated,
-      isSignificant: Math.abs(session.net) > 500 // Marcar sessões > R$ 500
+      isSignificant: Math.abs(day.totalNet) > 500 // Marcar dias > R$ 500
     };
   });
 
@@ -100,14 +130,14 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
     { value: minValue, y: 100 }
   ].filter(l => Math.abs(l.value) > 10);
 
-  // Labels do eixo X (número de sessões)
-  const totalSessions = chartData.length;
+  // Labels do eixo X (número de dias)
+  const totalDays = chartData.length;
   const xLabels = [
     { label: '1', x: 0 },
-    { label: Math.floor(totalSessions * 0.25).toString(), x: 25 },
-    { label: Math.floor(totalSessions * 0.5).toString(), x: 50 },
-    { label: Math.floor(totalSessions * 0.75).toString(), x: 75 },
-    { label: totalSessions.toString(), x: 100 }
+    { label: Math.floor(totalDays * 0.25).toString(), x: 25 },
+    { label: Math.floor(totalDays * 0.5).toString(), x: 50 },
+    { label: Math.floor(totalDays * 0.75).toString(), x: 75 },
+    { label: totalDays.toString(), x: 100 }
   ];
 
   return (
@@ -160,10 +190,10 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
           </div>
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontSize: 10, color: '#94a3b8', marginBottom: 2, fontWeight: 500 }}>
-              {chartData.length} {chartData.length === 1 ? 'sessão' : 'sessões'}
+              {chartData.length} {chartData.length === 1 ? 'dia' : 'dias'}
             </div>
             <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b' }}>
-              {totalProfit >= 0 ? '+' : ''}{totalProfit.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })}
+              {sessions.length} {sessions.length === 1 ? 'sessão' : 'sessões'}
             </div>
           </div>
         </div>
@@ -268,7 +298,7 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
             opacity="0.9"
           />
 
-          {/* Pontos especiais (sessões significativas > R$ 500) */}
+          {/* Pontos especiais (dias significativos > R$ 500) */}
           {points.map((p, i) => {
             if (!p.data.isSignificant) return null;
             return (
@@ -277,7 +307,7 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
                   cx={p.x}
                   cy={p.y}
                   r="2"
-                  fill={p.data.sessionNet > 0 ? "#10b981" : "#ef4444"}
+                  fill={p.data.dayNet > 0 ? "#10b981" : "#ef4444"}
                   stroke="#fff"
                   strokeWidth="0.6"
                 />
@@ -286,7 +316,7 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
                   cy={p.y}
                   r="3"
                   fill="none"
-                  stroke={p.data.sessionNet > 0 ? "#10b981" : "#ef4444"}
+                  stroke={p.data.dayNet > 0 ? "#10b981" : "#ef4444"}
                   strokeWidth="0.3"
                   opacity="0.5"
                 />
@@ -328,9 +358,10 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
                 setHoveredPoint({ 
                   index: clampedIndex, 
                   accumulated: point.data.accumulated,
-                  sessionNet: point.data.sessionNet,
-                  sessionNumber: point.data.sessionNumber,
-                  date: point.data.date
+                  dayNet: point.data.dayNet,
+                  dayNumber: point.data.dayNumber,
+                  date: point.data.date,
+                  sessionCount: point.data.sessionCount
                 });
               }
             }}
@@ -367,7 +398,7 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
           textTransform: 'uppercase',
           letterSpacing: '0.5px'
         }}>
-          Nº de Sessões
+          Nº de Dias
         </div>
 
         {/* Tooltip */}
@@ -388,21 +419,21 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
             pointerEvents: 'none',
             boxShadow: '0 4px 20px rgba(0, 0, 0, 0.4)'
           }}>
-            {/* Sessão */}
+            {/* Dia */}
             <div style={{ fontSize: 10, color: '#94a3b8', marginBottom: 6, fontWeight: 600 }}>
-              Sessão #{hoveredPoint.sessionNumber} • {hoveredPoint.date}
+              Dia #{hoveredPoint.dayNumber} • {hoveredPoint.date}
             </div>
             
-            {/* Resultado da sessão */}
+            {/* Resultado do dia */}
             <div style={{ 
               fontSize: 13, 
               fontWeight: 700, 
-              color: hoveredPoint.sessionNet >= 0 ? '#10b981' : '#ef4444',
+              color: hoveredPoint.dayNet >= 0 ? '#10b981' : '#ef4444',
               marginBottom: 6
             }}>
-              {hoveredPoint.sessionNet >= 0 ? '+' : ''}{hoveredPoint.sessionNet.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+              {hoveredPoint.dayNet >= 0 ? '+' : ''}{hoveredPoint.dayNet.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
               <span style={{ fontSize: 9, color: '#64748b', marginLeft: 6 }}>
-                (sessão)
+                ({hoveredPoint.sessionCount} {hoveredPoint.sessionCount === 1 ? 'sessão' : 'sessões'})
               </span>
             </div>
 
