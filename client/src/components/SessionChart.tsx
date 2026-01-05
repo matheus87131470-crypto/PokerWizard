@@ -135,8 +135,9 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
     data: d
   }));
 
-  // Path da linha (sem suavização artificial)
-  const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+  // Path da linha - sempre começa do zero na base
+  const startY = dataMin >= 0 ? 100 : dataMax <= 0 ? 0 : zeroY;
+  const linePath = `M 0 ${startY} ${points.map((p) => `L ${p.x} ${p.y}`).join(' ')}`;
 
   // Área preenchida - sempre parte da base (y=100) quando positivo, do topo (y=0) quando negativo
   const areaPath = dataMin >= 0 
