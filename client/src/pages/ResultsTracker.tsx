@@ -490,12 +490,26 @@ export default function ResultsTracker() {
       );
     }
 
-    // Calcular valores acumulados
+    // Calcular valores acumulados - começando do ZERO
     let accumulated = 0;
-    const chartData = data.map(session => {
+    const sessions = data.map(session => {
       accumulated += session.net;
       return { ...session, accumulated };
     }).reverse(); // Mais antigo primeiro
+
+    // Adicionar ponto inicial (saldo = 0 antes das sessões)
+    const firstSession = sessions[0];
+    const initialPoint = {
+      id: 'initial',
+      date: firstSession.date,
+      gains: 0,
+      losses: 0,
+      net: 0,
+      accumulated: 0,
+      timestamp: firstSession.timestamp - 1
+    };
+    
+    const chartData = [initialPoint, ...sessions];
 
     // Calcular totalProfit ANTES de usar em styles
     const totalProfit = chartData[chartData.length - 1].accumulated;
@@ -765,11 +779,12 @@ export default function ResultsTracker() {
               
               {/* Pontos - mais discretos, exceto o último */}
               {points.map((p, i) => {
+                const isInitial = i === 0; // Ponto inicial
                 const isLast = i === points.length - 1;
                 const isHovered = hoveredPoint?.index === i;
                 const radius = isLast ? 
                   (isHovered ? styles.pointRadius.last * 1.2 : styles.pointRadius.last) : 
-                  (isHovered ? styles.pointRadius.hover : styles.pointRadius.normal);
+                  (isHovered ? styles.pointRadius.hover : (isInitial ? 0.8 : styles.pointRadius.normal));
                 
                 return (
                   <circle
@@ -778,15 +793,16 @@ export default function ResultsTracker() {
                     cy={p.y}
                     r={radius}
                     fill={variant === 'analytics' ? 
-                      (isLast ? styles.lineColor : styles.lineColor) : 
-                      (isLast ? "#ec4899" : "rgba(236, 72, 153, 0.6)")
+                      (isLast ? styles.lineColor : (isInitial ? 'rgba(148, 163, 184, 0.6)' : styles.lineColor)) : 
+                      (isLast ? "#ec4899" : (isInitial ? "rgba(168, 85, 247, 0.4)" : "rgba(236, 72, 153, 0.6)"))
                     }
                     stroke={variant === 'analytics' ? '#fff' : (isLast ? "#fff" : "rgba(255, 255, 255, 0.4)")}
                     strokeWidth={variant === 'analytics' ? "0.3" : (isLast ? "0.4" : "0.2")}
-                    opacity={variant === 'analytics' ? styles.pointOpacity : 1}
+                    opacity={isInitial ? 0.5 : (variant === 'analytics' ? styles.pointOpacity : 1)}
                     filter={variant === 'highlight' && isLast ? "url(#glowLastPoint)" : "none"}
-                    style={{ cursor: 'pointer', transition: 'all 0.2s' }}
+                    style={{ cursor: isInitial ? 'default' : 'pointer', transition: 'all 0.2s' }}
                     onMouseEnter={(e) => {
+                      if (isInitial) return; // Não mostrar tooltip no ponto inicial
                       const rect = e.currentTarget.ownerSVGElement?.getBoundingClientRect();
                       if (rect) {
                         const xPos = rect.left + (p.x / 100) * rect.width;
@@ -811,11 +827,15 @@ export default function ResultsTracker() {
               {/* Labels de sessões */}
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, paddingLeft: 4, paddingRight: 4 }}>
                 {chartData.map((d, i) => {
-                  const showLabel = chartData.length <= 10 || i % Math.ceil(chartData.length / 10) === 0 || i === chartData.length - 1 || i === 0;
+                  // Pular o ponto inicial (i=0) nos labels
+                  if (i === 0) return null;
+                  
+                  const sessionNumber = i; // Número da sessão real (sem contar ponto inicial)
+                  const showLabel = chartData.length <= 11 || i % Math.ceil((chartData.length - 1) / 10) === 0 || i === chartData.length - 1 || i === 1;
                   return showLabel ? (
                     <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
                       <span style={{ fontSize: 11, color: variant === 'analytics' ? '#64748b' : '#a855f7', fontWeight: 700 }}>
-                        #{i + 1}
+                        #{sessionNumber}
                       </span>
                       <span style={{ fontSize: 10, color: '#6b7280', fontWeight: 500 }}>
                         {d.date.split('/')[0]}/{d.date.split('/')[1]}
@@ -826,7 +846,7 @@ export default function ResultsTracker() {
               </div>
               {/* Label explicativo */}
               <div style={{ textAlign: 'center', fontSize: 10, color: '#94a3b8', marginTop: 4, fontWeight: 600 }}>
-                {chartData.length} {chartData.length === 1 ? 'sessão' : 'sessões'} • Cada ponto = 1 sessão
+                {chartData.length - 1} {chartData.length - 1 === 1 ? 'sessão' : 'sessões'} • Cada ponto = 1 sessão
               </div>
             </div>
           </div>
@@ -864,7 +884,7 @@ export default function ResultsTracker() {
             
             {/* Informações da sessão */}
             <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 2 }}>
-              Sessão #{hoveredPoint.index + 1}
+              Sessão #{hoveredPoint.index}
             </div>
             <div style={{ fontSize: 12, color: variant === 'analytics' ? '#c4b5fd' : '#c4b5fd', fontWeight: 600 }}>
               {hoveredPoint.date}
