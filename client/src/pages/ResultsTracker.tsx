@@ -57,6 +57,11 @@ export default function ResultsTracker() {
   const [sessions, setSessions] = useState<SessionResult[]>([]);
   const [showHistory, setShowHistory] = useState(false);
   const [animateRing, setAnimateRing] = useState(false);
+  const [showPaywall, setShowPaywall] = useState(false);
+
+  // Constantes FREE
+  const FREE_SESSION_LIMIT = 10;
+  const MAX_PROGRESS_VALUE = 5000; // R$ 5.000 como meta visual
 
   // Carregar sessões do localStorage
   useEffect(() => {
@@ -183,7 +188,177 @@ export default function ResultsTracker() {
 
   const colors = getColors(todayNet);
 
-  // Progress Ring SVG
+  // Calcular total acumulado para barra de progresso
+  const totalAccumulated = sessions.reduce((acc, s) => acc + s.net, 0);
+  const progressPercentage = Math.min(100, Math.max(0, (totalAccumulated / MAX_PROGRESS_VALUE) * 100));
+
+  // Verificar limite FREE
+  const isBlocked = !isReallyPremium && sessions.length >= FREE_SESSION_LIMIT;
+  const shouldBlurChart = !isReallyPremium && sessions.length >= FREE_SESSION_LIMIT;
+
+  // Barra Circular de Progresso Animada
+  const CircularProgressBar = ({ percentage, total, max }: { percentage: number; total: number; max: number }) => {
+    const size = 200;
+    const strokeWidth = 14;
+    const radius = (size - strokeWidth) / 2;
+    const circumference = 2 * Math.PI * radius;
+    const offset = circumference - (percentage / 100) * circumference;
+
+    return (
+      <div style={{ position: 'relative', width: size, height: size, margin: '0 auto' }}>
+        <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
+          {/* Background circle */}
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            fill="none"
+            stroke="rgba(168, 85, 247, 0.15)"
+            strokeWidth={strokeWidth}
+          />
+          {/* Progress circle */}
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            fill="none"
+            stroke={total >= 0 ? 'url(#gradient-circular-profit)' : 'url(#gradient-circular-loss)'}
+            strokeWidth={strokeWidth}
+            strokeDasharray={circumference}
+            strokeDashoffset={offset}
+            strokeLinecap="round"
+            style={{
+              transition: 'stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
+              filter: total >= 0 
+                ? 'drop-shadow(0 0 20px rgba(168, 85, 247, 0.6)) drop-shadow(0 0 40px rgba(236, 72, 153, 0.4))'
+                : 'drop-shadow(0 0 20px rgba(239, 68, 68, 0.6)) drop-shadow(0 0 40px rgba(168, 85, 247, 0.3))'
+            }}
+          />
+          <defs>
+            <linearGradient id="gradient-circular-profit" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#a855f7" />
+              <stop offset="50%" stopColor="#ec4899" />
+              <stop offset="100%" stopColor="#f472b6" />
+            </linearGradient>
+            <linearGradient id="gradient-circular-loss" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#a855f7" />
+            </linearGradient>
+          </defs>
+        </svg>
+        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
+          <div style={{ fontSize: 28, fontWeight: 900, color: total >= 0 ? '#a855f7' : '#ef4444', marginBottom: 4 }}>
+            {total >= 0 ? '+' : ''}{total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+          </div>
+          <div style={{ fontSize: 11, color: '#6b7280', fontWeight: 600 }}>
+            de {max.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+          </div>
+          <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 4 }}>
+            {percentage.toFixed(0)}% da meta
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Gráfico de Evolução (igual Análise de Jogadores)
+  const EvolutionChart = ({ data, isBlurred }: { data: SessionResult[]; isBlurred: boolean }) => {
+    if (data.length === 0) {
+      return (
+        <div style={{ textAlign: 'center', padding: 60, color: '#6b7280' }}>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>📈</div>
+          <p style={{ fontSize: 14 }}>Adicione sessões para ver o gráfico de evolução</p>
+        </div>
+      );
+    }
+
+    // Calcular valores acumulados
+    let accumulated = 0;
+    const chartData = data.map(session => {
+      accumulated += session.net;
+      return { ...session, accumulated };
+    }).reverse(); // Mais antigo primeiro
+
+    const maxValue = Math.max(...chartData.map(d => Math.abs(d.accumulated)), 100);
+    const minValue = Math.min(...chartData.map(d => d.accumulated), 0);
+    const range = maxValue - minValue;
+
+    // Calcular pontos da linha
+    const points = chartData.map((d, i) => {
+      const x = (i / (chartData.length - 1 || 1)) * 100;
+      const y = 100 - (((d.accumulated - minValue) / range) * 80 + 10);
+      return `${x},${y}`;
+    }).join(' ');
+
+    // Área sob a linha
+    const areaPoints = points + ` 100,100 0,100`;
+
+    return (
+      <div style={{ position: 'relative', filter: isBlurred ? 'blur(8px)' : 'none', transition: 'filter 0.3s ease' }}>
+        <svg width="100%" height="280" viewBox="0 0 100 100" preserveAspectRatio="none" style={{ display: 'block' }}>
+          <defs>
+            <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#a855f7" />
+              <stop offset="50%" stopColor="#ec4899" />
+              <stop offset="100%" stopColor="#f472b6" />
+            </linearGradient>
+            <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#ec4899" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#a855f7" stopOpacity="0.1" />
+              <stop offset="100%" stopColor="#a855f7" stopOpacity="0" />
+            </linearGradient>
+            <filter id="glow">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+          
+          {/* Área */}
+          <polygon points={areaPoints} fill="url(#areaGradient)" />
+          
+          {/* Linha */}
+          <polyline
+            points={points}
+            fill="none"
+            stroke="url(#lineGradient)"
+            strokeWidth="0.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            filter="url(#glow)"
+          />
+          
+          {/* Pontos */}
+          {chartData.map((d, i) => {
+            const x = (i / (chartData.length - 1 || 1)) * 100;
+            const y = 100 - (((d.accumulated - minValue) / range) * 80 + 10);
+            return (
+              <circle
+                key={d.id}
+                cx={x}
+                cy={y}
+                r="0.8"
+                fill={d.net >= 0 ? '#10b981' : '#ef4444'}
+                filter="url(#glow)"
+              />
+            );
+          })}
+        </svg>
+        
+        {/* Legenda */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 12, fontSize: 11, color: '#6b7280' }}>
+          <span>Sessão 1</span>
+          <span>Evolução Acumulada</span>
+          <span>Sessão {chartData.length}</span>
+        </div>
+      </div>
+    );
+  };
+
+  // Progress Ring SVG (mantido para compatibilidade, mas não usado no novo layout)
   const ProgressRing = ({ percentage, size = 240, strokeWidth = 16 }: { percentage: number; size?: number; strokeWidth?: number }) => {
     const radius = (size - strokeWidth) / 2;
     const circumference = 2 * Math.PI * radius;
@@ -253,141 +428,193 @@ export default function ResultsTracker() {
         </div>
       </div>
 
-      {/* Main Content - ORDEM CORRETA: Input primeiro, depois gráfico */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 24, marginBottom: 32 }}>
-        {/* Input Card - PRIORIDADE NO TOPO */}
-        <div className="card" style={{ padding: 24, maxWidth: 600, margin: '0 auto', width: '100%' }}>
-          <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 20, color: '#f8fafc' }}>
-            💰 Nova Sessão
-          </h3>
+      {/* 1️⃣ NOVA SESSÃO - INPUT NO TOPO */}
+      <div className="card" style={{ padding: 24, maxWidth: 600, margin: '0 auto 32px', width: '100%' }}>
+        <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 20, color: '#f8fafc' }}>
+          💰 Nova Sessão
+        </h3>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            {/* Ganhos */}
-            <div>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#10b981', marginBottom: 8 }}>
-                ✅ Ganhos (R$)
-              </label>
-              <input
-                type="number"
-                value={gains}
-                onChange={(e) => setGains(e.target.value)}
-                placeholder="0.00"
-                step="0.01"
-                style={{
-                  width: '100%',
-                  padding: '12px 16px',
-                  background: 'rgba(16, 185, 129, 0.05)',
-                  border: '1px solid rgba(16, 185, 129, 0.3)',
-                  borderRadius: 8,
-                  color: '#10b981',
-                  fontSize: 16,
-                  fontWeight: 600,
-                  outline: 'none',
-                  transition: 'all 0.3s ease'
-                }}
-                onFocus={(e) => e.currentTarget.style.border = '1px solid rgba(16, 185, 129, 0.6)'}
-                onBlur={(e) => e.currentTarget.style.border = '1px solid rgba(16, 185, 129, 0.3)'}
-              />
-            </div>
-
-            {/* Perdas */}
-            <div>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#ef4444', marginBottom: 8 }}>
-                ❌ Perdas (R$)
-              </label>
-              <input
-                type="number"
-                value={losses}
-                onChange={(e) => setLosses(e.target.value)}
-                placeholder="0.00"
-                step="0.01"
-                style={{
-                  width: '100%',
-                  padding: '12px 16px',
-                  background: 'rgba(239, 68, 68, 0.05)',
-                  border: '1px solid rgba(239, 68, 68, 0.3)',
-                  borderRadius: 8,
-                  color: '#ef4444',
-                  fontSize: 16,
-                  fontWeight: 600,
-                  outline: 'none',
-                  transition: 'all 0.3s ease'
-                }}
-                onFocus={(e) => e.currentTarget.style.border = '1px solid rgba(239, 68, 68, 0.6)'}
-                onBlur={(e) => e.currentTarget.style.border = '1px solid rgba(239, 68, 68, 0.3)'}
-              />
-            </div>
-
-            {/* Botão Adicionar */}
-            <button
-              onClick={handleAddSession}
-              disabled={!gains && !losses}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {/* Ganhos */}
+          <div>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#10b981', marginBottom: 8 }}>
+              ✅ Ganhos (R$)
+            </label>
+            <input
+              type="number"
+              value={gains}
+              onChange={(e) => setGains(e.target.value)}
+              placeholder="0.00"
+              step="0.01"
+              disabled={isBlocked}
               style={{
-                padding: '14px 20px',
-                background: (!gains && !losses) ? 'rgba(168, 85, 247, 0.2)' : 'linear-gradient(145deg, rgba(168, 85, 247, 0.9), rgba(124, 58, 237, 0.9))',
-                border: 'none',
-                borderRadius: 10,
-                color: (!gains && !losses) ? '#6b7280' : '#fff',
-                fontSize: 15,
-                fontWeight: 700,
-                cursor: (!gains && !losses) ? 'not-allowed' : 'pointer',
+                width: '100%',
+                padding: '12px 16px',
+                background: isBlocked ? 'rgba(107, 114, 128, 0.1)' : 'rgba(16, 185, 129, 0.05)',
+                border: `1px solid ${isBlocked ? 'rgba(107, 114, 128, 0.3)' : 'rgba(16, 185, 129, 0.3)'}`,
+                borderRadius: 8,
+                color: isBlocked ? '#6b7280' : '#10b981',
+                fontSize: 16,
+                fontWeight: 600,
+                outline: 'none',
                 transition: 'all 0.3s ease',
-                boxShadow: (!gains && !losses) ? 'none' : '0 4px 20px rgba(168, 85, 247, 0.4)'
+                cursor: isBlocked ? 'not-allowed' : 'text'
               }}
-              onMouseEnter={(e) => {
-                if (gains || losses) {
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = '0 6px 30px rgba(168, 85, 247, 0.6)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 4px 20px rgba(168, 85, 247, 0.4)';
-              }}
-            >
-              ➕ Adicionar Sessão
-            </button>
-          </div>
-        </div>
-
-        {/* Progress Ring Card - Resultado do Dia - ABAIXO DO INPUT */}
-        <div className="card" style={{ padding: 32, textAlign: 'center', maxWidth: 600, margin: '0 auto', width: '100%' }}>
-          <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 20, color: '#f8fafc' }}>
-            📅 Resultado Hoje
-          </h3>
-
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: 20, position: 'relative' }}>
-            <ProgressRing percentage={todayPercentage} />
-            <div style={{ position: 'absolute', textAlign: 'center' }}>
-              <div style={{ fontSize: 36, fontWeight: 900, color: colors.primary, textShadow: colors.glow, marginBottom: 4 }}>
-                {todayNet >= 0 ? '+' : ''}{todayNet.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-              </div>
-              <div style={{ fontSize: 12, color: '#94a3b8', fontWeight: 600 }}>
-                Resultado Líquido
-              </div>
-            </div>
+              onFocus={(e) => !isBlocked && (e.currentTarget.style.border = '1px solid rgba(16, 185, 129, 0.6)')}
+              onBlur={(e) => !isBlocked && (e.currentTarget.style.border = '1px solid rgba(16, 185, 129, 0.3)')}
+            />
           </div>
 
-          {/* Stats do Dia */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 24 }}>
-            <div style={{ padding: 12, background: 'rgba(16, 185, 129, 0.1)', borderRadius: 8, border: '1px solid rgba(16, 185, 129, 0.2)' }}>
-              <div style={{ fontSize: 11, color: '#10b981', fontWeight: 600, marginBottom: 4 }}>GANHOS</div>
-              <div style={{ fontSize: 18, fontWeight: 800, color: '#10b981' }}>
-                R$ {todayGains.toFixed(2)}
-              </div>
-            </div>
-            <div style={{ padding: 12, background: 'rgba(239, 68, 68, 0.1)', borderRadius: 8, border: '1px solid rgba(239, 68, 68, 0.2)' }}>
-              <div style={{ fontSize: 11, color: '#ef4444', fontWeight: 600, marginBottom: 4 }}>PERDAS</div>
-              <div style={{ fontSize: 18, fontWeight: 800, color: '#ef4444' }}>
-                R$ {todayLosses.toFixed(2)}
-              </div>
-            </div>
+          {/* Perdas */}
+          <div>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#ef4444', marginBottom: 8 }}>
+              ❌ Perdas (R$)
+            </label>
+            <input
+              type="number"
+              value={losses}
+              onChange={(e) => setLosses(e.target.value)}
+              placeholder="0.00"
+              step="0.01"
+              disabled={isBlocked}
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                background: isBlocked ? 'rgba(107, 114, 128, 0.1)' : 'rgba(239, 68, 68, 0.05)',
+                border: `1px solid ${isBlocked ? 'rgba(107, 114, 128, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
+                borderRadius: 8,
+                color: isBlocked ? '#6b7280' : '#ef4444',
+                fontSize: 16,
+                fontWeight: 600,
+                outline: 'none',
+                transition: 'all 0.3s ease',
+                cursor: isBlocked ? 'not-allowed' : 'text'
+              }}
+              onFocus={(e) => !isBlocked && (e.currentTarget.style.border = '1px solid rgba(239, 68, 68, 0.6)')}
+              onBlur={(e) => !isBlocked && (e.currentTarget.style.border = '1px solid rgba(239, 68, 68, 0.3)')}
+            />
           </div>
+
+          {/* Limite FREE */}
+          {!isReallyPremium && (
+            <div style={{ fontSize: 12, color: '#94a3b8', textAlign: 'center' }}>
+              Sessões: {sessions.length}/{FREE_SESSION_LIMIT} {isBlocked && '(Limite atingido)'}
+            </div>
+          )}
+
+          {/* Botão Adicionar */}
+          <button
+            onClick={handleAddSession}
+            disabled={!gains && !losses || isBlocked}
+            style={{
+              padding: '14px 20px',
+              background: (!gains && !losses || isBlocked) ? 'rgba(168, 85, 247, 0.2)' : 'linear-gradient(145deg, rgba(168, 85, 247, 0.9), rgba(124, 58, 237, 0.9))',
+              border: 'none',
+              borderRadius: 10,
+              color: (!gains && !losses || isBlocked) ? '#6b7280' : '#fff',
+              fontSize: 15,
+              fontWeight: 700,
+              cursor: (!gains && !losses || isBlocked) ? 'not-allowed' : 'pointer',
+              transition: 'all 0.3s ease',
+              boxShadow: (!gains && !losses || isBlocked) ? 'none' : '0 4px 20px rgba(168, 85, 247, 0.4)'
+            }}
+            onMouseEnter={(e) => {
+              if ((gains || losses) && !isBlocked) {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 6px 30px rgba(168, 85, 247, 0.6)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 4px 20px rgba(168, 85, 247, 0.4)';
+            }}
+          >
+            ➕ Adicionar Sessão
+          </button>
         </div>
       </div>
 
+      {/* 2️⃣ BARRA CIRCULAR DE PROGRESSO */}
+      {sessions.length > 0 && (
+        <div className="card" style={{ padding: 32, maxWidth: 600, margin: '0 auto 32px', width: '100%', textAlign: 'center' }}>
+          <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 24, color: '#f8fafc' }}>
+            🎯 Progresso Acumulado
+          </h3>
+          <CircularProgressBar 
+            percentage={progressPercentage} 
+            total={totalAccumulated} 
+            max={MAX_PROGRESS_VALUE} 
+          />
+          <p style={{ fontSize: 13, color: '#94a3b8', marginTop: 16 }}>
+            Continue adicionando sessões para atingir sua meta!
+          </p>
+        </div>
+      )}
+
+      {/* 3️⃣ GRÁFICO DE EVOLUÇÃO */}
+      {sessions.length > 0 && (
+        <div className="card" style={{ padding: 24, maxWidth: 900, margin: '0 auto 32px', width: '100%', position: 'relative' }}>
+          <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 20, color: '#f8fafc' }}>
+            📈 Evolução de Resultados
+          </h3>
+          <EvolutionChart data={sessions} isBlurred={shouldBlurChart} />
+          
+          {/* Paywall sobre gráfico */}
+          {shouldBlurChart && (
+            <div style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              textAlign: 'center',
+              zIndex: 10,
+              background: 'rgba(10, 15, 36, 0.95)',
+              padding: 32,
+              borderRadius: 16,
+              border: '1px solid rgba(168, 85, 247, 0.4)',
+              boxShadow: '0 8px 40px rgba(0, 0, 0, 0.6)',
+              maxWidth: 400
+            }}>
+              <div style={{ fontSize: 48, marginBottom: 16 }}>🔒</div>
+              <h4 style={{ fontSize: 20, fontWeight: 700, marginBottom: 12, color: '#f8fafc' }}>
+                Limite FREE Atingido
+              </h4>
+              <p style={{ fontSize: 14, color: '#94a3b8', marginBottom: 20, lineHeight: 1.6 }}>
+                Você atingiu o limite de <strong style={{ color: '#a855f7' }}>{FREE_SESSION_LIMIT} sessões</strong>.<br />
+                Upgrade para <strong style={{ color: '#a855f7' }}>PRO</strong> e tenha histórico ilimitado!
+              </p>
+              <button
+                onClick={() => navigate('/premium')}
+                style={{
+                  padding: '14px 32px',
+                  background: 'linear-gradient(145deg, rgba(168, 85, 247, 0.9), rgba(124, 58, 237, 0.9))',
+                  border: 'none',
+                  borderRadius: 10,
+                  color: '#fff',
+                  fontSize: 15,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  boxShadow: '0 4px 20px rgba(168, 85, 247, 0.4)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 6px 30px rgba(168, 85, 247, 0.6)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 20px rgba(168, 85, 247, 0.4)';
+                }}
+              >
+                ⭐ Upgrade para PRO - R$ 3,50
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* PRO Features - Histórico Semanal/Mensal */}
-      {isReallyPremium ? (
+      {isReallyPremium && sessions.length > 0 && (
         <div className="card" style={{ padding: 24, marginBottom: 32 }}>
           <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 20, color: '#f8fafc' }}>
             📈 Histórico PRO
@@ -419,130 +646,9 @@ export default function ResultsTracker() {
             </div>
           </div>
         </div>
-      ) : !isReallyPremium ? (
-        <div className="card" style={{ padding: 24, marginBottom: 32, background: 'linear-gradient(145deg, rgba(168, 85, 247, 0.1), rgba(124, 58, 237, 0.05))', border: '1px solid rgba(168, 85, 247, 0.3)' }}>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>🔒</div>
-            <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 12, color: '#f8fafc' }}>
-              Desbloqueie Histórico Completo
-            </h3>
-            <p style={{ fontSize: 14, color: '#94a3b8', marginBottom: 20, lineHeight: 1.6 }}>
-              Com o <strong style={{ color: '#a855f7' }}>PokerWizard PRO</strong>, você tem acesso a:<br/>
-              📈 Histórico semanal e mensal<br/>
-              📊 Gráficos de evolução<br/>
-              🎯 Métricas avançadas
-            </p>
-            <button
-              onClick={() => navigate('/premium')}
-              style={{
-                padding: '14px 32px',
-                background: 'linear-gradient(145deg, rgba(168, 85, 247, 0.9), rgba(124, 58, 237, 0.9))',
-                border: 'none',
-                borderRadius: 10,
-                color: '#fff',
-                fontSize: 15,
-                fontWeight: 700,
-                cursor: 'pointer',
-                transition: 'all 0.3s ease',
-                boxShadow: '0 4px 20px rgba(168, 85, 247, 0.4)'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = '0 6px 30px rgba(168, 85, 247, 0.6)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 4px 20px rgba(168, 85, 247, 0.4)';
-              }}
-            >
-              ⭐ Upgrade para PRO - R$ 3,50
-            </button>
-          </div>
-        </div>
-      ) : null}
-
-      {/* Histórico de Sessões */}
-      {todayResults.length > 0 && (
-        <div className="card" style={{ padding: 24 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-            <h3 style={{ fontSize: 18, fontWeight: 700, color: '#f8fafc' }}>
-              📜 Histórico de Sessões
-            </h3>
-            <button
-              onClick={() => setShowHistory(!showHistory)}
-              style={{
-                padding: '8px 16px',
-                background: 'rgba(168, 85, 247, 0.2)',
-                border: '1px solid rgba(168, 85, 247, 0.3)',
-                borderRadius: 8,
-                color: '#a855f7',
-                fontSize: 13,
-                fontWeight: 600,
-                cursor: 'pointer',
-                transition: 'all 0.3s ease'
-              }}
-            >
-              {showHistory ? '🔼 Ocultar' : '🔽 Mostrar'}
-            </button>
-          </div>
-
-          {showHistory && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxHeight: 400, overflowY: 'auto' }}>
-              {todayResults.map((session) => (
-                <div
-                  key={session.id}
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    padding: 16,
-                    background: 'rgba(168, 85, 247, 0.05)',
-                    borderRadius: 8,
-                    border: `1px solid ${session.net >= 0 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)'}`,
-                    transition: 'all 0.3s ease'
-                  }}
-                >
-                  <div style={{ display: 'flex', gap: 24, alignItems: 'center' }}>
-                    <div style={{ fontSize: 24 }}>
-                      {session.net >= 0 ? '✅' : '❌'}
-                    </div>
-                    <div>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: session.net >= 0 ? '#10b981' : '#ef4444', marginBottom: 4 }}>
-                        {session.net >= 0 ? '+' : ''}{session.net.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                      </div>
-                      <div style={{ fontSize: 11, color: '#94a3b8' }}>
-                        Ganhos: R$ {session.gains.toFixed(2)} • Perdas: R$ {session.losses.toFixed(2)}
-                      </div>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => handleDeleteSession(session.id)}
-                    style={{
-                      padding: '6px 12px',
-                      background: 'rgba(239, 68, 68, 0.1)',
-                      border: '1px solid rgba(239, 68, 68, 0.3)',
-                      borderRadius: 6,
-                      color: '#ef4444',
-                      fontSize: 12,
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                      transition: 'all 0.3s ease'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
-                    }}
-                  >
-                    🗑️
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
       )}
+
+      {/* 4️⃣ HISTÓRICO DE SESSÕES (Removido - substituído por gráfico) */}
     </div>
   );
 }
