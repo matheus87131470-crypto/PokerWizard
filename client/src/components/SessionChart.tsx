@@ -64,8 +64,6 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
 
   const chartData = games;
 
-  const chartData = games;
-
   // Range do gráfico (baseado em acumulado)
   const values = chartData.map(d => d.accumulated);
   const dataMax = Math.max(...values, 100);
