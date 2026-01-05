@@ -94,17 +94,37 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
 
   const totalProfit = chartData[chartData.length - 1]?.accumulated || 0;
 
-  // Range do gráfico (baseado em acumulado)
+  // Range do gráfico (comportamento financeiro com baseline em zero)
   const values = chartData.map(d => d.accumulated);
-  const dataMax = Math.max(...values, 100);
-  const dataMin = Math.min(...values, -100);
+  const dataMax = Math.max(...values, 0);
+  const dataMin = Math.min(...values, 0);
   
-  const padding = Math.max(Math.abs(dataMax), Math.abs(dataMin)) * 0.1;
-  const maxValue = dataMax + padding;
-  const minValue = dataMin - padding;
+  let maxValue: number;
+  let minValue: number;
+  
+  // Se todos os valores são positivos ou zero
+  if (dataMin >= 0) {
+    minValue = 0;
+    const padding = dataMax * 0.1;
+    maxValue = dataMax + padding;
+  }
+  // Se todos os valores são negativos ou zero
+  else if (dataMax <= 0) {
+    maxValue = 0;
+    const padding = Math.abs(dataMin) * 0.1;
+    minValue = dataMin - padding;
+  }
+  // Se há valores positivos E negativos (zero no meio, simétrico)
+  else {
+    const maxMagnitude = Math.max(Math.abs(dataMax), Math.abs(dataMin));
+    const padding = maxMagnitude * 0.1;
+    maxValue = maxMagnitude + padding;
+    minValue = -(maxMagnitude + padding);
+  }
+  
   const range = maxValue - minValue;
 
-  // Função Y (baseline implícita em zero)
+  // Função Y (baseline fixa em zero)
   const getY = (value: number) => ((maxValue - value) / range) * 100;
   const zeroY = getY(0);
 
