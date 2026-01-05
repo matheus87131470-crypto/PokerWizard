@@ -343,8 +343,10 @@ export default function ResultsTracker() {
     );
   };
 
-  // Gráfico de Evolução (igual Análise de Jogadores)
+  // Gráfico de Evolução (estilo profissional igual foto)
   const EvolutionChart = ({ data, isBlurred }: { data: SessionResult[]; isBlurred: boolean }) => {
+    const [hoveredPoint, setHoveredPoint] = useState<number | null>(null);
+
     if (data.length === 0) {
       return (
         <div style={{ textAlign: 'center', padding: 60, color: '#6b7280' }}>
@@ -361,80 +363,173 @@ export default function ResultsTracker() {
       return { ...session, accumulated };
     }).reverse(); // Mais antigo primeiro
 
-    const maxValue = Math.max(...chartData.map(d => Math.abs(d.accumulated)), 100);
+    const maxValue = Math.max(...chartData.map(d => d.accumulated), 100);
     const minValue = Math.min(...chartData.map(d => d.accumulated), 0);
-    const range = maxValue - minValue;
+    const range = maxValue - minValue || 1;
+    const padding = range * 0.1;
+
+    // Calcular estatísticas
+    const totalProfit = chartData[chartData.length - 1].accumulated;
+    const firstValue = chartData[0].accumulated;
+    const growthPercent = firstValue !== 0 ? ((totalProfit - firstValue) / Math.abs(firstValue)) * 100 : 0;
+    const positiveMonths = chartData.filter(d => d.net > 0).length;
+    const avgMonthly = totalProfit / chartData.length;
+
+    // Função para calcular Y
+    const getY = (value: number) => {
+      return ((maxValue + padding - value) / (range + 2 * padding)) * 100;
+    };
 
     // Calcular pontos da linha
     const points = chartData.map((d, i) => {
-      const x = (i / (chartData.length - 1 || 1)) * 100;
-      const y = 100 - (((d.accumulated - minValue) / range) * 80 + 10);
-      return `${x},${y}`;
-    }).join(' ');
+      const x = (i / Math.max(chartData.length - 1, 1)) * 100;
+      const y = getY(d.accumulated);
+      return { x, y, data: d };
+    });
 
-    // Área sob a linha
-    const areaPoints = points + ` 100,100 0,100`;
+    // Linha SVG
+    const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+    
+    // Área SVG
+    const areaPath = linePath + ` L 100 100 L 0 100 Z`;
+
+    // Grid Y labels
+    const yLabels = [];
+    const numLabels = 5;
+    for (let i = 0; i <= numLabels; i++) {
+      const value = maxValue + padding - (i * (range + 2 * padding) / numLabels);
+      yLabels.push(value);
+    }
 
     return (
       <div style={{ position: 'relative', filter: isBlurred ? 'blur(8px)' : 'none', transition: 'filter 0.3s ease' }}>
-        <svg width="100%" height="280" viewBox="0 0 100 100" preserveAspectRatio="none" style={{ display: 'block' }}>
-          <defs>
-            <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#a855f7" />
-              <stop offset="50%" stopColor="#ec4899" />
-              <stop offset="100%" stopColor="#f472b6" />
-            </linearGradient>
-            <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#ec4899" stopOpacity="0.3" />
-              <stop offset="50%" stopColor="#a855f7" stopOpacity="0.1" />
-              <stop offset="100%" stopColor="#a855f7" stopOpacity="0" />
-            </linearGradient>
-            <filter id="glow">
-              <feGaussianBlur stdDeviation="2" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-          </defs>
-          
-          {/* Área */}
-          <polygon points={areaPoints} fill="url(#areaGradient)" />
-          
-          {/* Linha */}
-          <polyline
-            points={points}
-            fill="none"
-            stroke="url(#lineGradient)"
-            strokeWidth="0.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            filter="url(#glow)"
-          />
-          
-          {/* Pontos */}
-          {chartData.map((d, i) => {
-            const x = (i / (chartData.length - 1 || 1)) * 100;
-            const y = 100 - (((d.accumulated - minValue) / range) * 80 + 10);
-            return (
-              <circle
-                key={d.id}
-                cx={x}
-                cy={y}
-                r="0.8"
-                fill={d.net >= 0 ? '#10b981' : '#ef4444'}
-                filter="url(#glow)"
+        {/* Grid e gráfico */}
+        <div style={{ position: 'relative', background: 'rgba(15, 23, 42, 0.4)', borderRadius: 12, padding: '24px 16px', border: '1px solid rgba(168, 85, 247, 0.1)' }}>
+          {/* Eixo Y */}
+          <div style={{ position: 'absolute', left: 0, top: 24, bottom: 50, width: 60, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+            {yLabels.map((value, i) => (
+              <div key={i} style={{ fontSize: 11, color: '#6b7280', textAlign: 'right', paddingRight: 8 }}>
+                {value >= 1000 ? `R$${(value / 1000).toFixed(1)}K` : `R$${value.toFixed(0)}`}
+              </div>
+            ))}
+          </div>
+
+          {/* SVG Chart */}
+          <div style={{ marginLeft: 60, marginRight: 16, position: 'relative' }}>
+            <svg width="100%" height="300" viewBox="0 0 100 100" preserveAspectRatio="none" style={{ display: 'block' }}>
+              <defs>
+                <linearGradient id="lineGradientEvolution" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#a855f7" />
+                  <stop offset="50%" stopColor="#ec4899" />
+                  <stop offset="100%" stopColor="#f472b6" />
+                </linearGradient>
+                <linearGradient id="areaGradientEvolution" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#ec4899" stopOpacity="0.4" />
+                  <stop offset="50%" stopColor="#a855f7" stopOpacity="0.2" />
+                  <stop offset="100%" stopColor="#1e293b" stopOpacity="0" />
+                </linearGradient>
+                <filter id="glowEvolution">
+                  <feGaussianBlur stdDeviation="1.5" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+
+              {/* Grid horizontal lines */}
+              {[0, 25, 50, 75, 100].map((y) => (
+                <line key={y} x1="0" y1={y} x2="100" y2={y} stroke="rgba(168, 85, 247, 0.08)" strokeWidth="0.3" />
+              ))}
+              
+              {/* Área sob a linha */}
+              <path d={areaPath} fill="url(#areaGradientEvolution)" />
+              
+              {/* Linha principal */}
+              <path
+                d={linePath}
+                fill="none"
+                stroke="url(#lineGradientEvolution)"
+                strokeWidth="1.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                filter="url(#glowEvolution)"
               />
-            );
-          })}
-        </svg>
-        
-        {/* Legenda */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 12, fontSize: 11, color: '#6b7280' }}>
-          <span>Sessão 1</span>
-          <span>Evolução Acumulada</span>
-          <span>Sessão {chartData.length}</span>
+              
+              {/* Pontos */}
+              {points.map((p, i) => (
+                <g key={i}>
+                  <circle
+                    cx={p.x}
+                    cy={p.y}
+                    r={hoveredPoint === i ? "2" : "1.2"}
+                    fill="#ec4899"
+                    stroke="#fff"
+                    strokeWidth="0.3"
+                    filter="url(#glowEvolution)"
+                    style={{ cursor: 'pointer', transition: 'all 0.2s' }}
+                    onMouseEnter={() => setHoveredPoint(i)}
+                    onMouseLeave={() => setHoveredPoint(null)}
+                  />
+                  {/* Tooltip */}
+                  {hoveredPoint === i && (
+                    <>
+                      <foreignObject x={p.x - 15} y={p.y - 25} width="30" height="20">
+                        <div style={{
+                          background: 'rgba(236, 72, 153, 0.95)',
+                          padding: '4px 8px',
+                          borderRadius: 6,
+                          fontSize: 9,
+                          fontWeight: 700,
+                          color: '#fff',
+                          textAlign: 'center',
+                          whiteSpace: 'nowrap',
+                          boxShadow: '0 4px 12px rgba(236, 72, 153, 0.4)'
+                        }}>
+                          {p.data.accumulated >= 0 ? '+' : ''}{p.data.accumulated.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                        </div>
+                      </foreignObject>
+                    </>
+                  )}
+                </g>
+              ))}
+            </svg>
+
+            {/* Eixo X - Datas */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, paddingLeft: 4, paddingRight: 4 }}>
+              {chartData.map((d, i) => {
+                const showLabel = chartData.length <= 12 || i % Math.ceil(chartData.length / 12) === 0 || i === chartData.length - 1;
+                return showLabel ? (
+                  <span key={i} style={{ fontSize: 11, color: '#6b7280', fontWeight: 600 }}>
+                    {d.date.split('/')[0]}/{d.date.split('/')[1]}
+                  </span>
+                ) : null;
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Estatísticas abaixo do gráfico */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginTop: 20 }}>
+          <div style={{ textAlign: 'center', padding: 16, background: 'rgba(16, 185, 129, 0.1)', borderRadius: 10, border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+            <div style={{ fontSize: 28, fontWeight: 900, color: totalProfit >= 0 ? '#10b981' : '#ef4444', marginBottom: 4 }}>
+              {totalProfit >= 0 ? '+' : ''}{Math.abs(growthPercent).toFixed(0)}%
+            </div>
+            <div style={{ fontSize: 11, color: '#6b7280', fontWeight: 600 }}>Crescimento Total</div>
+          </div>
+          <div style={{ textAlign: 'center', padding: 16, background: 'rgba(168, 85, 247, 0.1)', borderRadius: 10, border: '1px solid rgba(168, 85, 247, 0.3)' }}>
+            <div style={{ fontSize: 28, fontWeight: 900, color: '#a855f7', marginBottom: 4 }}>
+              {positiveMonths}
+            </div>
+            <div style={{ fontSize: 11, color: '#6b7280', fontWeight: 600 }}>Sessões Positivas</div>
+          </div>
+          <div style={{ textAlign: 'center', padding: 16, background: 'rgba(236, 72, 153, 0.1)', borderRadius: 10, border: '1px solid rgba(236, 72, 153, 0.3)' }}>
+            <div style={{ fontSize: 28, fontWeight: 900, color: '#ec4899', marginBottom: 4 }}>
+              {avgMonthly >= 1000 ? `R$${(avgMonthly / 1000).toFixed(1)}K` : avgMonthly.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+            </div>
+            <div style={{ fontSize: 11, color: '#6b7280', fontWeight: 600 }}>Média por Sessão</div>
+          </div>
         </div>
       </div>
     );
