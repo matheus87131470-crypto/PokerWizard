@@ -548,10 +548,15 @@ export default function ResultsTracker() {
       tooltipBorder: 'rgba(168, 85, 247, 0.3)'
     };
 
-    const maxValue = Math.max(...chartData.map(d => d.accumulated), 100);
-    const minValue = Math.min(...chartData.map(d => d.accumulated), 0);
-    const range = maxValue - minValue || 1;
-    const padding = range * 0.1;
+    // Calcular range com espaço para negativo e positivo (visual financeiro)
+    const dataMax = Math.max(...chartData.map(d => d.accumulated));
+    const dataMin = Math.min(...chartData.map(d => d.accumulated));
+    
+    // Definir limites: mínimo deve ter espaço para quedas, máximo deve ter headroom
+    const maxValue = Math.max(dataMax * 1.1, 100); // 10% acima do máximo ou mínimo 100
+    const minValue = Math.min(dataMin - Math.abs(dataMax) * 0.1, -1500); // 10% abaixo ou -1500
+    const range = maxValue - minValue;
+    const padding = 0; // Sem padding adicional, já calculado acima
 
     // Calcular estatísticas
     const firstValue = chartData[0].accumulated;
