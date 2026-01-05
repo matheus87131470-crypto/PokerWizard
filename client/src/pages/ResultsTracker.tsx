@@ -477,9 +477,43 @@ export default function ResultsTracker() {
     );
   };
 
-  // Gráfico de Evolução (estilo profissional igual foto)
-  const EvolutionChart = ({ data, isBlurred }: { data: SessionResult[]; isBlurred: boolean }) => {
+  // Gráfico de Evolução - Dual Style: Analytics (profissional) vs Highlight (emocional)
+  const EvolutionChart = ({ data, isBlurred, variant = 'analytics' }: { data: SessionResult[]; isBlurred: boolean; variant?: 'analytics' | 'highlight' }) => {
     const [hoveredPoint, setHoveredPoint] = useState<{ index: number; x: number; y: number; value: number; date: string; sessionData: SessionResult } | null>(null);
+
+    // 🎨 Configurações de estilo por variante
+    const styles = variant === 'analytics' ? {
+      // 📊 ANALYTICS: Visual profissional para histórico/análise
+      lineColor: totalProfit >= 0 ? '#10b981' : '#ef4444',
+      lineWidth: '1.5',
+      lineGlow: false,
+      areaOpacity: 0.03,
+      areaColor: totalProfit >= 0 ? '#10b981' : '#ef4444',
+      gridOpacity: 0.06,
+      gridColor: '#94a3b8',
+      pointRadius: { normal: 0.6, hover: 1.2, last: 1.0 },
+      pointOpacity: 0.8,
+      background: 'transparent',
+      legendBg: 'rgba(148, 163, 184, 0.04)',
+      legendBorder: 'rgba(148, 163, 184, 0.12)',
+      tooltipBg: 'rgba(30, 41, 59, 0.98)',
+      tooltipBorder: 'rgba(148, 163, 184, 0.3)'
+    } : {
+      // ✨ HIGHLIGHT: Visual emocional para destaque/progressão
+      lineGradient: true,
+      lineWidth: '1.2',
+      lineGlow: true,
+      areaOpacity: 0.15,
+      gridOpacity: 0.08,
+      gridColor: '#a855f7',
+      pointRadius: { normal: 0.8, hover: 1.5, last: 1.8 },
+      pointOpacity: 0.6,
+      background: 'transparent',
+      legendBg: 'rgba(168, 85, 247, 0.05)',
+      legendBorder: 'rgba(168, 85, 247, 0.15)',
+      tooltipBg: 'rgba(15, 23, 42, 0.98)',
+      tooltipBorder: 'rgba(168, 85, 247, 0.3)'
+    };
 
     if (data.length === 0) {
       return (
@@ -529,7 +563,7 @@ export default function ResultsTracker() {
       return { x, y, data: d };
     });
 
-    // Linha SVG com segmentos coloridos para quedas
+    // Linha SVG com segmentos coloridos para quedas (apenas highlight)
     const segments: Array<{ path: string; isNegative: boolean }> = [];
     for (let i = 0; i < points.length - 1; i++) {
       const current = points[i];
@@ -558,9 +592,9 @@ export default function ResultsTracker() {
           alignItems: 'center',
           marginBottom: 16,
           padding: '12px 16px',
-          background: 'rgba(168, 85, 247, 0.05)',
+          background: styles.legendBg,
           borderRadius: 8,
-          border: '1px solid rgba(168, 85, 247, 0.15)'
+          border: `1px solid ${styles.legendBorder}`
         }}>
           <div>
             <span style={{ fontSize: 12, color: '#94a3b8', marginRight: 8 }}>Resultado atual:</span>
@@ -574,7 +608,7 @@ export default function ResultsTracker() {
           </div>
           <div>
             <span style={{ fontSize: 12, color: '#94a3b8', marginRight: 8 }}>Período:</span>
-            <strong style={{ fontSize: 14, fontWeight: 600, color: '#a855f7' }}>
+            <strong style={{ fontSize: 14, fontWeight: 600, color: variant === 'analytics' ? '#64748b' : '#a855f7' }}>
               {daysDiff === 0 ? 'Hoje' : `Últimos ${daysDiff} ${daysDiff === 1 ? 'dia' : 'dias'}`}
             </strong>
           </div>
@@ -602,42 +636,65 @@ export default function ResultsTracker() {
               onMouseLeave={() => setHoveredPoint(null)}
             >
               <defs>
-                <linearGradient id="lineGradientEvolution" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#a855f7" />
-                  <stop offset="50%" stopColor="#ec4899" />
-                  <stop offset="100%" stopColor="#f472b6" />
-                </linearGradient>
-                <linearGradient id="lineGradientNegative" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#f472b6" stopOpacity="0.7" />
-                  <stop offset="100%" stopColor="#fb923c" stopOpacity="0.7" />
-                </linearGradient>
-                <linearGradient id="areaGradientEvolution" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#ec4899" stopOpacity="0.15" />
-                  <stop offset="50%" stopColor="#a855f7" stopOpacity="0.08" />
-                  <stop offset="100%" stopColor="#1e293b" stopOpacity="0" />
-                </linearGradient>
-                <filter id="glowEvolution">
-                  <feGaussianBlur stdDeviation="1.5" result="blur" />
-                  <feMerge>
-                    <feMergeNode in="blur" />
-                    <feMergeNode in="blur" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
-                <filter id="glowLastPoint">
-                  <feGaussianBlur stdDeviation="2" result="blur" />
-                  <feMerge>
-                    <feMergeNode in="blur" />
-                    <feMergeNode in="blur" />
-                    <feMergeNode in="blur" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
+                {/* ANALYTICS: Linha sólida simples */}
+                {variant === 'analytics' && (
+                  <>
+                    <linearGradient id="areaGradientAnalytics" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor={styles.areaColor} stopOpacity={styles.areaOpacity} />
+                      <stop offset="100%" stopColor={styles.areaColor} stopOpacity="0" />
+                    </linearGradient>
+                  </>
+                )}
+                
+                {/* HIGHLIGHT: Gradientes e glows */}
+                {variant === 'highlight' && (
+                  <>
+                    <linearGradient id="lineGradientEvolution" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#a855f7" />
+                      <stop offset="50%" stopColor="#ec4899" />
+                      <stop offset="100%" stopColor="#f472b6" />
+                    </linearGradient>
+                    <linearGradient id="lineGradientNegative" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#f472b6" stopOpacity="0.7" />
+                      <stop offset="100%" stopColor="#fb923c" stopOpacity="0.7" />
+                    </linearGradient>
+                    <linearGradient id="areaGradientEvolution" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#ec4899" stopOpacity="0.15" />
+                      <stop offset="50%" stopColor="#a855f7" stopOpacity="0.08" />
+                      <stop offset="100%" stopColor="#1e293b" stopOpacity="0" />
+                    </linearGradient>
+                    <filter id="glowEvolution">
+                      <feGaussianBlur stdDeviation="1.5" result="blur" />
+                      <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+                    <filter id="glowLastPoint">
+                      <feGaussianBlur stdDeviation="2" result="blur" />
+                      <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+                  </>
+                )}
               </defs>
 
               {/* Grid horizontal lines */}
               {[0, 25, 50, 75, 100].map((y) => (
-                <line key={y} x1="0" y1={y} x2="100" y2={y} stroke="rgba(168, 85, 247, 0.08)" strokeWidth="0.3" />
+                <line 
+                  key={y} 
+                  x1="0" 
+                  y1={y} 
+                  x2="100" 
+                  y2={y} 
+                  stroke={`rgba(${styles.gridColor === '#94a3b8' ? '148, 163, 184' : '168, 85, 247'}, ${styles.gridOpacity})`}
+                  strokeWidth="0.3" 
+                />
               ))}
               
               {/* 📏 Linha vertical de referência ao passar o mouse */}
@@ -647,7 +704,7 @@ export default function ResultsTracker() {
                   y1="0"
                   x2={points[hoveredPoint.index].x}
                   y2="100"
-                  stroke="rgba(168, 85, 247, 0.4)"
+                  stroke={variant === 'analytics' ? 'rgba(148, 163, 184, 0.3)' : 'rgba(168, 85, 247, 0.4)'}
                   strokeWidth="0.5"
                   strokeDasharray="3,3"
                 />
@@ -665,39 +722,67 @@ export default function ResultsTracker() {
               />
               
               {/* Área sob a linha */}
-              <path 
-                d={`M 0 ${points[0].y} ${points.map((p, i) => `L ${p.x} ${p.y}`).join(' ')} L 100 100 L 0 100 Z`} 
-                fill="url(#areaGradientEvolution)" 
-              />
+              {variant === 'analytics' ? (
+                <path 
+                  d={`M 0 ${points[0].y} ${points.map((p, i) => `L ${p.x} ${p.y}`).join(' ')} L 100 100 L 0 100 Z`} 
+                  fill="url(#areaGradientAnalytics)" 
+                />
+              ) : (
+                <path 
+                  d={`M 0 ${points[0].y} ${points.map((p, i) => `L ${p.x} ${p.y}`).join(' ')} L 100 100 L 0 100 Z`} 
+                  fill="url(#areaGradientEvolution)" 
+                />
+              )}
               
-              {/* Linha principal com segmentos coloridos */}
-              {segments.map((seg, i) => (
+              {/* Linha principal */}
+              {variant === 'analytics' ? (
+                /* ANALYTICS: Linha sólida única cor */
                 <path
-                  key={i}
-                  d={seg.path}
+                  d={points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ')}
                   fill="none"
-                  stroke={seg.isNegative ? "url(#lineGradientNegative)" : "url(#lineGradientEvolution)"}
-                  strokeWidth="1.2"
+                  stroke={styles.lineColor}
+                  strokeWidth={styles.lineWidth}
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  filter="url(#glowEvolution)"
                 />
-              ))}
+              ) : (
+                /* HIGHLIGHT: Segmentos com gradiente e glow */
+                segments.map((seg, i) => (
+                  <path
+                    key={i}
+                    d={seg.path}
+                    fill="none"
+                    stroke={seg.isNegative ? "url(#lineGradientNegative)" : "url(#lineGradientEvolution)"}
+                    strokeWidth={styles.lineWidth}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    filter="url(#glowEvolution)"
+                  />
+                ))
+              )}
               
               {/* Pontos - mais discretos, exceto o último */}
               {points.map((p, i) => {
                 const isLast = i === points.length - 1;
                 const isHovered = hoveredPoint?.index === i;
+                const radius = isLast ? 
+                  (isHovered ? styles.pointRadius.last * 1.2 : styles.pointRadius.last) : 
+                  (isHovered ? styles.pointRadius.hover : styles.pointRadius.normal);
+                
                 return (
                   <circle
                     key={i}
                     cx={p.x}
                     cy={p.y}
-                    r={isLast ? (isHovered ? "2.2" : "1.8") : (isHovered ? "1.5" : "0.8")}
-                    fill={isLast ? "#ec4899" : "rgba(236, 72, 153, 0.6)"}
-                    stroke={isLast ? "#fff" : "rgba(255, 255, 255, 0.4)"}
-                    strokeWidth={isLast ? "0.4" : "0.2"}
-                    filter={isLast ? "url(#glowLastPoint)" : "none"}
+                    r={radius}
+                    fill={variant === 'analytics' ? 
+                      (isLast ? styles.lineColor : styles.lineColor) : 
+                      (isLast ? "#ec4899" : "rgba(236, 72, 153, 0.6)")
+                    }
+                    stroke={variant === 'analytics' ? '#fff' : (isLast ? "#fff" : "rgba(255, 255, 255, 0.4)")}
+                    strokeWidth={variant === 'analytics' ? "0.3" : (isLast ? "0.4" : "0.2")}
+                    opacity={variant === 'analytics' ? styles.pointOpacity : 1}
+                    filter={variant === 'highlight' && isLast ? "url(#glowLastPoint)" : "none"}
                     style={{ cursor: 'pointer', transition: 'all 0.2s' }}
                     onMouseEnter={(e) => {
                       const rect = e.currentTarget.ownerSVGElement?.getBoundingClientRect();
@@ -733,23 +818,25 @@ export default function ResultsTracker() {
           </div>
         </div>
 
-        {/* Tooltip flutuante aprimorado (estilo foto) */}
+        {/* Tooltip flutuante aprimorado */}
         {hoveredPoint && (
           <div style={{
             position: 'fixed',
             left: hoveredPoint.x,
             top: hoveredPoint.y - 80,
             transform: 'translateX(-50%)',
-            background: 'rgba(15, 23, 42, 0.98)',
+            background: styles.tooltipBg,
             padding: '12px 16px',
-            borderRadius: 10,
+            borderRadius: variant === 'analytics' ? 8 : 10,
             fontSize: 13,
             color: '#fff',
             whiteSpace: 'nowrap',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(168, 85, 247, 0.4)',
+            boxShadow: variant === 'analytics' ? 
+              '0 4px 20px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(148, 163, 184, 0.2)' : 
+              '0 8px 32px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(168, 85, 247, 0.4)',
             pointerEvents: 'none',
             zIndex: 9999,
-            border: '1px solid rgba(168, 85, 247, 0.3)'
+            border: `1px solid ${styles.tooltipBorder}`
           }}>
             {/* Valor principal */}
             <div style={{ 
@@ -765,7 +852,7 @@ export default function ResultsTracker() {
             <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 2 }}>
               Sessão #{hoveredPoint.index + 1}
             </div>
-            <div style={{ fontSize: 12, color: '#c4b5fd', fontWeight: 600 }}>
+            <div style={{ fontSize: 12, color: variant === 'analytics' ? '#c4b5fd' : '#c4b5fd', fontWeight: 600 }}>
               {hoveredPoint.date}
             </div>
             
@@ -774,9 +861,9 @@ export default function ResultsTracker() {
               <div style={{ 
                 marginTop: 8, 
                 paddingTop: 8, 
-                borderTop: '1px solid rgba(168, 85, 247, 0.2)',
+                borderTop: `1px solid ${variant === 'analytics' ? 'rgba(148, 163, 184, 0.2)' : 'rgba(168, 85, 247, 0.2)'}`,
                 fontSize: 11,
-                color: '#a78bfa'
+                color: variant === 'analytics' ? '#94a3b8' : '#a78bfa'
               }}>
                 Resultado: <strong style={{ color: hoveredPoint.sessionData.net >= 0 ? '#10b981' : '#ef4444' }}>
                   {hoveredPoint.sessionData.net >= 0 ? '+' : ''}{hoveredPoint.sessionData.net.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
