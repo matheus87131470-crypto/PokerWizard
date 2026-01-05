@@ -328,49 +328,53 @@ export default function ResultsTracker() {
 
     return (
       <div style={{ position: 'relative', width: '100%', maxWidth: size, height: size * 0.65, margin: '0 auto', overflow: 'visible', padding: '20px 0' }}>
-        {/* Círculos decorativos de fundo com glow */}
+        {/* Círculos decorativos de fundo com glow SUAVIZADO (~40% redução) */}
         <div style={{
           position: 'absolute',
           top: '50%',
           left: '50%',
           transform: 'translate(-50%, -50%)',
-          width: size * 1.8,
-          height: size * 1.8,
+          width: size * 1.6,
+          height: size * 1.6,
           borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(168, 85, 247, 0.2) 0%, rgba(236, 72, 153, 0.12) 50%, transparent 70%)',
-          filter: 'blur(50px)',
+          background: 'radial-gradient(circle, rgba(168, 85, 247, 0.12) 0%, rgba(236, 72, 153, 0.06) 50%, transparent 70%)',
+          filter: 'blur(60px)',
           pointerEvents: 'none',
-          animation: 'pulse 4s ease-in-out infinite'
+          opacity: 0.8,
+          animation: 'pulse-subtle 5s ease-in-out infinite'
         }} />
         <div style={{
           position: 'absolute',
           top: '50%',
           left: '50%',
           transform: 'translate(-50%, -50%)',
-          width: size * 1.4,
-          height: size * 1.4,
+          width: size * 1.3,
+          height: size * 1.3,
           borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(168, 85, 247, 0.3) 0%, rgba(236, 72, 153, 0.2) 40%, transparent 60%)',
-          filter: 'blur(35px)',
-          pointerEvents: 'none'
+          background: 'radial-gradient(circle, rgba(168, 85, 247, 0.15) 0%, rgba(236, 72, 153, 0.08) 40%, transparent 65%)',
+          filter: 'blur(45px)',
+          pointerEvents: 'none',
+          opacity: 0.7
         }} />
         
         {/* SVG Progress Arc */}
         <svg width={size} height={size * 0.65} viewBox={`0 0 ${size} ${size * 0.65}`} style={{ display: 'block' }}>
           <defs>
+            {/* Gradientes com saturação reduzida (~20%) */}
             <linearGradient id="gradient-arc-profit" x1="0%" y1="100%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#a855f7" />
-              <stop offset="50%" stopColor="#ec4899" />
-              <stop offset="100%" stopColor="#f472b6" />
+              <stop offset="0%" stopColor="#9d6fc9" />
+              <stop offset="50%" stopColor="#d96ba6" />
+              <stop offset="100%" stopColor="#e589b8" />
             </linearGradient>
             <linearGradient id="gradient-arc-loss" x1="0%" y1="100%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#ef4444" />
-              <stop offset="100%" stopColor="#a855f7" />
+              <stop offset="0%" stopColor="#e57373" />
+              <stop offset="100%" stopColor="#9d6fc9" />
             </linearGradient>
+            {/* Filtro de glow SUAVIZADO (~35% redução intensidade) */}
             <filter id="neon-glow-arc" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur1" />
-              <feGaussianBlur in="SourceGraphic" stdDeviation="16" result="blur2" />
-              <feGaussianBlur in="SourceGraphic" stdDeviation="24" result="blur3" />
+              <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="blur1" />
+              <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur2" />
+              <feGaussianBlur in="SourceGraphic" stdDeviation="15" result="blur3" />
               <feMerge>
                 <feMergeNode in="blur3" />
                 <feMergeNode in="blur2" />
@@ -384,7 +388,7 @@ export default function ResultsTracker() {
           <path
             d={`M ${strokeWidth} ${size * 0.65 - strokeWidth} A ${radius} ${radius} 0 0 1 ${size - strokeWidth} ${size * 0.65 - strokeWidth}`}
             fill="none"
-            stroke="rgba(168, 85, 247, 0.15)"
+            stroke="rgba(148, 163, 184, 0.12)"
             strokeWidth={strokeWidth}
             strokeLinecap="round"
           />
@@ -405,7 +409,7 @@ export default function ResultsTracker() {
           />
         </svg>
         
-        {/* Texto central */}
+        {/* Texto central - HIERARQUIA REFORÇADA (tipografia > efeitos) */}
         <div style={{ 
           position: 'absolute', 
           bottom: 15, 
@@ -415,56 +419,58 @@ export default function ResultsTracker() {
           width: '100%'
         }}>
           <div style={{ 
-            fontSize: 11, 
+            fontSize: 10, 
             color: '#94a3b8', 
             fontWeight: 600,
-            letterSpacing: '1px',
-            marginBottom: 4,
-            textTransform: 'uppercase'
+            letterSpacing: '1.2px',
+            marginBottom: 6,
+            textTransform: 'uppercase',
+            opacity: 0.7
           }}>
-            Total
+            Total Acumulado
           </div>
           
+          {/* VALOR PRINCIPAL - Maior destaque tipográfico */}
           <div style={{ 
-            fontSize: 38, 
+            fontSize: 44, 
             fontWeight: 900, 
-            color: '#a855f7',
-            textShadow: '0 0 40px rgba(168, 85, 247, 1), 0 0 80px rgba(168, 85, 247, 0.8), 0 0 120px rgba(236, 72, 153, 0.5)',
-            marginBottom: 2,
-            lineHeight: 1.1,
-            animation: 'glow-pulse 3s ease-in-out infinite'
+            color: '#9d6fc9',
+            textShadow: '0 0 20px rgba(157, 111, 201, 0.4), 0 0 40px rgba(157, 111, 201, 0.2)',
+            marginBottom: 6,
+            lineHeight: 1,
+            letterSpacing: '-0.02em'
           }}>
             {total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
           </div>
           
+          {/* Percentual - Secundário */}
           <div style={{ 
-            fontSize: 24, 
-            fontWeight: 900, 
-            color: '#ec4899',
-            textShadow: '0 0 30px rgba(236, 72, 153, 0.9), 0 0 60px rgba(168, 85, 247, 0.6)',
-            marginBottom: 2,
-            lineHeight: 1
+            fontSize: 22, 
+            fontWeight: 800, 
+            color: '#d96ba6',
+            textShadow: '0 0 15px rgba(217, 107, 166, 0.3)',
+            marginBottom: 6,
+            lineHeight: 1,
+            opacity: 0.9
           }}>
             {animatedPercentage.toFixed(1)}%
           </div>
           
+          {/* Meta - Terciário */}
           <div style={{ 
             fontSize: 11, 
             color: '#6b7280',
-            fontWeight: 600
+            fontWeight: 600,
+            opacity: 0.6
           }}>
             Meta: {goal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
           </div>
         </div>
 
         <style>{`
-          @keyframes pulse {
-            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.7; }
-            50% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.9; }
-          }
-          @keyframes glow-pulse {
-            0%, 100% { filter: brightness(1); }
-            50% { filter: brightness(1.3); }
+          @keyframes pulse-subtle {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
+            50% { transform: translate(-50%, -50%) scale(1.05); opacity: 0.7; }
           }
         `}</style>
       </div>
