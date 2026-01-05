@@ -58,10 +58,39 @@ export default function ResultsTracker() {
   const [showHistory, setShowHistory] = useState(false);
   const [animateRing, setAnimateRing] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
+  const [userGoal, setUserGoal] = useState<number>(1000); // Meta padrão: R$ 1.000
+  const [isEditingGoal, setIsEditingGoal] = useState(false);
+  const [goalInput, setGoalInput] = useState('1000');
 
   // Constantes FREE
   const FREE_SESSION_LIMIT = 10;
-  const MAX_PROGRESS_VALUE = 5000; // R$ 5.000 como meta visual
+
+  // Carregar meta do localStorage
+  useEffect(() => {
+    const storedGoal = localStorage.getItem('pokerwizard_user_goal');
+    if (storedGoal) {
+      const goal = parseFloat(storedGoal);
+      if (!isNaN(goal) && goal > 0) {
+        setUserGoal(goal);
+        setGoalInput(goal.toString());
+      }
+    }
+  }, []);
+
+  // Salvar meta no localStorage
+  const saveGoal = (goal: number) => {
+    setUserGoal(goal);
+    localStorage.setItem('pokerwizard_user_goal', goal.toString());
+  };
+
+  // Atualizar meta
+  const handleUpdateGoal = () => {
+    const newGoal = parseFloat(goalInput);
+    if (!isNaN(newGoal) && newGoal > 0) {
+      saveGoal(newGoal);
+      setIsEditingGoal(false);
+    }
+  };
 
   // Carregar sessões do localStorage
   useEffect(() => {
@@ -188,18 +217,20 @@ export default function ResultsTracker() {
 
   const colors = getColors(todayNet);
 
-  // Calcular total acumulado para barra de progresso
+  // Calcular total acumulado e progresso da meta
   const totalAccumulated = sessions.reduce((acc, s) => acc + s.net, 0);
-  const progressPercentage = Math.min(100, Math.max(0, (totalAccumulated / MAX_PROGRESS_VALUE) * 100));
+  const progressPercentage = Math.min(100, Math.max(0, (totalAccumulated / userGoal) * 100));
+  const remainingPercentage = Math.max(0, 100 - progressPercentage);
+  const remainingAmount = Math.max(0, userGoal - totalAccumulated);
 
   // Verificar limite FREE
   const isBlocked = !isReallyPremium && sessions.length >= FREE_SESSION_LIMIT;
   const shouldBlurChart = !isReallyPremium && sessions.length >= FREE_SESSION_LIMIT;
 
   // Barra Circular de Progresso Animada
-  const CircularProgressBar = ({ percentage, total, max }: { percentage: number; total: number; max: number }) => {
-    const size = 200;
-    const strokeWidth = 14;
+  const CircularProgressBar = ({ percentage, total, goal, remaining }: { percentage: number; total: number; goal: number; remaining: number }) => {
+    const size = 220;
+    const strokeWidth = 16;
     const radius = (size - strokeWidth) / 2;
     const circumference = 2 * Math.PI * radius;
     const offset = circumference - (percentage / 100) * circumference;
@@ -213,7 +244,7 @@ export default function ResultsTracker() {
             cy={size / 2}
             r={radius}
             fill="none"
-            stroke="rgba(168, 85, 247, 0.15)"
+            stroke="rgba(139, 92, 246, 0.15)"
             strokeWidth={strokeWidth}
           />
           {/* Progress circle */}
@@ -230,8 +261,8 @@ export default function ResultsTracker() {
             style={{
               transition: 'stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
               filter: total >= 0 
-                ? 'drop-shadow(0 0 20px rgba(168, 85, 247, 0.6)) drop-shadow(0 0 40px rgba(236, 72, 153, 0.4))'
-                : 'drop-shadow(0 0 20px rgba(239, 68, 68, 0.6)) drop-shadow(0 0 40px rgba(168, 85, 247, 0.3))'
+                ? 'drop-shadow(0 0 15px rgba(168, 85, 247, 0.6)) drop-shadow(0 0 30px rgba(236, 72, 153, 0.4))'
+                : 'drop-shadow(0 0 15px rgba(239, 68, 68, 0.6)) drop-shadow(0 0 30px rgba(168, 85, 247, 0.3))'
             }}
           />
           <defs>
@@ -247,14 +278,11 @@ export default function ResultsTracker() {
           </defs>
         </svg>
         <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
-          <div style={{ fontSize: 28, fontWeight: 900, color: total >= 0 ? '#a855f7' : '#ef4444', marginBottom: 4 }}>
-            {total >= 0 ? '+' : ''}{total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+          <div style={{ fontSize: 36, fontWeight: 900, color: total >= 0 ? '#a855f7' : '#ef4444', marginBottom: 4, textShadow: total >= 0 ? '0 0 20px rgba(168, 85, 247, 0.5)' : '0 0 20px rgba(239, 68, 68, 0.5)' }}>
+            {percentage.toFixed(0)}%
           </div>
-          <div style={{ fontSize: 11, color: '#6b7280', fontWeight: 600 }}>
-            de {max.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-          </div>
-          <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 4 }}>
-            {percentage.toFixed(0)}% da meta
+          <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600 }}>
+            {percentage >= 100 ? 'Meta atingida! 🎉' : 'da meta'}
           </div>
         </div>
       </div>
@@ -537,17 +565,118 @@ export default function ResultsTracker() {
       {/* 2️⃣ BARRA CIRCULAR DE PROGRESSO */}
       {sessions.length > 0 && (
         <div className="card" style={{ padding: 32, maxWidth: 600, margin: '0 auto 32px', width: '100%', textAlign: 'center' }}>
-          <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 24, color: '#f8fafc' }}>
-            🎯 Progresso Acumulado
-          </h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+            <h3 style={{ fontSize: 18, fontWeight: 700, color: '#f8fafc' }}>
+              🎯 Progresso da Meta
+            </h3>
+            <button
+              onClick={() => setIsEditingGoal(!isEditingGoal)}
+              style={{
+                padding: '6px 12px',
+                background: 'rgba(168, 85, 247, 0.15)',
+                border: '1px solid rgba(168, 85, 247, 0.3)',
+                borderRadius: 8,
+                color: '#a855f7',
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.3s ease'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(168, 85, 247, 0.25)'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(168, 85, 247, 0.15)'}
+            >
+              ✏️ Editar Meta
+            </button>
+          </div>
+
+          {/* Editor de Meta */}
+          {isEditingGoal && (
+            <div style={{ marginBottom: 24, padding: 16, background: 'rgba(168, 85, 247, 0.1)', borderRadius: 12, border: '1px solid rgba(168, 85, 247, 0.3)' }}>
+              <div style={{ display: 'flex', gap: 12, alignItems: 'center', justifyContent: 'center' }}>
+                <input
+                  type="number"
+                  value={goalInput}
+                  onChange={(e) => setGoalInput(e.target.value)}
+                  placeholder="1000"
+                  step="100"
+                  style={{
+                    width: 150,
+                    padding: '10px 14px',
+                    background: 'rgba(10, 15, 36, 0.8)',
+                    border: '1px solid rgba(168, 85, 247, 0.4)',
+                    borderRadius: 8,
+                    color: '#a855f7',
+                    fontSize: 16,
+                    fontWeight: 600,
+                    outline: 'none',
+                    textAlign: 'center'
+                  }}
+                />
+                <button
+                  onClick={handleUpdateGoal}
+                  style={{
+                    padding: '10px 20px',
+                    background: 'linear-gradient(145deg, rgba(168, 85, 247, 0.9), rgba(124, 58, 237, 0.9))',
+                    border: 'none',
+                    borderRadius: 8,
+                    color: '#fff',
+                    fontSize: 14,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  ✓ Salvar
+                </button>
+              </div>
+              <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 8 }}>
+                Digite sua meta de lucro em R$
+              </p>
+            </div>
+          )}
+
+          {/* Barra Circular */}
           <CircularProgressBar 
             percentage={progressPercentage} 
             total={totalAccumulated} 
-            max={MAX_PROGRESS_VALUE} 
+            goal={userGoal}
+            remaining={remainingAmount}
           />
-          <p style={{ fontSize: 13, color: '#94a3b8', marginTop: 16 }}>
-            Continue adicionando sessões para atingir sua meta!
-          </p>
+          
+          {/* Informações da Meta */}
+          <div style={{ marginTop: 24, display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {/* Texto Principal */}
+            <div style={{ fontSize: 15, fontWeight: 700, color: progressPercentage >= 100 ? '#10b981' : '#a855f7' }}>
+              {progressPercentage >= 100 ? (
+                <>🎉 Meta atingida! Parabéns!</>
+              ) : (
+                <>{remainingPercentage.toFixed(0)}% faltam para atingir sua meta</>
+              )}
+            </div>
+
+            {/* Valores */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 8 }}>
+              <div style={{ padding: 12, background: 'rgba(168, 85, 247, 0.1)', borderRadius: 10, border: '1px solid rgba(168, 85, 247, 0.3)' }}>
+                <div style={{ fontSize: 11, color: '#a855f7', fontWeight: 600, marginBottom: 6 }}>RESULTADO ATUAL</div>
+                <div style={{ fontSize: 20, fontWeight: 900, color: totalAccumulated >= 0 ? '#10b981' : '#ef4444' }}>
+                  {totalAccumulated >= 0 ? '+' : ''}{totalAccumulated.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                </div>
+              </div>
+              <div style={{ padding: 12, background: 'rgba(168, 85, 247, 0.1)', borderRadius: 10, border: '1px solid rgba(168, 85, 247, 0.3)' }}>
+                <div style={{ fontSize: 11, color: '#a855f7', fontWeight: 600, marginBottom: 6 }}>META DEFINIDA</div>
+                <div style={{ fontSize: 20, fontWeight: 900, color: '#a855f7' }}>
+                  {userGoal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                </div>
+              </div>
+            </div>
+
+            {/* Quanto falta (se não atingiu) */}
+            {progressPercentage < 100 && (
+              <div style={{ fontSize: 13, color: '#94a3b8', marginTop: 4 }}>
+                Faltam <strong style={{ color: '#a855f7' }}>{remainingAmount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</strong> para sua meta
+              </div>
+            )}
+          </div>
         </div>
       )}
 
