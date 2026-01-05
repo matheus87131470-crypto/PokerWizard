@@ -12,6 +12,16 @@ interface SessionResult {
   timestamp: number;
 }
 
+interface Cycle {
+  id: string;
+  startDate: string;
+  endDate: string;
+  sessions: SessionResult[];
+  totalNet: number;
+  goal: number;
+  percentageReached: number;
+}
+
 export default function ResultsTracker() {
   const { user, token } = useAuth();
   const { isPremium } = usePaywall(token);
@@ -61,6 +71,10 @@ export default function ResultsTracker() {
   const [userGoal, setUserGoal] = useState<number>(1000); // Meta padrão: R$ 1.000
   const [isEditingGoal, setIsEditingGoal] = useState(false);
   const [goalInput, setGoalInput] = useState('1000');
+  const [completedCycles, setCompletedCycles] = useState<Cycle[]>([]);
+  const [showFinalizeCycleModal, setShowFinalizeCycleModal] = useState(false);
+  const [showResetTotalModal, setShowResetTotalModal] = useState(false);
+  const [cycleNumber, setCycleNumber] = useState(1);
 
   // Constantes FREE
   const FREE_SESSION_LIMIT = 10;
@@ -73,6 +87,18 @@ export default function ResultsTracker() {
       if (!isNaN(goal) && goal > 0) {
         setUserGoal(goal);
         setGoalInput(goal.toString());
+      }
+    }
+
+    // Carregar ciclos completados
+    const storedCycles = localStorage.getItem('pokerwizard_completed_cycles');
+    if (storedCycles) {
+      try {
+        const cycles = JSON.parse(storedCycles);
+        setCompletedCycles(cycles);
+        setCycleNumber(cycles.length + 1);
+      } catch (error) {
+        console.error('Erro ao carregar ciclos:', error);
       }
     }
   }, []);
@@ -146,6 +172,48 @@ export default function ResultsTracker() {
   const handleDeleteSession = (id: string) => {
     const updatedSessions = sessions.filter(s => s.id !== id);
     saveSessions(updatedSessions);
+  };
+
+  // Finalizar Ciclo
+  const handleFinalizeCycle = () => {
+    if (sessions.length === 0) return;
+
+    const totalNet = sessions.reduce((acc, s) => acc + s.net, 0);
+    const percentageReached = (totalNet / userGoal) * 100;
+
+    const newCycle: Cycle = {
+      id: Date.now().toString(),
+      startDate: sessions[sessions.length - 1]?.date || new Date().toLocaleDateString('pt-BR'),
+      endDate: sessions[0]?.date || new Date().toLocaleDateString('pt-BR'),
+      sessions: [...sessions],
+      totalNet,
+      goal: userGoal,
+      percentageReached
+    };
+
+    const updatedCycles = [...completedCycles, newCycle];
+    setCompletedCycles(updatedCycles);
+    localStorage.setItem('pokerwizard_completed_cycles', JSON.stringify(updatedCycles));
+
+    // Resetar sessões e iniciar novo ciclo
+    setSessions([]);
+    localStorage.setItem('pokerwizard_results_sessions', JSON.stringify([]));
+    setCycleNumber(updatedCycles.length + 1);
+    setShowFinalizeCycleModal(false);
+
+    // Animação
+    setAnimateRing(true);
+    setTimeout(() => setAnimateRing(false), 600);
+  };
+
+  // Reset Total (apenas PRO)
+  const handleResetTotal = () => {
+    setSessions([]);
+    setCompletedCycles([]);
+    setCycleNumber(1);
+    localStorage.setItem('pokerwizard_results_sessions', JSON.stringify([]));
+    localStorage.setItem('pokerwizard_completed_cycles', JSON.stringify([]));
+    setShowResetTotalModal(false);
   };
 
   // Calcular resultado do dia (FREE)
@@ -790,26 +858,67 @@ export default function ResultsTracker() {
         <div className="card" style={{ padding: 32, maxWidth: 600, margin: '0 auto 32px', width: '100%', textAlign: 'center' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
             <h3 style={{ fontSize: 18, fontWeight: 700, color: '#f8fafc' }}>
-              🎯 Progresso da Meta
+              🎯 Progresso da Meta (Ciclo #{cycleNumber})
             </h3>
-            <button
-              onClick={() => setIsEditingGoal(!isEditingGoal)}
-              style={{
-                padding: '6px 12px',
-                background: 'rgba(168, 85, 247, 0.15)',
-                border: '1px solid rgba(168, 85, 247, 0.3)',
-                borderRadius: 8,
-                color: '#a855f7',
-                fontSize: 12,
-                fontWeight: 600,
-                cursor: 'pointer',
-                transition: 'all 0.3s ease'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(168, 85, 247, 0.25)'}
-              onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(168, 85, 247, 0.15)'}
-            >
-              ✏️ Editar Meta
-            </button>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                onClick={() => setIsEditingGoal(!isEditingGoal)}
+                style={{
+                  padding: '6px 12px',
+                  background: 'rgba(168, 85, 247, 0.15)',
+                  border: '1px solid rgba(168, 85, 247, 0.3)',
+                  borderRadius: 8,
+                  color: '#a855f7',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(168, 85, 247, 0.25)'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(168, 85, 247, 0.15)'}
+              >
+                ✏️ Editar Meta
+              </button>
+              <button
+                onClick={() => setShowFinalizeCycleModal(true)}
+                disabled={sessions.length === 0}
+                style={{
+                  padding: '6px 12px',
+                  background: sessions.length === 0 ? 'rgba(107, 114, 128, 0.15)' : 'rgba(236, 72, 153, 0.15)',
+                  border: `1px solid ${sessions.length === 0 ? 'rgba(107, 114, 128, 0.3)' : 'rgba(236, 72, 153, 0.3)'}`,
+                  borderRadius: 8,
+                  color: sessions.length === 0 ? '#6b7280' : '#ec4899',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: sessions.length === 0 ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.3s ease'
+                }}
+                onMouseEnter={(e) => sessions.length > 0 && (e.currentTarget.style.background = 'rgba(236, 72, 153, 0.25)')}
+                onMouseLeave={(e) => sessions.length > 0 && (e.currentTarget.style.background = 'rgba(236, 72, 153, 0.15)')}
+              >
+                🏁 Finalizar Ciclo
+              </button>
+              {isReallyPremium && (
+                <button
+                  onClick={() => setShowResetTotalModal(true)}
+                  style={{
+                    padding: '6px 12px',
+                    background: 'rgba(239, 68, 68, 0.15)',
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    borderRadius: 8,
+                    color: '#ef4444',
+                    fontSize: 12,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.25)'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.15)'}
+                >
+                  🗑️ Reset Total
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Editor de Meta */}
@@ -995,6 +1104,248 @@ export default function ResultsTracker() {
               <div style={{ fontSize: 28, fontWeight: 900, color: '#a855f7' }}>
                 {sessions.length}
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Finalizar Ciclo */}
+      {showFinalizeCycleModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.8)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: 20
+        }}>
+          <div style={{
+            background: 'linear-gradient(145deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.98))',
+            borderRadius: 16,
+            padding: 32,
+            maxWidth: 500,
+            width: '100%',
+            border: '1px solid rgba(236, 72, 153, 0.3)',
+            boxShadow: '0 20px 60px rgba(236, 72, 153, 0.3)'
+          }}>
+            <div style={{ textAlign: 'center', marginBottom: 24 }}>
+              <div style={{ fontSize: 56, marginBottom: 16 }}>🏁</div>
+              <h3 style={{ fontSize: 24, fontWeight: 800, color: '#f8fafc', marginBottom: 12 }}>
+                Finalizar Ciclo #{cycleNumber}?
+              </h3>
+              <p style={{ fontSize: 14, color: '#94a3b8', lineHeight: 1.6 }}>
+                Isso vai <strong style={{ color: '#ec4899' }}>salvar todo o histórico atual</strong> e iniciar um novo ciclo zerado.
+                <br />
+                Você poderá visualizar este ciclo no histórico.
+              </p>
+            </div>
+
+            {/* Resumo do ciclo */}
+            <div style={{ 
+              background: 'rgba(168, 85, 247, 0.1)', 
+              borderRadius: 12, 
+              padding: 16, 
+              marginBottom: 24,
+              border: '1px solid rgba(168, 85, 247, 0.3)'
+            }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 4 }}>Total</div>
+                  <div style={{ fontSize: 20, fontWeight: 900, color: totalAccumulated >= 0 ? '#10b981' : '#ef4444' }}>
+                    {totalAccumulated >= 0 ? '+' : ''}{totalAccumulated.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 4 }}>Progresso</div>
+                  <div style={{ fontSize: 20, fontWeight: 900, color: '#a855f7' }}>
+                    {progressPercentage.toFixed(1)}%
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 4 }}>Sessões</div>
+                  <div style={{ fontSize: 20, fontWeight: 900, color: '#ec4899' }}>
+                    {sessions.length}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 4 }}>Meta</div>
+                  <div style={{ fontSize: 20, fontWeight: 900, color: '#f472b6' }}>
+                    {userGoal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Botões */}
+            <div style={{ display: 'flex', gap: 12 }}>
+              <button
+                onClick={() => setShowFinalizeCycleModal(false)}
+                style={{
+                  flex: 1,
+                  padding: '12px 20px',
+                  background: 'rgba(107, 114, 128, 0.2)',
+                  border: '1px solid rgba(107, 114, 128, 0.4)',
+                  borderRadius: 10,
+                  color: '#94a3b8',
+                  fontSize: 14,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(107, 114, 128, 0.3)'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(107, 114, 128, 0.2)'}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleFinalizeCycle}
+                style={{
+                  flex: 1,
+                  padding: '12px 20px',
+                  background: 'linear-gradient(145deg, rgba(236, 72, 153, 0.9), rgba(219, 39, 119, 0.9))',
+                  border: 'none',
+                  borderRadius: 10,
+                  color: '#fff',
+                  fontSize: 14,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  boxShadow: '0 4px 20px rgba(236, 72, 153, 0.4)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 6px 30px rgba(236, 72, 153, 0.6)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 20px rgba(236, 72, 153, 0.4)';
+                }}
+              >
+                🏁 Finalizar e Iniciar Novo
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Reset Total (PRO) */}
+      {showResetTotalModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.9)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: 20
+        }}>
+          <div style={{
+            background: 'linear-gradient(145deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.98))',
+            borderRadius: 16,
+            padding: 32,
+            maxWidth: 500,
+            width: '100%',
+            border: '2px solid rgba(239, 68, 68, 0.5)',
+            boxShadow: '0 20px 60px rgba(239, 68, 68, 0.5)'
+          }}>
+            <div style={{ textAlign: 'center', marginBottom: 24 }}>
+              <div style={{ fontSize: 56, marginBottom: 16 }}>⚠️</div>
+              <h3 style={{ fontSize: 24, fontWeight: 800, color: '#ef4444', marginBottom: 12 }}>
+                ATENÇÃO: Reset Total
+              </h3>
+              <p style={{ fontSize: 14, color: '#94a3b8', lineHeight: 1.6, marginBottom: 16 }}>
+                Esta ação é <strong style={{ color: '#ef4444' }}>IRREVERSÍVEL</strong>!
+                <br />
+                <br />
+                Você vai <strong style={{ color: '#ef4444' }}>DELETAR PERMANENTEMENTE</strong>:
+              </p>
+              <ul style={{ textAlign: 'left', fontSize: 14, color: '#f8fafc', lineHeight: 2, marginBottom: 16 }}>
+                <li>✖️ Todas as sessões do ciclo atual</li>
+                <li>✖️ Todos os {completedCycles.length} ciclos completados</li>
+                <li>✖️ Todo o histórico de progresso</li>
+              </ul>
+              <p style={{ fontSize: 13, color: '#6b7280', fontStyle: 'italic' }}>
+                (Apenas usuários PRO têm acesso a esta função)
+              </p>
+            </div>
+
+            {/* Confirmação de segurança */}
+            <div style={{ 
+              background: 'rgba(239, 68, 68, 0.1)', 
+              borderRadius: 12, 
+              padding: 16, 
+              marginBottom: 24,
+              border: '1px solid rgba(239, 68, 68, 0.3)'
+            }}>
+              <div style={{ fontSize: 13, color: '#94a3b8', marginBottom: 8, fontWeight: 600 }}>
+                ⚡ Dados que serão perdidos:
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                <div style={{ fontSize: 11, color: '#6b7280' }}>
+                  Sessões atuais: <strong style={{ color: '#ef4444' }}>{sessions.length}</strong>
+                </div>
+                <div style={{ fontSize: 11, color: '#6b7280' }}>
+                  Ciclos salvos: <strong style={{ color: '#ef4444' }}>{completedCycles.length}</strong>
+                </div>
+              </div>
+            </div>
+
+            {/* Botões */}
+            <div style={{ display: 'flex', gap: 12 }}>
+              <button
+                onClick={() => setShowResetTotalModal(false)}
+                style={{
+                  flex: 1,
+                  padding: '12px 20px',
+                  background: 'rgba(107, 114, 128, 0.2)',
+                  border: '1px solid rgba(107, 114, 128, 0.4)',
+                  borderRadius: 10,
+                  color: '#94a3b8',
+                  fontSize: 14,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(107, 114, 128, 0.3)'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(107, 114, 128, 0.2)'}
+              >
+                ← Cancelar (Recomendado)
+              </button>
+              <button
+                onClick={handleResetTotal}
+                style={{
+                  flex: 1,
+                  padding: '12px 20px',
+                  background: 'linear-gradient(145deg, rgba(239, 68, 68, 0.9), rgba(220, 38, 38, 0.9))',
+                  border: 'none',
+                  borderRadius: 10,
+                  color: '#fff',
+                  fontSize: 14,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  boxShadow: '0 4px 20px rgba(239, 68, 68, 0.5)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 6px 30px rgba(239, 68, 68, 0.7)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 20px rgba(239, 68, 68, 0.5)';
+                }}
+              >
+                🗑️ Deletar Tudo
+              </button>
             </div>
           </div>
         </div>
