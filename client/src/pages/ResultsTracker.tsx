@@ -229,8 +229,8 @@ export default function ResultsTracker() {
 
   // Barra Circular de Progresso Animada - Estilo Semicircular
   const CircularProgressBar = ({ percentage, total, goal, remaining }: { percentage: number; total: number; goal: number; remaining: number }) => {
-    const size = 280;
-    const strokeWidth = 20;
+    const size = 340;
+    const strokeWidth = 22;
     const radius = size / 2 - strokeWidth;
     const circumference = Math.PI * radius; // Semicírculo
     const offset = circumference - (percentage / 100) * circumference;
@@ -243,10 +243,10 @@ export default function ResultsTracker() {
           top: '50%',
           left: '50%',
           transform: 'translate(-50%, -50%)',
-          width: size * 1.4,
-          height: size * 1.4,
+          width: size * 1.5,
+          height: size * 1.5,
           borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(168, 85, 247, 0.08) 0%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(168, 85, 247, 0.15) 0%, transparent 70%)',
           pointerEvents: 'none'
         }} />
         <div style={{
@@ -254,10 +254,10 @@ export default function ResultsTracker() {
           top: '50%',
           left: '50%',
           transform: 'translate(-50%, -50%)',
-          width: size * 1.1,
-          height: size * 1.1,
+          width: size * 1.2,
+          height: size * 1.2,
           borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(168, 85, 247, 0.12) 0%, transparent 60%)',
+          background: 'radial-gradient(circle, rgba(168, 85, 247, 0.25) 0%, transparent 60%)',
           pointerEvents: 'none'
         }} />
         
@@ -273,8 +273,8 @@ export default function ResultsTracker() {
               <stop offset="100%" stopColor="#a855f7" />
             </linearGradient>
             <filter id="glow-effect" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="4" result="blur" />
-              <feFlood floodColor={total >= 0 ? "#a855f7" : "#ef4444"} floodOpacity="0.6" />
+              <feGaussianBlur stdDeviation="6" result="blur" />
+              <feFlood floodColor={total >= 0 ? "#a855f7" : "#ef4444"} floodOpacity="0.9" />
               <feComposite in2="blur" operator="in" />
               <feMerge>
                 <feMergeNode />
@@ -287,7 +287,7 @@ export default function ResultsTracker() {
           <path
             d={`M ${strokeWidth} ${size * 0.65 - strokeWidth} A ${radius} ${radius} 0 0 1 ${size - strokeWidth} ${size * 0.65 - strokeWidth}`}
             fill="none"
-            stroke="rgba(168, 85, 247, 0.15)"
+            stroke="rgba(168, 85, 247, 0.2)"
             strokeWidth={strokeWidth}
             strokeLinecap="round"
           />
@@ -318,18 +318,6 @@ export default function ResultsTracker() {
           width: '100%'
         }}>
           <div style={{ 
-            fontSize: 48, 
-            fontWeight: 900, 
-            color: total >= 0 ? '#22d3ee' : '#ef4444',
-            textShadow: total >= 0 
-              ? '0 0 30px rgba(34, 211, 238, 0.6), 0 0 60px rgba(168, 85, 247, 0.4)' 
-              : '0 0 30px rgba(239, 68, 68, 0.6), 0 0 60px rgba(168, 85, 247, 0.3)',
-            marginBottom: 4,
-            lineHeight: 1
-          }}>
-            {total >= 0 ? '+' : ''}{total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-          </div>
-          <div style={{ 
             fontSize: 14, 
             color: '#94a3b8', 
             fontWeight: 600,
@@ -338,14 +326,16 @@ export default function ResultsTracker() {
             {percentage >= 100 ? 'Meta atingida! 🎉' : 'Total em Vendas'}
           </div>
           <div style={{ 
-            fontSize: 28, 
+            fontSize: 56, 
             fontWeight: 900, 
             color: '#a855f7',
-            textShadow: '0 0 20px rgba(168, 85, 247, 0.5)'
+            textShadow: '0 0 40px rgba(168, 85, 247, 0.9), 0 0 80px rgba(168, 85, 247, 0.6), 0 0 120px rgba(168, 85, 247, 0.3)',
+            marginBottom: 8,
+            lineHeight: 1
           }}>
             {percentage.toFixed(1)}%
           </div>
-          <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>
+          <div style={{ fontSize: 13, color: '#6b7280', marginTop: 4 }}>
             Meta: {goal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
           </div>
         </div>
