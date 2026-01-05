@@ -345,7 +345,7 @@ export default function ResultsTracker() {
 
   // Gráfico de Evolução (estilo profissional igual foto)
   const EvolutionChart = ({ data, isBlurred }: { data: SessionResult[]; isBlurred: boolean }) => {
-    const [hoveredPoint, setHoveredPoint] = useState<number | null>(null);
+    const [hoveredPoint, setHoveredPoint] = useState<{ index: number; x: number; y: number; value: number } | null>(null);
 
     if (data.length === 0) {
       return (
@@ -414,9 +414,16 @@ export default function ResultsTracker() {
             ))}
           </div>
 
-          {/* SVG Chart */}
+          {/* SVG Chart Container */}
           <div style={{ marginLeft: 60, marginRight: 16, position: 'relative' }}>
-            <svg width="100%" height="300" viewBox="0 0 100 100" preserveAspectRatio="none" style={{ display: 'block' }}>
+            <svg 
+              width="100%" 
+              height="300" 
+              viewBox="0 0 100 100" 
+              preserveAspectRatio="none" 
+              style={{ display: 'block' }}
+              onMouseLeave={() => setHoveredPoint(null)}
+            >
               <defs>
                 <linearGradient id="lineGradientEvolution" x1="0%" y1="0%" x2="100%" y2="0%">
                   <stop offset="0%" stopColor="#a855f7" />
@@ -459,40 +466,25 @@ export default function ResultsTracker() {
               
               {/* Pontos */}
               {points.map((p, i) => (
-                <g key={i}>
-                  <circle
-                    cx={p.x}
-                    cy={p.y}
-                    r={hoveredPoint === i ? "2" : "1.2"}
-                    fill="#ec4899"
-                    stroke="#fff"
-                    strokeWidth="0.3"
-                    filter="url(#glowEvolution)"
-                    style={{ cursor: 'pointer', transition: 'all 0.2s' }}
-                    onMouseEnter={() => setHoveredPoint(i)}
-                    onMouseLeave={() => setHoveredPoint(null)}
-                  />
-                  {/* Tooltip */}
-                  {hoveredPoint === i && (
-                    <>
-                      <foreignObject x={p.x - 15} y={p.y - 25} width="30" height="20">
-                        <div style={{
-                          background: 'rgba(236, 72, 153, 0.95)',
-                          padding: '4px 8px',
-                          borderRadius: 6,
-                          fontSize: 9,
-                          fontWeight: 700,
-                          color: '#fff',
-                          textAlign: 'center',
-                          whiteSpace: 'nowrap',
-                          boxShadow: '0 4px 12px rgba(236, 72, 153, 0.4)'
-                        }}>
-                          {p.data.accumulated >= 0 ? '+' : ''}{p.data.accumulated.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                        </div>
-                      </foreignObject>
-                    </>
-                  )}
-                </g>
+                <circle
+                  key={i}
+                  cx={p.x}
+                  cy={p.y}
+                  r={hoveredPoint?.index === i ? "2" : "1.2"}
+                  fill="#ec4899"
+                  stroke="#fff"
+                  strokeWidth="0.3"
+                  filter="url(#glowEvolution)"
+                  style={{ cursor: 'pointer', transition: 'all 0.2s' }}
+                  onMouseEnter={(e) => {
+                    const rect = e.currentTarget.ownerSVGElement?.getBoundingClientRect();
+                    if (rect) {
+                      const xPos = rect.left + (p.x / 100) * rect.width;
+                      const yPos = rect.top + (p.y / 100) * rect.height;
+                      setHoveredPoint({ index: i, x: xPos, y: yPos, value: p.data.accumulated });
+                    }
+                  }}
+                />
               ))}
             </svg>
 
@@ -509,6 +501,29 @@ export default function ResultsTracker() {
             </div>
           </div>
         </div>
+
+        {/* Tooltip flutuante (fora do SVG) */}
+        {hoveredPoint && (
+          <div style={{
+            position: 'fixed',
+            left: hoveredPoint.x,
+            top: hoveredPoint.y - 50,
+            transform: 'translateX(-50%)',
+            background: 'rgba(236, 72, 153, 0.95)',
+            padding: '8px 16px',
+            borderRadius: 8,
+            fontSize: 14,
+            fontWeight: 700,
+            color: '#fff',
+            whiteSpace: 'nowrap',
+            boxShadow: '0 4px 20px rgba(236, 72, 153, 0.6)',
+            pointerEvents: 'none',
+            zIndex: 9999,
+            border: '1px solid rgba(255, 255, 255, 0.2)'
+          }}>
+            {hoveredPoint.value >= 0 ? '+' : ''}{hoveredPoint.value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+          </div>
+        )}
 
         {/* Estatísticas abaixo do gráfico */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginTop: 20 }}>
