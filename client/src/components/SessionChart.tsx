@@ -15,7 +15,13 @@ interface SessionChartProps {
 }
 
 export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
-  const [hoveredPoint, setHoveredPoint] = useState<{ index: number; value: number; gameNumber: number } | null>(null);
+  const [hoveredPoint, setHoveredPoint] = useState<{ 
+    index: number; 
+    accumulated: number; 
+    sessionNet: number;
+    sessionNumber: number;
+    date: string;
+  } | null>(null);
   const [period, setPeriod] = useState<'7d' | '30d' | 'all'>('all');
 
   if (data.length === 0) {
@@ -39,30 +45,26 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
   }
 
   // Ordem cronológica
-  const sessions = [...filteredData].reverse();
+  const sessions = [...filteredData].sort((a, b) => a.timestamp - b.timestamp);
   
-  // Saldo total (para header)
-  const totalProfit = sessions.reduce((acc, s) => acc + s.net, 0);
-
-  // LÓGICA SHARKSCOPE: Simular jogos individuais dentro de cada sessão
-  // Cada sessão vira múltiplos pontos (jogos) com lucro acumulado
-  const games: Array<{ gameNumber: number; accumulated: number }> = [];
-  let accumulated = 0;
-  let gameCounter = 0;
-
-  sessions.forEach(session => {
-    // Simular 15-25 jogos por sessão (densidade SharkScope)
-    const gamesInSession = Math.floor(Math.random() * 11) + 15; // 15-25 jogos
-    const resultPerGame = session.net / gamesInSession;
+  // LÓGICA BRIEFING: 1 ponto por sessão, lucro acumulado real
+  const chartData = sessions.map((session, index) => {
+    const accumulated = sessions
+      .slice(0, index + 1)
+      .reduce((acc, s) => acc + s.net, 0);
     
-    for (let i = 0; i < gamesInSession; i++) {
-      accumulated += resultPerGame;
-      gameCounter++;
-      games.push({ gameNumber: gameCounter, accumulated });
-    }
+    return {
+      sessionNumber: index + 1,
+      date: session.date,
+      sessionNet: session.net,
+      accumulated,
+      isSignificant: Math.abs(session.net) > 500 // Marcar sessões > R$ 500
+    };
   });
 
-  const chartData = games;
+  const totalProfit = chartData[chartData.length - 1]?.accumulated || 0;
+
+  const totalProfit = chartData[chartData.length - 1]?.accumulated || 0;
 
   // Range do gráfico (baseado em acumulado)
   const values = chartData.map(d => d.accumulated);
@@ -74,16 +76,11 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
   const minValue = dataMin - padding;
   const range = maxValue - minValue;
 
-  // Período
-  const firstDate = new Date(sessions[0].date.split('/').reverse().join('-'));
-  const lastDate = new Date(sessions[sessions.length - 1].date.split('/').reverse().join('-'));
-  const daysDiff = Math.ceil((lastDate.getTime() - firstDate.getTime()) / dayMs);
-
   // Função Y (baseline implícita em zero)
   const getY = (value: number) => ((maxValue - value) / range) * 100;
   const zeroY = getY(0);
 
-  // Pontos (alta densidade)
+  // Pontos do gráfico (1 por sessão)
   const points = chartData.map((d, i) => ({
     x: chartData.length === 1 ? 50 : (i / (chartData.length - 1)) * 100,
     y: getY(d.accumulated),
@@ -93,26 +90,26 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
   // Path da linha (sem suavização artificial)
   const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
 
-  // Área preenchida tipo SharkScope
+  // Área preenchida
   const areaPath = `M 0 ${zeroY} ${points.map((p) => `L ${p.x} ${p.y}`).join(' ')} L 100 ${zeroY} Z`;
 
-  // Labels do eixo Y (valores de lucro)
+  // Labels do eixo Y (valores de lucro acumulado)
   const yLabels = [
     { value: maxValue, y: 0 },
     { value: maxValue * 0.5, y: 25 },
     { value: 0, y: zeroY },
     { value: minValue * 0.5, y: 75 },
     { value: minValue, y: 100 }
-  ].filter(l => Math.abs(l.value) > 10); // Só mostrar se significativo
+  ].filter(l => Math.abs(l.value) > 10);
 
-  // Labels do eixo X (número de jogos)
-  const totalGames = chartData.length;
+  // Labels do eixo X (número de sessões)
+  const totalSessions = chartData.length;
   const xLabels = [
-    { label: '0', x: 0 },
-    { label: Math.floor(totalGames * 0.25).toString(), x: 25 },
-    { label: Math.floor(totalGames * 0.5).toString(), x: 50 },
-    { label: Math.floor(totalGames * 0.75).toString(), x: 75 },
-    { label: totalGames.toString(), x: 100 }
+    { label: '1', x: 0 },
+    { label: Math.floor(totalSessions * 0.25).toString(), x: 25 },
+    { label: Math.floor(totalSessions * 0.5).toString(), x: 50 },
+    { label: Math.floor(totalSessions * 0.75).toString(), x: 75 },
+    { label: totalSessions.toString(), x: 100 }
   ];
 
   return (
@@ -165,10 +162,10 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
           </div>
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontSize: 10, color: '#94a3b8', marginBottom: 2, fontWeight: 500 }}>
-              {chartData.length} jogos
+              {chartData.length} {chartData.length === 1 ? 'sessão' : 'sessões'}
             </div>
             <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b' }}>
-              {sessions.length} {sessions.length === 1 ? 'sessão' : 'sessões'}
+              {totalProfit >= 0 ? '+' : ''}{totalProfit.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })}
             </div>
           </div>
         </div>
@@ -273,19 +270,45 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
             opacity="0.9"
           />
 
+          {/* Pontos especiais (sessões significativas > R$ 500) */}
+          {points.map((p, i) => {
+            if (!p.data.isSignificant) return null;
+            return (
+              <g key={i}>
+                <circle
+                  cx={p.x}
+                  cy={p.y}
+                  r="2"
+                  fill={p.data.sessionNet > 0 ? "#10b981" : "#ef4444"}
+                  stroke="#fff"
+                  strokeWidth="0.6"
+                />
+                <circle
+                  cx={p.x}
+                  cy={p.y}
+                  r="3"
+                  fill="none"
+                  stroke={p.data.sessionNet > 0 ? "#10b981" : "#ef4444"}
+                  strokeWidth="0.3"
+                  opacity="0.5"
+                />
+              </g>
+            );
+          })}
+
           {/* Ponto de hover */}
           {hoveredPoint && (
             <circle
               cx={points[hoveredPoint.index].x}
               cy={points[hoveredPoint.index].y}
-              r="1.5"
-              fill={totalProfit >= 0 ? "#3b82f6" : "#ef4444"}
+              r="2"
+              fill={hoveredPoint.accumulated >= 0 ? "#3b82f6" : "#ef4444"}
               stroke="#fff"
               strokeWidth="0.5"
             />
           )}
 
-          {/* Área invisível para capturar hover - menos sensível */}
+          {/* Área invisível para capturar hover */}
           <rect
             x="0"
             y="0"
@@ -299,17 +322,17 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
               const rect = svg.getBoundingClientRect();
               const x = ((e.clientX - rect.left) / rect.width) * 100;
               
-              // Reduzir sensibilidade: agrupar pontos em intervalos maiores
-              const samplingRate = Math.max(1, Math.floor(points.length / 50)); // Max 50 pontos detectáveis
-              const closestIndex = Math.round((x / 100) * (points.length - 1) / samplingRate) * samplingRate;
-              const clampedIndex = Math.min(closestIndex, points.length - 1);
+              const closestIndex = Math.round((x / 100) * (points.length - 1));
+              const clampedIndex = Math.max(0, Math.min(closestIndex, points.length - 1));
               const point = points[clampedIndex];
               
-              if (point && (!hoveredPoint || hoveredPoint.index !== clampedIndex)) {
+              if (point) {
                 setHoveredPoint({ 
                   index: clampedIndex, 
-                  value: point.data.accumulated,
-                  gameNumber: point.data.gameNumber
+                  accumulated: point.data.accumulated,
+                  sessionNet: point.data.sessionNet,
+                  sessionNumber: point.data.sessionNumber,
+                  date: point.data.date
                 });
               }
             }}
@@ -346,7 +369,7 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
           textTransform: 'uppercase',
           letterSpacing: '0.5px'
         }}>
-          Nº de Jogos
+          Nº de Sessões
         </div>
 
         {/* Tooltip */}
@@ -354,21 +377,49 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
           <div style={{
             position: 'absolute',
             top: 50,
-            left: `${(hoveredPoint.index / (points.length - 1)) * 100}%`,
+            left: `${(hoveredPoint.index / Math.max(points.length - 1, 1)) * 100}%`,
             transform: 'translateX(-50%)',
-            background: 'rgba(15, 23, 42, 0.95)',
-            border: '1px solid rgba(71, 85, 105, 0.4)',
-            padding: '8px 12px',
-            borderRadius: 6,
+            background: 'rgba(10, 15, 36, 0.98)',
+            border: '1px solid rgba(71, 85, 105, 0.5)',
+            padding: '12px 16px',
+            borderRadius: 8,
             fontSize: 11,
             fontWeight: 600,
-            color: hoveredPoint.value >= 0 ? '#3b82f6' : '#ef4444',
             whiteSpace: 'nowrap',
             zIndex: 10,
-            pointerEvents: 'none'
+            pointerEvents: 'none',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.4)'
           }}>
-            {hoveredPoint.value >= 0 ? '+' : ''}{hoveredPoint.value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-            <div style={{ fontSize: 9, color: '#94a3b8', marginTop: 2 }}>Jogo #{hoveredPoint.gameNumber}</div>
+            {/* Sessão */}
+            <div style={{ fontSize: 10, color: '#94a3b8', marginBottom: 6, fontWeight: 600 }}>
+              Sessão #{hoveredPoint.sessionNumber} • {hoveredPoint.date}
+            </div>
+            
+            {/* Resultado da sessão */}
+            <div style={{ 
+              fontSize: 13, 
+              fontWeight: 700, 
+              color: hoveredPoint.sessionNet >= 0 ? '#10b981' : '#ef4444',
+              marginBottom: 6
+            }}>
+              {hoveredPoint.sessionNet >= 0 ? '+' : ''}{hoveredPoint.sessionNet.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+              <span style={{ fontSize: 9, color: '#64748b', marginLeft: 6 }}>
+                (sessão)
+              </span>
+            </div>
+
+            {/* Total acumulado */}
+            <div style={{ 
+              fontSize: 12, 
+              color: hoveredPoint.accumulated >= 0 ? '#3b82f6' : '#ef4444',
+              paddingTop: 6,
+              borderTop: '1px solid rgba(71, 85, 105, 0.3)'
+            }}>
+              <span style={{ fontSize: 9, color: '#94a3b8', marginRight: 6 }}>Acumulado:</span>
+              <strong>
+                {hoveredPoint.accumulated >= 0 ? '+' : ''}{hoveredPoint.accumulated.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+              </strong>
+            </div>
           </div>
         )}
         </div>
