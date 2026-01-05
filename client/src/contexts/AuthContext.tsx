@@ -1,5 +1,9 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
+// 🧪 MODO DE TESTE: Force o sistema a se comportar como FREE
+// ⚠️ SEMPRE false em produção
+export const FORCE_FREE_MODE = false;
+
 interface User {
   id: string;
   email: string;
@@ -82,8 +86,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       const data = await res.json();
       if (data.user) {
-        setUser(data.user);
-        try { localStorage.setItem('pokerwizard_user', JSON.stringify(data.user)); } catch (e) {}
+        // 🧪 FORCE_FREE_MODE: sobrescreve premium para false
+        const userToSet = FORCE_FREE_MODE 
+          ? { ...data.user, premium: false }
+          : data.user;
+        setUser(userToSet);
+        try { localStorage.setItem('pokerwizard_user', JSON.stringify(userToSet)); } catch (e) {}
       }
     } catch (err) {
       // Em caso de erro de rede, manter o usuário logado com os dados do localStorage
@@ -107,10 +115,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       const data = await res.json();
+      // 🧪 FORCE_FREE_MODE: sobrescreve premium para false
+      const userToSet = FORCE_FREE_MODE 
+        ? { ...data.user, premium: false }
+        : data.user;
       setToken(data.token);
-      setUser(data.user);
+      setUser(userToSet);
       try { localStorage.setItem('pokerwizard_token', data.token); } catch (e) {}
-      try { localStorage.setItem('pokerwizard_user', JSON.stringify(data.user)); } catch (e) {}
+      try { localStorage.setItem('pokerwizard_user', JSON.stringify(userToSet)); } catch (e) {}
     } catch (err: any) {
       setError(err.message);
       throw err;
@@ -147,10 +159,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       const data = await res.json();
+      // 🧪 FORCE_FREE_MODE: sobrescreve premium para false
+      const userToSet = FORCE_FREE_MODE 
+        ? { ...data.user, premium: false }
+        : data.user;
       setToken(data.token);
-      setUser(data.user);
+      setUser(userToSet);
       try { localStorage.setItem('pokerwizard_token', data.token); } catch (e) {}
-      try { localStorage.setItem('pokerwizard_user', JSON.stringify(data.user)); } catch (e) {}
+      try { localStorage.setItem('pokerwizard_user', JSON.stringify(userToSet)); } catch (e) {}
     } catch (err: any) {
       setError(err.message);
       throw err;

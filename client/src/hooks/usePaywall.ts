@@ -6,6 +6,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { FORCE_FREE_MODE } from '../contexts/AuthContext';
 
 const API_URL = import.meta.env.VITE_API_URL || '';
 
@@ -73,7 +74,13 @@ export function usePaywall(token: string | null): UsePaywallReturn {
       
       const data = await res.json();
       console.log('[usePaywall] ✅ Dados carregados da API:', data);
-      setUsageStatus(data);
+      
+      // 🧪 FORCE_FREE_MODE: sobrescreve para modo FREE
+      const statusToSet = FORCE_FREE_MODE 
+        ? { ...data, isPremium: false, statusPlano: 'free' as const, freeCredits: Math.min(data.freeCredits, FREE_CREDITS_LIMIT) }
+        : data;
+      
+      setUsageStatus(statusToSet);
     } catch (err: any) {
       console.error('[usePaywall] ❌ Erro na API:', err.message);
       console.log('[usePaywall] 🔄 Usando fallback do localStorage');
@@ -83,18 +90,36 @@ export function usePaywall(token: string | null): UsePaywallReturn {
       const isLocalPremium = checkLocalStoragePremium();
       if (isLocalPremium) {
         console.log('[usePaywall] ✅ Usuário identificado como PRO via localStorage');
-        setUsageStatus({
-          isPremium: true,
-          statusPlano: 'premium',
-          freeCredits: -1,
-          freeCreditsLimit: FREE_CREDITS_LIMIT,
-          blocked: false,
-          message: 'Premium ativo (offline)',
-          features: [],
-          totalRemaining: -1,
-          anyBlocked: false,
-          allBlocked: false
-        });
+        
+        // 🧪 FORCE_FREE_MODE: ignora premium mesmo no localStorage
+        if (FORCE_FREE_MODE) {
+          console.log('[usePaywall] 🧪 FORCE_FREE_MODE ativo - forçando modo FREE');
+          setUsageStatus({
+            isPremium: false,
+            statusPlano: 'free',
+            freeCredits: FREE_CREDITS_LIMIT,
+            freeCreditsLimit: FREE_CREDITS_LIMIT,
+            blocked: false,
+            message: 'Modo FREE (teste)',
+            features: [],
+            totalRemaining: FREE_CREDITS_LIMIT,
+            anyBlocked: false,
+            allBlocked: false
+          });
+        } else {
+          setUsageStatus({
+            isPremium: true,
+            statusPlano: 'premium',
+            freeCredits: -1,
+            freeCreditsLimit: FREE_CREDITS_LIMIT,
+            blocked: false,
+            message: 'Premium ativo (offline)',
+            features: [],
+            totalRemaining: -1,
+            anyBlocked: false,
+            allBlocked: false
+          });
+        }
       }
     } finally {
       setLoading(false);
@@ -179,9 +204,12 @@ export function usePaywall(token: string | null): UsePaywallReturn {
   const freeCredits = usageStatus?.freeCredits ?? FREE_CREDITS_LIMIT;
   
   // Se usageStatus não carregou, verificar localStorage
-  const isPremium = usageStatus 
-    ? usageStatus.isPremium 
-    : checkLocalStoragePremium();
+  // 🧪 FORCE_FREE_MODE: sempre retorna false
+  const isPremium = FORCE_FREE_MODE 
+    ? false 
+    : (usageStatus 
+      ? usageStatus.isPremium 
+      : checkLocalStoragePremium());
 
   // Debug
   useEffect(() => {

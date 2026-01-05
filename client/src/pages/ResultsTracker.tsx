@@ -502,6 +502,14 @@ export default function ResultsTracker() {
     const growthPercent = firstValue !== 0 ? ((totalProfit - firstValue) / Math.abs(firstValue)) * 100 : 0;
     const positiveMonths = chartData.filter(d => d.net > 0).length;
     const avgMonthly = totalProfit / chartData.length;
+    
+    // 📊 Linha de referência (saldo inicial = 0)
+    const referenceValue = 0;
+
+    // 📅 Período em dias
+    const firstDate = new Date(chartData[0].date.split('/').reverse().join('-'));
+    const lastDate = new Date(chartData[chartData.length - 1].date.split('/').reverse().join('-'));
+    const daysDiff = Math.ceil((lastDate.getTime() - firstDate.getTime()) / (1000 * 60 * 60 * 24));
 
     // Função para calcular Y
     const getY = (value: number) => {
@@ -515,11 +523,17 @@ export default function ResultsTracker() {
       return { x, y, data: d };
     });
 
-    // Linha SVG
-    const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
-    
-    // Área SVG
-    const areaPath = linePath + ` L 100 100 L 0 100 Z`;
+    // Linha SVG com segmentos coloridos para quedas
+    const segments: Array<{ path: string; isNegative: boolean }> = [];
+    for (let i = 0; i < points.length - 1; i++) {
+      const current = points[i];
+      const next = points[i + 1];
+      const isNegative = next.data.accumulated < current.data.accumulated;
+      segments.push({
+        path: `M ${current.x} ${current.y} L ${next.x} ${next.y}`,
+        isNegative
+      });
+    }
 
     // Grid Y labels
     const yLabels = [];
@@ -531,6 +545,35 @@ export default function ResultsTracker() {
 
     return (
       <div style={{ position: 'relative', filter: isBlurred ? 'blur(8px)' : 'none', transition: 'filter 0.3s ease' }}>
+        {/* 📊 Micro-legenda */}
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center',
+          marginBottom: 16,
+          padding: '12px 16px',
+          background: 'rgba(168, 85, 247, 0.05)',
+          borderRadius: 8,
+          border: '1px solid rgba(168, 85, 247, 0.15)'
+        }}>
+          <div>
+            <span style={{ fontSize: 12, color: '#94a3b8', marginRight: 8 }}>Resultado atual:</span>
+            <strong style={{ 
+              fontSize: 16, 
+              fontWeight: 700,
+              color: totalProfit >= 0 ? '#10b981' : '#ef4444'
+            }}>
+              {totalProfit >= 0 ? '+' : ''}{totalProfit.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+            </strong>
+          </div>
+          <div>
+            <span style={{ fontSize: 12, color: '#94a3b8', marginRight: 8 }}>Período:</span>
+            <strong style={{ fontSize: 14, fontWeight: 600, color: '#a855f7' }}>
+              {daysDiff === 0 ? 'Hoje' : `Últimos ${daysDiff} ${daysDiff === 1 ? 'dia' : 'dias'}`}
+            </strong>
+          </div>
+        </div>
+
         {/* Grid e gráfico - Fluido sem card */}
         <div style={{ position: 'relative', background: 'transparent', padding: '24px 0' }}>
           {/* Eixo Y */}
@@ -558,14 +601,27 @@ export default function ResultsTracker() {
                   <stop offset="50%" stopColor="#ec4899" />
                   <stop offset="100%" stopColor="#f472b6" />
                 </linearGradient>
+                <linearGradient id="lineGradientNegative" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#f472b6" stopOpacity="0.7" />
+                  <stop offset="100%" stopColor="#fb923c" stopOpacity="0.7" />
+                </linearGradient>
                 <linearGradient id="areaGradientEvolution" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#ec4899" stopOpacity="0.4" />
-                  <stop offset="50%" stopColor="#a855f7" stopOpacity="0.2" />
+                  <stop offset="0%" stopColor="#ec4899" stopOpacity="0.15" />
+                  <stop offset="50%" stopColor="#a855f7" stopOpacity="0.08" />
                   <stop offset="100%" stopColor="#1e293b" stopOpacity="0" />
                 </linearGradient>
                 <filter id="glowEvolution">
                   <feGaussianBlur stdDeviation="1.5" result="blur" />
                   <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+                <filter id="glowLastPoint">
+                  <feGaussianBlur stdDeviation="2" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
                     <feMergeNode in="blur" />
                     <feMergeNode in="blur" />
                     <feMergeNode in="SourceGraphic" />
@@ -578,42 +634,63 @@ export default function ResultsTracker() {
                 <line key={y} x1="0" y1={y} x2="100" y2={y} stroke="rgba(168, 85, 247, 0.08)" strokeWidth="0.3" />
               ))}
               
-              {/* Área sob a linha */}
-              <path d={areaPath} fill="url(#areaGradientEvolution)" />
-              
-              {/* Linha principal */}
-              <path
-                d={linePath}
-                fill="none"
-                stroke="url(#lineGradientEvolution)"
-                strokeWidth="1.2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                filter="url(#glowEvolution)"
+              {/* 📏 Linha de referência tracejada (saldo inicial) */}
+              <line
+                x1="0"
+                y1={getY(referenceValue)}
+                x2="100"
+                y2={getY(referenceValue)}
+                stroke="rgba(148, 163, 184, 0.25)"
+                strokeWidth="0.4"
+                strokeDasharray="2,2"
               />
               
-              {/* Pontos */}
-              {points.map((p, i) => (
-                <circle
+              {/* Área sob a linha */}
+              <path 
+                d={`M 0 ${points[0].y} ${points.map((p, i) => `L ${p.x} ${p.y}`).join(' ')} L 100 100 L 0 100 Z`} 
+                fill="url(#areaGradientEvolution)" 
+              />
+              
+              {/* Linha principal com segmentos coloridos */}
+              {segments.map((seg, i) => (
+                <path
                   key={i}
-                  cx={p.x}
-                  cy={p.y}
-                  r={hoveredPoint?.index === i ? "2" : "1.2"}
-                  fill="#ec4899"
-                  stroke="#fff"
-                  strokeWidth="0.3"
+                  d={seg.path}
+                  fill="none"
+                  stroke={seg.isNegative ? "url(#lineGradientNegative)" : "url(#lineGradientEvolution)"}
+                  strokeWidth="1.2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                   filter="url(#glowEvolution)"
-                  style={{ cursor: 'pointer', transition: 'all 0.2s' }}
-                  onMouseEnter={(e) => {
-                    const rect = e.currentTarget.ownerSVGElement?.getBoundingClientRect();
-                    if (rect) {
-                      const xPos = rect.left + (p.x / 100) * rect.width;
-                      const yPos = rect.top + (p.y / 100) * rect.height;
-                      setHoveredPoint({ index: i, x: xPos, y: yPos, value: p.data.accumulated });
-                    }
-                  }}
                 />
               ))}
+              
+              {/* Pontos - mais discretos, exceto o último */}
+              {points.map((p, i) => {
+                const isLast = i === points.length - 1;
+                const isHovered = hoveredPoint?.index === i;
+                return (
+                  <circle
+                    key={i}
+                    cx={p.x}
+                    cy={p.y}
+                    r={isLast ? (isHovered ? "2.2" : "1.8") : (isHovered ? "1.5" : "0.8")}
+                    fill={isLast ? "#ec4899" : "rgba(236, 72, 153, 0.6)"}
+                    stroke={isLast ? "#fff" : "rgba(255, 255, 255, 0.4)"}
+                    strokeWidth={isLast ? "0.4" : "0.2"}
+                    filter={isLast ? "url(#glowLastPoint)" : "none"}
+                    style={{ cursor: 'pointer', transition: 'all 0.2s' }}
+                    onMouseEnter={(e) => {
+                      const rect = e.currentTarget.ownerSVGElement?.getBoundingClientRect();
+                      if (rect) {
+                        const xPos = rect.left + (p.x / 100) * rect.width;
+                        const yPos = rect.top + (p.y / 100) * rect.height;
+                        setHoveredPoint({ index: i, x: xPos, y: yPos, value: p.data.accumulated });
+                      }
+                    }}
+                  />
+                );
+              })}
             </svg>
 
             {/* Eixo X - Datas */}
