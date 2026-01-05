@@ -269,7 +269,7 @@ export default function PlayerAnalysis() {
               📈 Evolução de Ganhos
             </h3>
             
-            <div className="chart-container" style={{ position: 'relative', overflow: 'hidden' }}>
+            <div style={{ position: 'relative' }}>
             {/* Background Glow Effects */}
             <div style={{
               position: 'absolute',

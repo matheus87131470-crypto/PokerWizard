@@ -531,8 +531,8 @@ export default function ResultsTracker() {
 
     return (
       <div style={{ position: 'relative', filter: isBlurred ? 'blur(8px)' : 'none', transition: 'filter 0.3s ease' }}>
-        {/* Grid e gráfico */}
-        <div style={{ position: 'relative', background: 'rgba(15, 23, 42, 0.4)', borderRadius: 12, padding: '24px 16px', border: '1px solid rgba(168, 85, 247, 0.1)' }}>
+        {/* Grid e gráfico - Fluido sem card */}
+        <div style={{ position: 'relative', background: 'transparent', padding: '24px 0' }}>
           {/* Eixo Y */}
           <div style={{ position: 'absolute', left: 0, top: 24, bottom: 50, width: 60, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
             {yLabels.map((value, i) => (
@@ -1021,9 +1021,7 @@ export default function ResultsTracker() {
           <h3 style={{ fontSize: 22, fontWeight: 700, marginBottom: 32, color: '#f8fafc', textAlign: 'center', textShadow: '0 0 20px rgba(168, 85, 247, 0.3)' }}>
             📈 Evolução de Resultados
           </h3>
-          <div className="chart-container">
-            <EvolutionChart data={sessions} isBlurred={shouldBlurChart} />
-          </div>
+          <EvolutionChart data={sessions} isBlurred={shouldBlurChart} />
           
           {/* Paywall sobre gráfico */}
           {shouldBlurChart && (
