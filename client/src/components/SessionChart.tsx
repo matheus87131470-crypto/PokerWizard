@@ -15,8 +15,8 @@ interface SessionChartProps {
 }
 
 export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
-  const [hoveredPoint, setHoveredPoint] = useState<{ index: number; value: number; date: string } | null>(null);
-  const [period, setPeriod] = useState<'7d' | '30d' | 'all'>('7d');
+  const [hoveredPoint, setHoveredPoint] = useState<{ index: number; value: number; gameNumber: number } | null>(null);
+  const [period, setPeriod] = useState<'7d' | '30d' | 'all'>('all');
 
   if (data.length === 0) {
     return (
@@ -44,47 +44,59 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
   // Saldo total (para header)
   const totalProfit = sessions.reduce((acc, s) => acc + s.net, 0);
 
-  // Dados do gráfico: resultado POR SESSÃO
-  const chartData = sessions.map(s => ({ ...s, value: s.net }));
+  // LÓGICA SHARKSCOPE: Simular jogos individuais dentro de cada sessão
+  // Cada sessão vira múltiplos pontos (jogos) com lucro acumulado
+  const games: Array<{ gameNumber: number; accumulated: number }> = [];
+  let accumulated = 0;
+  let gameCounter = 0;
 
-  // Range do gráfico
-  const values = chartData.map(d => d.value);
-  const dataMax = Math.max(...values, 500);
-  const dataMin = Math.min(...values, -500);
+  sessions.forEach(session => {
+    // Simular 10-20 jogos por sessão (densidade alta)
+    const gamesInSession = Math.max(10, Math.floor(Math.random() * 11) + 10);
+    const resultPerGame = session.net / gamesInSession;
+    
+    for (let i = 0; i < gamesInSession; i++) {
+      accumulated += resultPerGame;
+      gameCounter++;
+      games.push({ gameNumber: gameCounter, accumulated });
+    }
+  });
+
+  const chartData = games;
+
+  const chartData = games;
+
+  // Range do gráfico (baseado em acumulado)
+  const values = chartData.map(d => d.accumulated);
+  const dataMax = Math.max(...values, 100);
+  const dataMin = Math.min(...values, -100);
   
-  const padding = Math.max(Math.abs(dataMax), Math.abs(dataMin)) * 0.2;
+  const padding = Math.max(Math.abs(dataMax), Math.abs(dataMin)) * 0.1;
   const maxValue = dataMax + padding;
   const minValue = dataMin - padding;
   const range = maxValue - minValue;
 
   // Período
-  const firstDate = new Date(chartData[0].date.split('/').reverse().join('-'));
-  const lastDate = new Date(chartData[chartData.length - 1].date.split('/').reverse().join('-'));
+  const firstDate = new Date(sessions[0].date.split('/').reverse().join('-'));
+  const lastDate = new Date(sessions[sessions.length - 1].date.split('/').reverse().join('-'));
   const daysDiff = Math.ceil((lastDate.getTime() - firstDate.getTime()) / dayMs);
 
-  // Função Y
+  // Função Y (baseline implícita em zero)
   const getY = (value: number) => ((maxValue - value) / range) * 100;
   const zeroY = getY(0);
 
-  // Pontos
+  // Pontos (alta densidade)
   const points = chartData.map((d, i) => ({
     x: chartData.length === 1 ? 50 : (i / (chartData.length - 1)) * 100,
-    y: getY(d.value),
+    y: getY(d.accumulated),
     data: d
   }));
 
-  // Paths
-  const positivePath = points.map((p, i) => {
-    const y = p.data.value >= 0 ? p.y : zeroY;
-    return `${i === 0 ? 'M' : 'L'} ${p.x} ${y}`;
-  }).join(' ') + ` L ${points[points.length - 1].x} ${zeroY} L ${points[0].x} ${zeroY} Z`;
-
-  const negativePath = points.map((p, i) => {
-    const y = p.data.value < 0 ? p.y : zeroY;
-    return `${i === 0 ? 'M' : 'L'} ${p.x} ${y}`;
-  }).join(' ') + ` L ${points[points.length - 1].x} ${zeroY} L ${points[0].x} ${zeroY} Z`;
-
+  // Path da linha (sem suavização artificial)
   const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+
+  // Área preenchida tipo SharkScope
+  const areaPath = `M 0 ${zeroY} ${points.map((p) => `L ${p.x} ${p.y}`).join(' ')} L 100 ${zeroY} Z`;
 
   return (
     <div style={{ position: 'relative', filter: isBlurred ? 'blur(8px)' : 'none', transition: 'filter 0.3s ease' }}>
@@ -136,10 +148,10 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
           </div>
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontSize: 10, color: '#94a3b8', marginBottom: 2, fontWeight: 500 }}>
-              {chartData.length} {chartData.length === 1 ? 'sessão' : 'sessões'}
+              {chartData.length} jogos
             </div>
             <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b' }}>
-              {daysDiff === 0 ? 'Hoje' : `${daysDiff}d`}
+              {sessions.length} {sessions.length === 1 ? 'sessão' : 'sessões'}
             </div>
           </div>
         </div>
@@ -154,75 +166,92 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
         border: '1px solid rgba(71, 85, 105, 0.15)'
       }}>
         <div style={{ fontSize: 10, color: '#64748b', marginBottom: 12, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-          Resultado por Sessão
+          Lucro Acumulado (por jogo)
         </div>
         
         <svg 
           width="100%" 
-          height="140"
+          height="180"
           viewBox="0 0 100 100" 
           preserveAspectRatio="none" 
           style={{ display: 'block' }}
           onMouseLeave={() => setHoveredPoint(null)}
         >
           <defs>
-            <linearGradient id="areaPositive" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.2" />
-              <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
-            </linearGradient>
-            <linearGradient id="areaNegative" x1="0%" y1="100%" x2="0%" y2="0%">
-              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.2" />
-              <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
+            <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor={totalProfit >= 0 ? "#3b82f6" : "#ef4444"} stopOpacity="0.15" />
+              <stop offset="100%" stopColor={totalProfit >= 0 ? "#3b82f6" : "#ef4444"} stopOpacity="0" />
             </linearGradient>
           </defs>
 
+          {/* Linha de referência zero */}
           <line 
             x1="0" 
             y1={zeroY} 
             x2="100" 
             y2={zeroY} 
-            stroke="rgba(148, 163, 184, 0.25)" 
-            strokeWidth="0.4" 
-            strokeDasharray="4,4"
+            stroke="rgba(148, 163, 184, 0.2)" 
+            strokeWidth="0.3" 
+            strokeDasharray="2,2"
           />
 
-          <path d={positivePath} fill="url(#areaPositive)" />
-          <path d={negativePath} fill="url(#areaNegative)" />
+          {/* Área preenchida */}
+          <path d={areaPath} fill="url(#areaGradient)" />
 
+          {/* Linha principal - sem suavização */}
           <path
             d={linePath}
             fill="none"
-            stroke="#64748b"
-            strokeWidth="1.5"
+            stroke={totalProfit >= 0 ? "#3b82f6" : "#ef4444"}
+            strokeWidth="1.2"
             strokeLinecap="round"
             strokeLinejoin="round"
+            opacity="0.8"
           />
 
-          {points.map((p, i) => {
-            const isHovered = hoveredPoint?.index === i;
-            const isPositive = p.data.value >= 0;
-            
-            return (
-              <circle
-                key={i}
-                cx={p.x}
-                cy={p.y}
-                r={isHovered ? 1.2 : 0.7}
-                fill={isPositive ? '#3b82f6' : '#ef4444'}
-                stroke="#fff"
-                strokeWidth="0.3"
-                style={{ cursor: 'pointer', transition: 'all 0.2s' }}
-                onMouseEnter={() => setHoveredPoint({ index: i, value: p.data.value, date: p.data.date })}
-              />
-            );
-          })}
+          {/* Ponto de hover */}
+          {hoveredPoint && (
+            <circle
+              cx={points[hoveredPoint.index].x}
+              cy={points[hoveredPoint.index].y}
+              r="1"
+              fill={totalProfit >= 0 ? "#3b82f6" : "#ef4444"}
+              stroke="#fff"
+              strokeWidth="0.4"
+            />
+          )}
+
+          {/* Área invisível para capturar hover */}
+          <rect
+            x="0"
+            y="0"
+            width="100"
+            height="100"
+            fill="transparent"
+            onMouseMove={(e) => {
+              const svg = e.currentTarget.ownerSVGElement;
+              if (!svg) return;
+              const rect = svg.getBoundingClientRect();
+              const x = ((e.clientX - rect.left) / rect.width) * 100;
+              const closestIndex = Math.round((x / 100) * (points.length - 1));
+              const point = points[closestIndex];
+              if (point) {
+                setHoveredPoint({ 
+                  index: closestIndex, 
+                  value: point.data.accumulated,
+                  gameNumber: point.data.gameNumber
+                });
+              }
+            }}
+          />
         </svg>
 
+        {/* Tooltip */}
         {hoveredPoint && (
           <div style={{
             position: 'absolute',
             top: 50,
-            left: `${(hoveredPoint.index / Math.max(points.length - 1, 1)) * 100}%`,
+            left: `${(hoveredPoint.index / (points.length - 1)) * 100}%`,
             transform: 'translateX(-50%)',
             background: 'rgba(15, 23, 42, 0.95)',
             border: '1px solid rgba(71, 85, 105, 0.4)',
@@ -236,7 +265,7 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
             pointerEvents: 'none'
           }}>
             {hoveredPoint.value >= 0 ? '+' : ''}{hoveredPoint.value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-            <div style={{ fontSize: 9, color: '#94a3b8', marginTop: 2 }}>{hoveredPoint.date}</div>
+            <div style={{ fontSize: 9, color: '#94a3b8', marginTop: 2 }}>Jogo #{hoveredPoint.gameNumber}</div>
           </div>
         )}
       </div>
