@@ -504,14 +504,14 @@ export default function ResultsTracker() {
     const styles = variant === 'analytics' ? {
       // 📊 ANALYTICS: Visual profissional para histórico/análise
       lineColor: totalProfit >= 0 ? '#10b981' : '#ef4444',
-      lineWidth: '1.5',
+      lineWidth: '2',
       lineGlow: false,
-      areaOpacity: 0.03,
+      areaOpacity: 0.05,
       areaColor: totalProfit >= 0 ? '#10b981' : '#ef4444',
       gridOpacity: 0.06,
       gridColor: '#94a3b8',
-      pointRadius: { normal: 0.6, hover: 1.2, last: 1.0 },
-      pointOpacity: 0.8,
+      pointRadius: { normal: 1.2, hover: 1.8, last: 1.5 },
+      pointOpacity: 1,
       background: 'transparent',
       legendBg: 'rgba(148, 163, 184, 0.04)',
       legendBorder: 'rgba(148, 163, 184, 0.12)',
@@ -806,16 +806,28 @@ export default function ResultsTracker() {
               })}
             </svg>
 
-            {/* Eixo X - Datas */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, paddingLeft: 4, paddingRight: 4 }}>
-              {chartData.map((d, i) => {
-                const showLabel = chartData.length <= 12 || i % Math.ceil(chartData.length / 12) === 0 || i === chartData.length - 1;
-                return showLabel ? (
-                  <span key={i} style={{ fontSize: 11, color: '#6b7280', fontWeight: 600 }}>
-                    {d.date.split('/')[0]}/{d.date.split('/')[1]}
-                  </span>
-                ) : null;
-              })}
+            {/* Eixo X - Números das Sessões e Data */}
+            <div style={{ marginTop: 12 }}>
+              {/* Labels de sessões */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, paddingLeft: 4, paddingRight: 4 }}>
+                {chartData.map((d, i) => {
+                  const showLabel = chartData.length <= 10 || i % Math.ceil(chartData.length / 10) === 0 || i === chartData.length - 1 || i === 0;
+                  return showLabel ? (
+                    <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                      <span style={{ fontSize: 11, color: variant === 'analytics' ? '#64748b' : '#a855f7', fontWeight: 700 }}>
+                        #{i + 1}
+                      </span>
+                      <span style={{ fontSize: 10, color: '#6b7280', fontWeight: 500 }}>
+                        {d.date.split('/')[0]}/{d.date.split('/')[1]}
+                      </span>
+                    </div>
+                  ) : null;
+                })}
+              </div>
+              {/* Label explicativo */}
+              <div style={{ textAlign: 'center', fontSize: 10, color: '#94a3b8', marginTop: 4, fontWeight: 600 }}>
+                {chartData.length} {chartData.length === 1 ? 'sessão' : 'sessões'} • Cada ponto = 1 sessão
+              </div>
             </div>
           </div>
         </div>
