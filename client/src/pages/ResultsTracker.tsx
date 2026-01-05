@@ -227,83 +227,115 @@ export default function ResultsTracker() {
   const isBlocked = !isReallyPremium && sessions.length >= FREE_SESSION_LIMIT;
   const shouldBlurChart = !isReallyPremium && sessions.length >= FREE_SESSION_LIMIT;
 
-  // Barra Circular de Progresso Animada - Estilo Semicircular
+  // Barra Circular de Progresso Animada - Estilo Premium com Glow
   const CircularProgressBar = ({ percentage, total, goal, remaining }: { percentage: number; total: number; goal: number; remaining: number }) => {
-    const size = 340;
-    const strokeWidth = 22;
-    const radius = size / 2 - strokeWidth;
-    const circumference = Math.PI * radius; // Semicírculo
-    const offset = circumference - (percentage / 100) * circumference;
+    const [animatedPercentage, setAnimatedPercentage] = useState(0);
+    
+    useEffect(() => {
+      // Animação de preenchimento suave
+      const duration = 1500;
+      const steps = 60;
+      const stepDuration = duration / steps;
+      const increment = percentage / steps;
+      let current = 0;
+      
+      const timer = setInterval(() => {
+        current += increment;
+        if (current >= percentage) {
+          setAnimatedPercentage(percentage);
+          clearInterval(timer);
+        } else {
+          setAnimatedPercentage(current);
+        }
+      }, stepDuration);
+      
+      return () => clearInterval(timer);
+    }, [percentage]);
+
+    const size = 320;
+    const strokeWidth = 24;
+    const radius = (size - strokeWidth) / 2;
+    const circumference = 2 * Math.PI * radius;
+    const offset = circumference - (animatedPercentage / 100) * circumference;
 
     return (
-      <div style={{ position: 'relative', width: size, height: size * 0.65, margin: '0 auto', overflow: 'hidden' }}>
-        {/* Círculos de fundo decorativos */}
+      <div style={{ position: 'relative', width: size, height: size, margin: '0 auto' }}>
+        {/* Círculos decorativos de fundo com glow */}
         <div style={{
           position: 'absolute',
           top: '50%',
           left: '50%',
           transform: 'translate(-50%, -50%)',
-          width: size * 1.5,
-          height: size * 1.5,
+          width: size * 1.8,
+          height: size * 1.8,
           borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(168, 85, 247, 0.15) 0%, transparent 70%)',
-          pointerEvents: 'none'
+          background: 'radial-gradient(circle, rgba(168, 85, 247, 0.15) 0%, rgba(236, 72, 153, 0.08) 50%, transparent 70%)',
+          filter: 'blur(40px)',
+          pointerEvents: 'none',
+          animation: 'pulse 4s ease-in-out infinite'
         }} />
         <div style={{
           position: 'absolute',
           top: '50%',
           left: '50%',
           transform: 'translate(-50%, -50%)',
-          width: size * 1.2,
-          height: size * 1.2,
+          width: size * 1.3,
+          height: size * 1.3,
           borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(168, 85, 247, 0.25) 0%, transparent 60%)',
+          background: 'radial-gradient(circle, rgba(168, 85, 247, 0.25) 0%, rgba(236, 72, 153, 0.15) 40%, transparent 60%)',
+          filter: 'blur(30px)',
           pointerEvents: 'none'
         }} />
         
-        <svg width={size} height={size * 0.65} viewBox={`0 0 ${size} ${size * 0.65}`} style={{ display: 'block' }}>
+        {/* SVG Progress Ring */}
+        <svg width={size} height={size} style={{ transform: 'rotate(-90deg)', filter: 'drop-shadow(0 0 25px rgba(168, 85, 247, 0.6))' }}>
           <defs>
-            <linearGradient id="gradient-semi-profit" x1="0%" y1="100%" x2="100%" y2="0%">
+            <linearGradient id="gradient-progress-glow" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#a855f7" />
               <stop offset="50%" stopColor="#ec4899" />
               <stop offset="100%" stopColor="#22d3ee" />
             </linearGradient>
-            <linearGradient id="gradient-semi-loss" x1="0%" y1="100%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#ef4444" />
-              <stop offset="100%" stopColor="#a855f7" />
-            </linearGradient>
-            <filter id="glow-effect" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="6" result="blur" />
-              <feFlood floodColor={total >= 0 ? "#a855f7" : "#ef4444"} floodOpacity="0.9" />
-              <feComposite in2="blur" operator="in" />
+            <filter id="neon-glow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur1" />
+              <feGaussianBlur in="SourceGraphic" stdDeviation="15" result="blur2" />
               <feMerge>
-                <feMergeNode />
+                <feMergeNode in="blur2" />
+                <feMergeNode in="blur1" />
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
+            <linearGradient id="gradient-bg-ring" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="rgba(168, 85, 247, 0.15)" />
+              <stop offset="100%" stopColor="rgba(236, 72, 153, 0.1)" />
+            </linearGradient>
           </defs>
           
-          {/* Background arc */}
-          <path
-            d={`M ${strokeWidth} ${size * 0.65 - strokeWidth} A ${radius} ${radius} 0 0 1 ${size - strokeWidth} ${size * 0.65 - strokeWidth}`}
+          {/* Background ring (parte vazia) */}
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
             fill="none"
-            stroke="rgba(168, 85, 247, 0.2)"
+            stroke="url(#gradient-bg-ring)"
             strokeWidth={strokeWidth}
             strokeLinecap="round"
+            opacity="0.4"
           />
           
-          {/* Progress arc */}
-          <path
-            d={`M ${strokeWidth} ${size * 0.65 - strokeWidth} A ${radius} ${radius} 0 0 1 ${size - strokeWidth} ${size * 0.65 - strokeWidth}`}
+          {/* Progress ring (parte preenchida) */}
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
             fill="none"
-            stroke={`url(#gradient-semi-${total >= 0 ? 'profit' : 'loss'})`}
+            stroke="url(#gradient-progress-glow)"
             strokeWidth={strokeWidth}
             strokeDasharray={circumference}
             strokeDashoffset={offset}
             strokeLinecap="round"
-            filter="url(#glow-effect)"
+            filter="url(#neon-glow)"
             style={{
-              transition: 'stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1)',
+              transition: 'stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
             }}
           />
         </svg>
@@ -311,34 +343,66 @@ export default function ResultsTracker() {
         {/* Texto central */}
         <div style={{ 
           position: 'absolute', 
-          bottom: 20, 
+          top: '50%', 
           left: '50%', 
-          transform: 'translateX(-50%)', 
+          transform: 'translate(-50%, -50%)', 
           textAlign: 'center',
-          width: '100%'
+          width: '80%'
         }}>
           <div style={{ 
-            fontSize: 14, 
+            fontSize: 13, 
             color: '#94a3b8', 
             fontWeight: 600,
-            marginBottom: 8
+            letterSpacing: '1px',
+            marginBottom: 12,
+            textTransform: 'uppercase'
           }}>
-            {percentage >= 100 ? 'Meta atingida! 🎉' : 'Total em Vendas'}
+            Total em Vendas
           </div>
+          
           <div style={{ 
-            fontSize: 56, 
+            fontSize: 52, 
+            fontWeight: 900, 
+            color: total >= 0 ? '#22d3ee' : '#ef4444',
+            textShadow: total >= 0 
+              ? '0 0 40px rgba(34, 211, 238, 0.8), 0 0 80px rgba(168, 85, 247, 0.6), 0 0 120px rgba(236, 72, 153, 0.4)' 
+              : '0 0 40px rgba(239, 68, 68, 0.8), 0 0 80px rgba(168, 85, 247, 0.5)',
+            marginBottom: 8,
+            lineHeight: 1,
+            animation: 'glow-pulse 3s ease-in-out infinite'
+          }}>
+            {total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+          </div>
+          
+          <div style={{ 
+            fontSize: 32, 
             fontWeight: 900, 
             color: '#a855f7',
-            textShadow: '0 0 40px rgba(168, 85, 247, 0.9), 0 0 80px rgba(168, 85, 247, 0.6), 0 0 120px rgba(168, 85, 247, 0.3)',
-            marginBottom: 8,
-            lineHeight: 1
+            textShadow: '0 0 30px rgba(168, 85, 247, 0.8), 0 0 60px rgba(168, 85, 247, 0.5)',
+            marginBottom: 10
           }}>
-            {percentage.toFixed(1)}%
+            {animatedPercentage.toFixed(1)}%
           </div>
-          <div style={{ fontSize: 13, color: '#6b7280', marginTop: 4 }}>
+          
+          <div style={{ 
+            fontSize: 13, 
+            color: '#6b7280',
+            fontWeight: 600
+          }}>
             Meta: {goal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
           </div>
         </div>
+
+        <style>{`
+          @keyframes pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.6; }
+            50% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.8; }
+          }
+          @keyframes glow-pulse {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.2); }
+          }
+        `}</style>
       </div>
     );
   };
