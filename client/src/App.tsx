@@ -5,7 +5,6 @@ import Features from './pages/Features';
 import Analysis from './pages/Analysis';
 import Analyze from './pages/Analyze';
 import Ranges from './pages/Ranges';
-import PlayerAnalysis from './pages/PlayerAnalysis';
 import Login from './pages/Login';
 import Premium from './pages/Premium';
 import UpgradeSuccess from './pages/UpgradeSuccess';
@@ -178,27 +177,7 @@ function Layout({ children }: { children: React.ReactNode }) {
           <NavLink to="/bj-pro" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>🎰 BJ Pro</NavLink>
           <NavLink to="/analyze" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>🔍 Analyze</NavLink>
           <NavLink to="/ranges" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>📊 Ranges</NavLink>
-          <NavLink 
-            to="/player-analysis" 
-            className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}
-            style={{ position: 'relative' }}
-          >
-            🔍 Análise de Jogadores
-            <span style={{
-              position: 'absolute',
-              top: -8,
-              right: -8,
-              background: 'linear-gradient(135deg, #06b6d4, #0ea5e9)',
-              color: 'white',
-              fontSize: 8,
-              padding: '2px 6px',
-              borderRadius: 10,
-              fontWeight: 700
-            }}>
-              EM BREVE
-            </span>
-          </NavLink>
-          <NavLink to="/results" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>📊 Resultados</NavLink>
+          <NavLink to="/results" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>📊 Controle de Resultados</NavLink>
             <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             {auth.user ? (
               <>
@@ -1158,76 +1137,6 @@ function Home() {
               Ver Resultados →
             </button>
           </div>
-
-          {/* Card 5 - Análise de Jogadores - EM BREVE - Neon Cyan */}
-          <div 
-            className="card" 
-            onClick={() => navigate('/player-analysis')}
-            style={{ 
-              display: 'flex', 
-              flexDirection: 'column', 
-              padding: 24,
-              minHeight: 280,
-              justifyContent: 'space-between',
-              background: 'linear-gradient(145deg, rgba(6, 182, 212, 0.12), rgba(10, 15, 36, 0.95))',
-              border: '1px solid rgba(6, 182, 212, 0.4)',
-              boxShadow: '0 0 40px rgba(6, 182, 212, 0.1), inset 0 1px 0 rgba(6, 182, 212, 0.2)',
-              position: 'relative',
-              overflow: 'hidden',
-              cursor: 'pointer',
-              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
-            }}
-          >
-            {/* Badge "Em Breve" no canto - Neon Style */}
-            <div style={{
-              position: 'absolute',
-              top: 16,
-              right: -30,
-              background: 'linear-gradient(135deg, #06b6d4, #38bdf8)',
-              padding: '6px 40px',
-              fontSize: 10,
-              fontWeight: 700,
-              color: 'white',
-              transform: 'rotate(45deg)',
-              boxShadow: '0 0 20px rgba(6, 182, 212, 0.5)'
-            }}>
-              EM BREVE
-            </div>
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
-                <div style={{ fontSize: 36, filter: 'drop-shadow(0 0 10px rgba(6, 182, 212, 0.5))' }}>🔍</div>
-                <span style={{ 
-                  background: 'rgba(6, 182, 212, 0.2)', 
-                  color: '#38bdf8', 
-                  padding: '4px 10px', 
-                  borderRadius: 6, 
-                  fontSize: 11, 
-                  fontWeight: 600,
-                  boxShadow: '0 0 10px rgba(6, 182, 212, 0.3)',
-                }}>
-                  SHARKSCOPE
-                </span>
-              </div>
-              <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8, color: '#f8fafc' }}>Análise de Jogadores</h3>
-              <p style={{ fontSize: 14, color: '#7dd3fc', lineHeight: 1.6, marginBottom: 16 }}>
-                Descubra os leaks dos seus oponentes. Análise completa de tendências e padrões de jogo.
-              </p>
-            </div>
-            <button 
-              className="btn" 
-              style={{ 
-                width: '100%', 
-                padding: '12px',
-                background: 'linear-gradient(135deg, #06b6d4, #38bdf8)',
-                color: '#fff',
-                fontWeight: 600,
-                border: 'none',
-                boxShadow: '0 0 20px rgba(6, 182, 212, 0.3)',
-              }}
-            >
-              Ver Preview →
-            </button>
-          </div>
         </div>
       </div>
 
@@ -1394,7 +1303,6 @@ export default function App() {
             <Route path="/results" element={<ResultsTracker />} />
             <Route path="/analyze" element={<Analyze />} />
             <Route path="/ranges" element={<Ranges />} />
-            <Route path="/player-analysis" element={<PlayerAnalysis />} />
             <Route path="/analysis" element={<Analysis />} />
             <Route path="/features" element={<Features />} />
             <Route path="/solutions" element={<Solutions />} />
