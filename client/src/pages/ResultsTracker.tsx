@@ -481,6 +481,25 @@ export default function ResultsTracker() {
   const EvolutionChart = ({ data, isBlurred, variant = 'analytics' }: { data: SessionResult[]; isBlurred: boolean; variant?: 'analytics' | 'highlight' }) => {
     const [hoveredPoint, setHoveredPoint] = useState<{ index: number; x: number; y: number; value: number; date: string; sessionData: SessionResult } | null>(null);
 
+    if (data.length === 0) {
+      return (
+        <div style={{ textAlign: 'center', padding: 60, color: '#6b7280' }}>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>📈</div>
+          <p style={{ fontSize: 14 }}>Adicione sessões para ver o gráfico de evolução</p>
+        </div>
+      );
+    }
+
+    // Calcular valores acumulados
+    let accumulated = 0;
+    const chartData = data.map(session => {
+      accumulated += session.net;
+      return { ...session, accumulated };
+    }).reverse(); // Mais antigo primeiro
+
+    // Calcular totalProfit ANTES de usar em styles
+    const totalProfit = chartData[chartData.length - 1].accumulated;
+
     // 🎨 Configurações de estilo por variante
     const styles = variant === 'analytics' ? {
       // 📊 ANALYTICS: Visual profissional para histórico/análise
@@ -515,29 +534,12 @@ export default function ResultsTracker() {
       tooltipBorder: 'rgba(168, 85, 247, 0.3)'
     };
 
-    if (data.length === 0) {
-      return (
-        <div style={{ textAlign: 'center', padding: 60, color: '#6b7280' }}>
-          <div style={{ fontSize: 48, marginBottom: 16 }}>📈</div>
-          <p style={{ fontSize: 14 }}>Adicione sessões para ver o gráfico de evolução</p>
-        </div>
-      );
-    }
-
-    // Calcular valores acumulados
-    let accumulated = 0;
-    const chartData = data.map(session => {
-      accumulated += session.net;
-      return { ...session, accumulated };
-    }).reverse(); // Mais antigo primeiro
-
     const maxValue = Math.max(...chartData.map(d => d.accumulated), 100);
     const minValue = Math.min(...chartData.map(d => d.accumulated), 0);
     const range = maxValue - minValue || 1;
     const padding = range * 0.1;
 
     // Calcular estatísticas
-    const totalProfit = chartData[chartData.length - 1].accumulated;
     const firstValue = chartData[0].accumulated;
     const growthPercent = firstValue !== 0 ? ((totalProfit - firstValue) / Math.abs(firstValue)) * 100 : 0;
     const positiveMonths = chartData.filter(d => d.net > 0).length;
