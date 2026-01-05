@@ -227,62 +227,126 @@ export default function ResultsTracker() {
   const isBlocked = !isReallyPremium && sessions.length >= FREE_SESSION_LIMIT;
   const shouldBlurChart = !isReallyPremium && sessions.length >= FREE_SESSION_LIMIT;
 
-  // Barra Circular de Progresso Animada
+  // Barra Circular de Progresso Animada - Estilo Semicircular
   const CircularProgressBar = ({ percentage, total, goal, remaining }: { percentage: number; total: number; goal: number; remaining: number }) => {
-    const size = 220;
-    const strokeWidth = 16;
-    const radius = (size - strokeWidth) / 2;
-    const circumference = 2 * Math.PI * radius;
+    const size = 280;
+    const strokeWidth = 20;
+    const radius = size / 2 - strokeWidth;
+    const circumference = Math.PI * radius; // Semicírculo
     const offset = circumference - (percentage / 100) * circumference;
 
     return (
-      <div style={{ position: 'relative', width: size, height: size, margin: '0 auto' }}>
-        <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
-          {/* Background circle */}
-          <circle
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
+      <div style={{ position: 'relative', width: size, height: size * 0.65, margin: '0 auto', overflow: 'hidden' }}>
+        {/* Círculos de fundo decorativos */}
+        <div style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: size * 1.4,
+          height: size * 1.4,
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(168, 85, 247, 0.08) 0%, transparent 70%)',
+          pointerEvents: 'none'
+        }} />
+        <div style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: size * 1.1,
+          height: size * 1.1,
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(168, 85, 247, 0.12) 0%, transparent 60%)',
+          pointerEvents: 'none'
+        }} />
+        
+        <svg width={size} height={size * 0.65} viewBox={`0 0 ${size} ${size * 0.65}`} style={{ display: 'block' }}>
+          <defs>
+            <linearGradient id="gradient-semi-profit" x1="0%" y1="100%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#a855f7" />
+              <stop offset="50%" stopColor="#ec4899" />
+              <stop offset="100%" stopColor="#22d3ee" />
+            </linearGradient>
+            <linearGradient id="gradient-semi-loss" x1="0%" y1="100%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#a855f7" />
+            </linearGradient>
+            <filter id="glow-effect" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feFlood floodColor={total >= 0 ? "#a855f7" : "#ef4444"} floodOpacity="0.6" />
+              <feComposite in2="blur" operator="in" />
+              <feMerge>
+                <feMergeNode />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+          
+          {/* Background arc */}
+          <path
+            d={`M ${strokeWidth} ${size * 0.65 - strokeWidth} A ${radius} ${radius} 0 0 1 ${size - strokeWidth} ${size * 0.65 - strokeWidth}`}
             fill="none"
-            stroke="rgba(139, 92, 246, 0.15)"
+            stroke="rgba(168, 85, 247, 0.15)"
             strokeWidth={strokeWidth}
+            strokeLinecap="round"
           />
-          {/* Progress circle */}
-          <circle
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
+          
+          {/* Progress arc */}
+          <path
+            d={`M ${strokeWidth} ${size * 0.65 - strokeWidth} A ${radius} ${radius} 0 0 1 ${size - strokeWidth} ${size * 0.65 - strokeWidth}`}
             fill="none"
-            stroke={total >= 0 ? 'url(#gradient-circular-profit)' : 'url(#gradient-circular-loss)'}
+            stroke={`url(#gradient-semi-${total >= 0 ? 'profit' : 'loss'})`}
             strokeWidth={strokeWidth}
             strokeDasharray={circumference}
             strokeDashoffset={offset}
             strokeLinecap="round"
+            filter="url(#glow-effect)"
             style={{
-              transition: 'stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
-              filter: total >= 0 
-                ? 'drop-shadow(0 0 15px rgba(168, 85, 247, 0.6)) drop-shadow(0 0 30px rgba(236, 72, 153, 0.4))'
-                : 'drop-shadow(0 0 15px rgba(239, 68, 68, 0.6)) drop-shadow(0 0 30px rgba(168, 85, 247, 0.3))'
+              transition: 'stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1)',
             }}
           />
-          <defs>
-            <linearGradient id="gradient-circular-profit" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#a855f7" />
-              <stop offset="50%" stopColor="#ec4899" />
-              <stop offset="100%" stopColor="#f472b6" />
-            </linearGradient>
-            <linearGradient id="gradient-circular-loss" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#ef4444" />
-              <stop offset="100%" stopColor="#a855f7" />
-            </linearGradient>
-          </defs>
         </svg>
-        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
-          <div style={{ fontSize: 36, fontWeight: 900, color: total >= 0 ? '#a855f7' : '#ef4444', marginBottom: 4, textShadow: total >= 0 ? '0 0 20px rgba(168, 85, 247, 0.5)' : '0 0 20px rgba(239, 68, 68, 0.5)' }}>
-            {percentage.toFixed(0)}%
+        
+        {/* Texto central */}
+        <div style={{ 
+          position: 'absolute', 
+          bottom: 20, 
+          left: '50%', 
+          transform: 'translateX(-50%)', 
+          textAlign: 'center',
+          width: '100%'
+        }}>
+          <div style={{ 
+            fontSize: 48, 
+            fontWeight: 900, 
+            color: total >= 0 ? '#22d3ee' : '#ef4444',
+            textShadow: total >= 0 
+              ? '0 0 30px rgba(34, 211, 238, 0.6), 0 0 60px rgba(168, 85, 247, 0.4)' 
+              : '0 0 30px rgba(239, 68, 68, 0.6), 0 0 60px rgba(168, 85, 247, 0.3)',
+            marginBottom: 4,
+            lineHeight: 1
+          }}>
+            {total >= 0 ? '+' : ''}{total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
           </div>
-          <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 600 }}>
-            {percentage >= 100 ? 'Meta atingida! 🎉' : 'da meta'}
+          <div style={{ 
+            fontSize: 14, 
+            color: '#94a3b8', 
+            fontWeight: 600,
+            marginBottom: 8
+          }}>
+            {percentage >= 100 ? 'Meta atingida! 🎉' : 'Total em Vendas'}
+          </div>
+          <div style={{ 
+            fontSize: 28, 
+            fontWeight: 900, 
+            color: '#a855f7',
+            textShadow: '0 0 20px rgba(168, 85, 247, 0.5)'
+          }}>
+            {percentage.toFixed(1)}%
+          </div>
+          <div style={{ fontSize: 12, color: '#6b7280', marginTop: 4 }}>
+            Meta: {goal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
           </div>
         </div>
       </div>
