@@ -51,8 +51,8 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
   let gameCounter = 0;
 
   sessions.forEach(session => {
-    // Simular 10-20 jogos por sessão (densidade alta)
-    const gamesInSession = Math.max(10, Math.floor(Math.random() * 11) + 10);
+    // Simular 15-25 jogos por sessão (densidade SharkScope)
+    const gamesInSession = Math.floor(Math.random() * 11) + 15; // 15-25 jogos
     const resultPerGame = session.net / gamesInSession;
     
     for (let i = 0; i < gamesInSession; i++) {
@@ -169,7 +169,7 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
         
         <svg 
           width="100%" 
-          height="180"
+          height="220"
           viewBox="0 0 100 100" 
           preserveAspectRatio="none" 
           style={{ display: 'block' }}
@@ -177,20 +177,34 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
         >
           <defs>
             <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor={totalProfit >= 0 ? "#3b82f6" : "#ef4444"} stopOpacity="0.15" />
+              <stop offset="0%" stopColor={totalProfit >= 0 ? "#3b82f6" : "#ef4444"} stopOpacity="0.25" />
+              <stop offset="50%" stopColor={totalProfit >= 0 ? "#3b82f6" : "#ef4444"} stopOpacity="0.1" />
               <stop offset="100%" stopColor={totalProfit >= 0 ? "#3b82f6" : "#ef4444"} stopOpacity="0" />
             </linearGradient>
           </defs>
 
-          {/* Linha de referência zero */}
+          {/* Grid horizontal sutil (estilo SharkScope) */}
+          {[0, 25, 50, 75, 100].map(y => (
+            <line 
+              key={y}
+              x1="0" 
+              y1={y} 
+              x2="100" 
+              y2={y} 
+              stroke="rgba(100, 116, 139, 0.08)" 
+              strokeWidth="0.2"
+            />
+          ))}
+
+          {/* Linha de referência zero (destaque) */}
           <line 
             x1="0" 
             y1={zeroY} 
             x2="100" 
             y2={zeroY} 
-            stroke="rgba(148, 163, 184, 0.2)" 
-            strokeWidth="0.3" 
-            strokeDasharray="2,2"
+            stroke="rgba(148, 163, 184, 0.3)" 
+            strokeWidth="0.4" 
+            strokeDasharray="1,1"
           />
 
           {/* Área preenchida */}
@@ -201,10 +215,10 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
             d={linePath}
             fill="none"
             stroke={totalProfit >= 0 ? "#3b82f6" : "#ef4444"}
-            strokeWidth="1.2"
+            strokeWidth="1.5"
             strokeLinecap="round"
             strokeLinejoin="round"
-            opacity="0.8"
+            opacity="0.9"
           />
 
           {/* Ponto de hover */}
@@ -212,10 +226,10 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
             <circle
               cx={points[hoveredPoint.index].x}
               cy={points[hoveredPoint.index].y}
-              r="1"
+              r="1.5"
               fill={totalProfit >= 0 ? "#3b82f6" : "#ef4444"}
               stroke="#fff"
-              strokeWidth="0.4"
+              strokeWidth="0.5"
             />
           )}
 
