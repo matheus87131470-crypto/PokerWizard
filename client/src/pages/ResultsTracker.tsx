@@ -1013,13 +1013,15 @@ export default function ResultsTracker() {
         </div>
       )}
 
-      {/* 3️⃣ GRÁFICO DE EVOLUÇÃO */}
+      {/* 3️⃣ GRÁFICO DE EVOLUÇÃO - FLUTUANTE */}
       {sessions.length > 0 && (
-        <div className="card" style={{ padding: 24, maxWidth: 900, margin: '0 auto 32px', width: '100%', position: 'relative' }}>
-          <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 20, color: '#f8fafc' }}>
+        <div className="chart-floating" style={{ maxWidth: 1000, margin: '0 auto 32px', width: '100%', position: 'relative' }}>
+          <h3 style={{ fontSize: 22, fontWeight: 700, marginBottom: 32, color: '#f8fafc', textAlign: 'center', textShadow: '0 0 20px rgba(168, 85, 247, 0.3)' }}>
             📈 Evolução de Resultados
           </h3>
-          <EvolutionChart data={sessions} isBlurred={shouldBlurChart} />
+          <div className="chart-container">
+            <EvolutionChart data={sessions} isBlurred={shouldBlurChart} />
+          </div>
           
           {/* Paywall sobre gráfico */}
           {shouldBlurChart && (
@@ -1072,6 +1074,7 @@ export default function ResultsTracker() {
               </button>
             </div>
           )}
+          </div>
         </div>
       )}
 

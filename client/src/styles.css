@@ -279,6 +279,50 @@ body::after {
   transform: translateY(-4px);
 }
 
+/* Floating Chart - Layout fluido premium sem cards visíveis */
+.chart-floating {
+  background: transparent;
+  border: none;
+  padding: 48px 0;
+  margin: 0 auto;
+  position: relative;
+  overflow: visible;
+}
+
+.chart-floating::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -10%;
+  right: -10%;
+  height: 100%;
+  background: radial-gradient(ellipse at center, rgba(168, 85, 247, 0.03), transparent 70%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Chart Container - Para gráficos soltos */
+.chart-container {
+  background: linear-gradient(145deg, rgba(10, 15, 36, 0.4), rgba(5, 8, 22, 0.3));
+  border: 1px solid rgba(168, 85, 247, 0.08);
+  border-radius: 24px;
+  padding: 32px;
+  backdrop-filter: blur(12px);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(168, 85, 247, 0.1);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.chart-container:hover {
+  border-color: rgba(168, 85, 247, 0.15);
+  box-shadow: 
+    0 12px 48px rgba(0, 0, 0, 0.4),
+    0 0 80px rgba(168, 85, 247, 0.1),
+    inset 0 1px 0 rgba(168, 85, 247, 0.15);
+  transform: translateY(-2px);
+}
+
 .card:hover::after {
   opacity: 1;
 }

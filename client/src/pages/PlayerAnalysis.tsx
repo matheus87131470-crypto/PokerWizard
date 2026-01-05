@@ -256,16 +256,20 @@ export default function PlayerAnalysis() {
             <StatCard label="Avg Profit" value={`${MOCK_PLAYER_DATA.avgProfit}%`} icon="📊" />
           </div>
 
-          {/* Gráfico de Ganhos Neon - Estilo Futurista */}
-          <div className="card" style={{ 
-            padding: 24, 
-            marginBottom: 20,
-            background: 'linear-gradient(145deg, rgba(5, 8, 22, 0.98), rgba(10, 15, 36, 0.95))',
-            border: '1px solid rgba(168, 85, 247, 0.4)',
-            boxShadow: '0 0 60px rgba(168, 85, 247, 0.15), inset 0 0 80px rgba(236, 72, 153, 0.05)',
-            position: 'relative',
-            overflow: 'hidden'
-          }}>
+          {/* Gráfico de Ganhos Neon - Flutuante Premium */}
+          <div className="chart-floating" style={{ marginBottom: 32 }}>
+            <h3 style={{ 
+              fontSize: 22, 
+              fontWeight: 700, 
+              marginBottom: 32,
+              color: '#f8fafc',
+              textAlign: 'center',
+              textShadow: '0 0 20px rgba(168, 85, 247, 0.3)'
+            }}>
+              📈 Evolução de Ganhos
+            </h3>
+            
+            <div className="chart-container" style={{ position: 'relative', overflow: 'hidden' }}>
             {/* Background Glow Effects */}
             <div style={{
               position: 'absolute',
@@ -490,6 +494,7 @@ export default function PlayerAnalysis() {
                   <div style={{ fontSize: 11, color: '#64748b' }}>Média Mensal</div>
                 </div>
               </div>
+            </div>
             </div>
           </div>
 
