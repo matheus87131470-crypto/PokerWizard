@@ -165,47 +165,64 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
     ? `M 0 0 ${dataPoints.map((p) => `L ${p.x} ${p.y}`).join(' ')} L 100 0 Z`
     : `M 0 ${zeroY} ${dataPoints.map((p) => `L ${p.x} ${p.y}`).join(' ')} L 100 ${zeroY} Z`;
 
-  // Labels do eixo Y (valores de lucro acumulado)
+  // Labels do eixo Y (valores de lucro acumulado) - padrão financeiro (4-5 marcadores)
   let yLabels;
   
   if (dataMin >= 0) {
     // Apenas valores positivos - zero na base
     yLabels = [
       { value: maxValue, y: 0 },
-      { value: maxValue * 0.75, y: 25 },
-      { value: maxValue * 0.5, y: 50 },
-      { value: maxValue * 0.25, y: 75 },
+      { value: maxValue * 0.67, y: 33 },
+      { value: maxValue * 0.33, y: 67 },
       { value: 0, y: 100 }
     ];
   } else if (dataMax <= 0) {
     // Apenas valores negativos - zero no topo
     yLabels = [
       { value: 0, y: 0 },
-      { value: minValue * 0.25, y: 25 },
-      { value: minValue * 0.5, y: 50 },
-      { value: minValue * 0.75, y: 75 },
+      { value: minValue * 0.33, y: 33 },
+      { value: minValue * 0.67, y: 67 },
       { value: minValue, y: 100 }
     ];
   } else {
-    // Valores positivos e negativos - zero no meio
+    // Valores positivos e negativos - zero no meio (5 marcadores)
     yLabels = [
       { value: maxValue, y: 0 },
-      { value: maxValue * 0.5, y: 25 },
+      { value: maxValue * 0.5, y: (zeroY / 2) },
       { value: 0, y: zeroY },
-      { value: minValue * 0.5, y: 75 },
+      { value: minValue * 0.5, y: zeroY + ((100 - zeroY) / 2) },
       { value: minValue, y: 100 }
     ];
   }
 
-  // Labels do eixo X (número de dias)
+  // Labels do eixo X (datas) - padrão financeiro limpo
   const totalDays = chartData.length;
-  const xLabels = [
-    { label: '1', x: 0 },
-    { label: Math.floor(totalDays * 0.25).toString(), x: 25 },
-    { label: Math.floor(totalDays * 0.5).toString(), x: 50 },
-    { label: Math.floor(totalDays * 0.75).toString(), x: 75 },
-    { label: totalDays.toString(), x: 100 }
-  ];
+  let xLabels: Array<{ label: string; x: number }>;
+  
+  if (totalDays === 0) {
+    xLabels = [];
+  } else if (totalDays === 1) {
+    xLabels = [{ label: chartData[0].date, x: 50 }];
+  } else if (totalDays <= 4) {
+    // Poucos pontos: mostrar todas as datas
+    xLabels = chartData.map((d, i) => ({
+      label: d.date.substring(0, 5), // DD/MM
+      x: ((i + 1) / totalDays) * 100
+    }));
+  } else {
+    // Muitos pontos: 4 marcadores estratégicos
+    const first = chartData[0];
+    const third = chartData[Math.floor(totalDays / 3)];
+    const twoThirds = chartData[Math.floor((totalDays * 2) / 3)];
+    const last = chartData[totalDays - 1];
+    
+    xLabels = [
+      { label: first.date.substring(0, 5), x: (1 / totalDays) * 100 },
+      { label: third.date.substring(0, 5), x: ((Math.floor(totalDays / 3) + 1) / totalDays) * 100 },
+      { label: twoThirds.date.substring(0, 5), x: ((Math.floor((totalDays * 2) / 3) + 1) / totalDays) * 100 },
+      { label: last.date.substring(0, 5), x: 100 }
+    ];
+  }
 
   return (
     <div style={{ position: 'relative', filter: isBlurred ? 'blur(8px)' : 'none', transition: 'filter 0.3s ease' }}>
@@ -295,7 +312,7 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
                 textAlign: 'right'
               }}
             >
-              {label.value >= 0 ? '+' : ''}{label.value.toLocaleString('pt-BR', { 
+              {label.value === 0 ? 'R$ 0' : (label.value > 0 ? '+' : '') + label.value.toLocaleString('pt-BR', { 
                 style: 'currency', 
                 currency: 'BRL',
                 minimumFractionDigits: 0,
@@ -462,7 +479,7 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
           textTransform: 'uppercase',
           letterSpacing: '0.5px'
         }}>
-          Nº de Dias
+          Data
         </div>
 
         {/* Tooltip */}
