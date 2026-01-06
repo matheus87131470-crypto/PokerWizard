@@ -548,8 +548,16 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
           <div style={{
             position: 'absolute',
             top: 50,
-            left: `${(hoveredPoint.index / Math.max(points.length - 1, 1)) * 100}%`,
-            transform: 'translateX(-50%)',
+            left: hoveredPoint.index < points.length / 3 
+              ? '10%'  // Se está no início, alinha à esquerda
+              : hoveredPoint.index > (points.length * 2) / 3
+              ? '90%'  // Se está no fim, alinha à direita
+              : `${(hoveredPoint.index / Math.max(points.length - 1, 1)) * 100}%`, // No meio, centraliza
+            transform: hoveredPoint.index < points.length / 3 
+              ? 'translateX(0)'
+              : hoveredPoint.index > (points.length * 2) / 3
+              ? 'translateX(-100%)'
+              : 'translateX(-50%)',
             background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.98) 0%, rgba(20, 10, 30, 0.98) 100%)',
             border: '2px solid #f0abfc',
             padding: '16px 22px',
@@ -560,7 +568,8 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
             zIndex: 10,
             pointerEvents: 'none',
             boxShadow: '0 0 40px rgba(240, 171, 252, 0.8), 0 0 80px rgba(168, 85, 247, 0.5), 0 8px 32px rgba(0, 0, 0, 0.9)',
-            backdropFilter: 'blur(10px)'
+            backdropFilter: 'blur(10px)',
+            maxWidth: '90%'
           }}>
             {/* Dia */}
             <div style={{ 
