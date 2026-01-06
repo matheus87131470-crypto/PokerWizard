@@ -145,18 +145,35 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
     }
   };
 
-  // Pontos do gráfico (1 por sessão) - redistribuir X para acomodar ponto inicial
-  const dataPoints = chartData.map((d, i) => ({
-    x: chartData.length === 1 ? 100 : ((i + 1) / chartData.length) * 100,
-    y: getY(d.accumulated),
-    data: d
-  }));
+  // Pontos do gráfico com ZIG-ZAG artístico (oscilações visuais)
+  const dataPoints = chartData.map((d, i) => {
+    const baseX = chartData.length === 1 ? 100 : ((i + 1) / chartData.length) * 100;
+    const baseY = getY(d.accumulated);
+    
+    // Adicionar oscilação visual (zig-zag) - variação de ±3% na altura
+    const oscillation = Math.sin(i * 1.7) * (range * 0.03);
+    const visualY = Math.max(0, Math.min(100, getY(d.accumulated - oscillation)));
+    
+    return {
+      x: baseX,
+      y: visualY,
+      data: d
+    };
+  });
 
   // Combinar ponto inicial + dados reais
   const points = [initialPoint, ...dataPoints];
 
-  // Path da linha - começa do zero e evolui
-  const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+  // Path da linha com ZIG-ZAG - interpolação suave entre pontos
+  let linePath = `M ${points[0].x} ${points[0].y}`;
+  for (let i = 1; i < points.length; i++) {
+    const prev = points[i - 1];
+    const curr = points[i];
+    // Usar curvas suaves (quadratic) para criar fluidez no zig-zag
+    const controlX = (prev.x + curr.x) / 2;
+    const controlY = (prev.y + curr.y) / 2 + Math.sin(i * 0.8) * 2;
+    linePath += ` Q ${controlX} ${controlY}, ${curr.x} ${curr.y}`;
+  }
 
   // Área preenchida
   const areaPath = dataMin >= 0 
@@ -283,68 +300,68 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
         </div>
       </div>
 
-      {/* Gráfico */}
+      {/* Gráfico Neon 3D Artístico */}
       <div style={{ 
         position: 'relative', 
-        background: 'rgba(15, 23, 42, 0.15)', 
-        padding: '16px',
-        borderRadius: 8, 
-        border: '1px solid rgba(71, 85, 105, 0.15)',
-        display: 'flex',
-        gap: 8
+        background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 15, 50, 0.9) 50%, rgba(50, 15, 70, 0.85) 100%)',
+        padding: '24px',
+        borderRadius: 12, 
+        border: '1px solid rgba(168, 85, 247, 0.2)',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(168, 85, 247, 0.1)',
+        overflow: 'hidden'
       }}>
-        {/* Labels do eixo Y (esquerda) */}
-        <div style={{ 
-          display: 'flex', 
-          flexDirection: 'column', 
-          justifyContent: 'space-between',
-          paddingTop: 30,
-          paddingBottom: 20,
-          minWidth: 60
-        }}>
-          {yLabels.map((label, i) => (
-            <div 
-              key={i}
-              style={{ 
-                fontSize: 9, 
-                color: '#64748b', 
-                fontWeight: 500,
-                textAlign: 'right'
-              }}
-            >
-              {label.value === 0 ? 'R$ 0' : (label.value > 0 ? '+' : '') + label.value.toLocaleString('pt-BR', { 
-                style: 'currency', 
-                currency: 'BRL',
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 0
-              })}
-            </div>
-          ))}
-        </div>
+        {/* Background Grid 3D */}
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          opacity: 0.15,
+          background: `
+            repeating-linear-gradient(0deg, rgba(168, 85, 247, 0.3) 0px, transparent 1px, transparent 30px, rgba(168, 85, 247, 0.3) 31px),
+            repeating-linear-gradient(90deg, rgba(168, 85, 247, 0.3) 0px, transparent 1px, transparent 40px, rgba(168, 85, 247, 0.3) 41px)
+          `,
+          transform: 'perspective(500px) rotateX(60deg)',
+          transformOrigin: 'bottom'
+        }} />
 
-        {/* Área do gráfico */}
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 10, color: '#64748b', marginBottom: 12, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-            Lucro Acumulado (por jogo)
-          </div>
-        
+        {/* Gráfico SVG Neon */}
         <svg 
           width="100%" 
-          height="220"
+          height="280"
           viewBox="0 0 100 100" 
           preserveAspectRatio="none" 
-          style={{ display: 'block' }}
+          style={{ display: 'block', position: 'relative', zIndex: 1 }}
           onMouseLeave={() => setHoveredPoint(null)}
         >
           <defs>
-            <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#a855f7" stopOpacity="0.12" />
-              <stop offset="50%" stopColor="#a855f7" stopOpacity="0.06" />
-              <stop offset="100%" stopColor="#a855f7" stopOpacity="0" />
+            {/* Gradiente Neon Rosa/Roxo */}
+            <linearGradient id="neonGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#f0abfc" stopOpacity="0.4" />
+              <stop offset="50%" stopColor="#a855f7" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#7c3aed" stopOpacity="0" />
+            </linearGradient>
+
+            {/* Glow Filter Forte */}
+            <filter id="neonGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur1"/>
+              <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur2"/>
+              <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur3"/>
+              <feMerge>
+                <feMergeNode in="blur3"/>
+                <feMergeNode in="blur2"/>
+                <feMergeNode in="blur1"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+
+            {/* Gradiente das Barras 3D */}
+            <linearGradient id="barGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#7c3aed" stopOpacity="0.6" />
+              <stop offset="50%" stopColor="#a855f7" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#c084fc" stopOpacity="0.4" />
             </linearGradient>
           </defs>
 
-          {/* Grid horizontal quase invisível */}
+          {/* Grid horizontal futurista */}
           {[0, 25, 50, 75, 100].map(y => (
             <line 
               key={y}
@@ -352,72 +369,81 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
               y1={y} 
               x2="100" 
               y2={y} 
-              stroke="rgba(100, 116, 139, 0.04)" 
-              strokeWidth="0.15"
+              stroke="rgba(168, 85, 247, 0.15)" 
+              strokeWidth="0.1"
+              strokeDasharray="2,2"
             />
           ))}
 
-          {/* Linha de referência zero (destaque) */}
-          <line 
-            x1="0" 
-            y1={zeroY} 
-            x2="100" 
-            y2={zeroY} 
-            stroke="rgba(148, 163, 184, 0.3)" 
-            strokeWidth="0.4" 
-            strokeDasharray="1,1"
+          {/* Barras 3D Verticais */}
+          {dataPoints.map((p, i) => {
+            const barHeight = Math.abs(100 - p.y);
+            const barWidth = 1.5;
+            return (
+              <g key={`bar-${i}`}>
+                {/* Sombra da barra */}
+                <rect
+                  x={p.x - barWidth / 2 + 0.3}
+                  y={p.y + 0.5}
+                  width={barWidth}
+                  height={barHeight}
+                  fill="rgba(0, 0, 0, 0.3)"
+                  rx="0.2"
+                />
+                {/* Barra principal */}
+                <rect
+                  x={p.x - barWidth / 2}
+                  y={p.y}
+                  width={barWidth}
+                  height={barHeight}
+                  fill="url(#barGradient)"
+                  rx="0.2"
+                  opacity="0.6"
+                />
+                {/* Brilho 3D no topo */}
+                <rect
+                  x={p.x - barWidth / 2}
+                  y={p.y}
+                  width={barWidth}
+                  height="2"
+                  fill="#f0abfc"
+                  rx="0.2"
+                  opacity="0.8"
+                />
+              </g>
+            );
+          })}
+
+          {/* Área preenchida neon */}
+          <path 
+            d={areaPath} 
+            fill="url(#neonGradient)" 
           />
 
-          {/* Área preenchida */}
-          <path d={areaPath} fill="url(#areaGradient)" />
-
-          {/* Linha principal roxa */}
+          {/* Linha principal NEON com ZIG-ZAG */}
           <path
             d={linePath}
             fill="none"
-            stroke="#a855f7"
-            strokeWidth="1.8"
+            stroke="#f0abfc"
+            strokeWidth="1.2"
             strokeLinecap="round"
             strokeLinejoin="round"
-            opacity="1"
+            filter="url(#neonGlow)"
+          />
+          
+          {/* Linha adicional para intensificar glow */}
+          <path
+            d={linePath}
+            fill="none"
+            stroke="#e879f9"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            opacity="0.4"
+            filter="url(#neonGlow)"
           />
 
-          {/* Apenas o último ponto destacado */}
-          {points.length > 0 && (
-            <g>
-              <circle
-                cx={points[points.length - 1].x}
-                cy={points[points.length - 1].y}
-                r="2.2"
-                fill="#a855f7"
-                stroke="#fff"
-                strokeWidth="0.8"
-              />
-              <circle
-                cx={points[points.length - 1].x}
-                cy={points[points.length - 1].y}
-                r="4"
-                fill="none"
-                stroke="#a855f7"
-                strokeWidth="0.4"
-                opacity="0.6"
-              />
-            </g>
-          )}
-
-          {/* Ponto de hover */}
-          {hoveredPoint && (
-            <circle
-              cx={points[hoveredPoint.index].x}
-              cy={points[hoveredPoint.index].y}
-              r="2"
-              fill="#a855f7"
-              stroke="#fff"
-              strokeWidth="0.6"
-            />
-          )}
-
-          {/* Área invisível para capturar hover */}
+          {/* Área invisível para hover */}
           <rect
             x="0"
             y="0"
@@ -435,7 +461,7 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
               const clampedIndex = Math.max(0, Math.min(closestIndex, points.length - 1));
               const point = points[clampedIndex];
               
-              if (point) {
+              if (point && point.data.dayNumber > 0) {
                 setHoveredPoint({ 
                   index: clampedIndex, 
                   accumulated: point.data.accumulated,
@@ -449,40 +475,22 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
           />
         </svg>
 
-        {/* Labels do eixo X (embaixo) */}
-        <div style={{ 
-          display: 'flex', 
+        {/* Labels inferiores com visual neon */}
+        <div style={{
+          display: 'flex',
           justifyContent: 'space-between',
-          marginTop: 8,
-          paddingLeft: 2,
-          paddingRight: 2
+          marginTop: 16,
+          padding: '0 8px'
         }}>
-          {xLabels.map((label, i) => (
-            <div 
-              key={i}
-              style={{ 
-                fontSize: 9, 
-                color: '#64748b', 
-                fontWeight: 500
-              }}
-            >
-              {label.label}
-            </div>
-          ))}
+          <div style={{ fontSize: 9, color: '#a855f7', fontWeight: 600, textShadow: '0 0 10px rgba(168, 85, 247, 0.5)' }}>
+            {xLabels[0]?.label || ''}
+          </div>
+          <div style={{ fontSize: 9, color: '#a855f7', fontWeight: 600, textShadow: '0 0 10px rgba(168, 85, 247, 0.5)' }}>
+            {xLabels[xLabels.length - 1]?.label || ''}
+          </div>
         </div>
 
-        <div style={{ 
-          fontSize: 8, 
-          color: '#64748b', 
-          textAlign: 'center',
-          marginTop: 4,
-          textTransform: 'uppercase',
-          letterSpacing: '0.5px'
-        }}>
-          Data
-        </div>
-
-        {/* Tooltip */}
+        {/* Tooltip Neon */}
         {hoveredPoint && (
           <div style={{
             position: 'absolute',
@@ -490,7 +498,7 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
             left: `${(hoveredPoint.index / Math.max(points.length - 1, 1)) * 100}%`,
             transform: 'translateX(-50%)',
             background: 'rgba(0, 0, 0, 0.95)',
-            border: '1px solid rgba(168, 85, 247, 0.3)',
+            border: '1px solid #f0abfc',
             padding: '14px 18px',
             borderRadius: 10,
             fontSize: 11,
@@ -498,10 +506,10 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
             whiteSpace: 'nowrap',
             zIndex: 10,
             pointerEvents: 'none',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(168, 85, 247, 0.1)'
+            boxShadow: '0 0 30px rgba(240, 171, 252, 0.5), 0 8px 32px rgba(0, 0, 0, 0.6)'
           }}>
             {/* Dia */}
-            <div style={{ fontSize: 10, color: '#94a3b8', marginBottom: 6, fontWeight: 600 }}>
+            <div style={{ fontSize: 10, color: '#e879f9', marginBottom: 6, fontWeight: 600 }}>
               Dia #{hoveredPoint.dayNumber} • {hoveredPoint.date}
             </div>
             
@@ -509,11 +517,12 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
             <div style={{ 
               fontSize: 13, 
               fontWeight: 700, 
-              color: hoveredPoint.dayNet >= 0 ? '#a855f7' : '#f472b6',
-              marginBottom: 6
+              color: '#f0abfc',
+              marginBottom: 6,
+              textShadow: '0 0 10px rgba(240, 171, 252, 0.8)'
             }}>
               {hoveredPoint.dayNet >= 0 ? '+' : ''}{hoveredPoint.dayNet.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-              <span style={{ fontSize: 9, color: '#64748b', marginLeft: 6 }}>
+              <span style={{ fontSize: 9, color: '#94a3b8', marginLeft: 6 }}>
                 ({hoveredPoint.sessionCount} {hoveredPoint.sessionCount === 1 ? 'sessão' : 'sessões'})
               </span>
             </div>
@@ -521,18 +530,17 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
             {/* Total acumulado */}
             <div style={{ 
               fontSize: 12, 
-              color: '#a855f7',
+              color: '#c084fc',
               paddingTop: 6,
-              borderTop: '1px solid rgba(168, 85, 247, 0.2)'
+              borderTop: '1px solid rgba(240, 171, 252, 0.3)'
             }}>
               <span style={{ fontSize: 9, color: '#94a3b8', marginRight: 6 }}>Acumulado:</span>
-              <strong>
+              <strong style={{ textShadow: '0 0 10px rgba(192, 132, 252, 0.6)' }}>
                 {hoveredPoint.accumulated >= 0 ? '+' : ''}{hoveredPoint.accumulated.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
               </strong>
             </div>
           </div>
         )}
-        </div>
       </div>
     </div>
   );
