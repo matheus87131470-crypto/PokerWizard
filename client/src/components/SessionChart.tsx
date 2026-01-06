@@ -543,52 +543,63 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
         </div>
         </div>
 
-        {/* Tooltip Neon */}
+        {/* Tooltip Neon Premium */}
         {hoveredPoint && (
           <div style={{
             position: 'absolute',
             top: 50,
             left: `${(hoveredPoint.index / Math.max(points.length - 1, 1)) * 100}%`,
             transform: 'translateX(-50%)',
-            background: 'rgba(0, 0, 0, 0.95)',
-            border: '1px solid #f0abfc',
-            padding: '14px 18px',
-            borderRadius: 10,
-            fontSize: 11,
+            background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.98) 0%, rgba(20, 10, 30, 0.98) 100%)',
+            border: '2px solid #f0abfc',
+            padding: '16px 22px',
+            borderRadius: 12,
+            fontSize: 12,
             fontWeight: 600,
             whiteSpace: 'nowrap',
             zIndex: 10,
             pointerEvents: 'none',
-            boxShadow: '0 0 30px rgba(240, 171, 252, 0.5), 0 8px 32px rgba(0, 0, 0, 0.6)'
+            boxShadow: '0 0 40px rgba(240, 171, 252, 0.8), 0 0 80px rgba(168, 85, 247, 0.5), 0 8px 32px rgba(0, 0, 0, 0.9)',
+            backdropFilter: 'blur(10px)'
           }}>
             {/* Dia */}
-            <div style={{ fontSize: 10, color: '#e879f9', marginBottom: 6, fontWeight: 600 }}>
+            <div style={{ 
+              fontSize: 11, 
+              color: '#fff', 
+              marginBottom: 8, 
+              fontWeight: 700,
+              textShadow: '0 0 20px rgba(240, 171, 252, 1)'
+            }}>
               Dia #{hoveredPoint.dayNumber} • {hoveredPoint.date}
             </div>
             
             {/* Resultado do dia */}
             <div style={{ 
-              fontSize: 13, 
-              fontWeight: 700, 
+              fontSize: 16, 
+              fontWeight: 800, 
               color: '#f0abfc',
-              marginBottom: 6,
-              textShadow: '0 0 10px rgba(240, 171, 252, 0.8)'
+              marginBottom: 8,
+              textShadow: '0 0 20px rgba(240, 171, 252, 1), 0 0 40px rgba(232, 121, 249, 0.8)'
             }}>
               {hoveredPoint.dayNet >= 0 ? '+' : ''}{hoveredPoint.dayNet.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-              <span style={{ fontSize: 9, color: '#94a3b8', marginLeft: 6 }}>
+              <span style={{ fontSize: 10, color: '#c084fc', marginLeft: 8, fontWeight: 600 }}>
                 ({hoveredPoint.sessionCount} {hoveredPoint.sessionCount === 1 ? 'sessão' : 'sessões'})
               </span>
             </div>
 
             {/* Total acumulado */}
             <div style={{ 
-              fontSize: 12, 
-              color: '#c084fc',
-              paddingTop: 6,
-              borderTop: '1px solid rgba(240, 171, 252, 0.3)'
+              fontSize: 13, 
+              color: '#fff',
+              paddingTop: 8,
+              borderTop: '2px solid rgba(240, 171, 252, 0.4)',
+              fontWeight: 700
             }}>
-              <span style={{ fontSize: 9, color: '#94a3b8', marginRight: 6 }}>Acumulado:</span>
-              <strong style={{ textShadow: '0 0 10px rgba(192, 132, 252, 0.6)' }}>
+              <span style={{ fontSize: 10, color: '#e879f9', marginRight: 8 }}>Acumulado:</span>
+              <strong style={{ 
+                color: '#f0abfc',
+                textShadow: '0 0 15px rgba(240, 171, 252, 0.9)' 
+              }}>
                 {hoveredPoint.accumulated >= 0 ? '+' : ''}{hoveredPoint.accumulated.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
               </strong>
             </div>
