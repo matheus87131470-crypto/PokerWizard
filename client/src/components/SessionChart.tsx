@@ -145,18 +145,14 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
     }
   };
 
-  // Pontos do gráfico com ZIG-ZAG artístico (oscilações visuais)
+  // Pontos do gráfico REAIS - cada ponto = 1 dia com accumulated real (SharkScope style)
   const dataPoints = chartData.map((d, i) => {
     const baseX = chartData.length === 1 ? 100 : ((i + 1) / chartData.length) * 100;
-    const baseY = getY(d.accumulated);
-    
-    // Adicionar oscilação visual (zig-zag) - variação de ±3% na altura
-    const oscillation = Math.sin(i * 1.7) * (range * 0.03);
-    const visualY = Math.max(0, Math.min(100, getY(d.accumulated - oscillation)));
+    const baseY = getY(d.accumulated); // USAR DADOS REAIS, não oscilações artificiais
     
     return {
       x: baseX,
-      y: visualY,
+      y: baseY,
       data: d
     };
   });
@@ -164,16 +160,8 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
   // Combinar ponto inicial + dados reais
   const points = [initialPoint, ...dataPoints];
 
-  // Path da linha com ZIG-ZAG - interpolação suave entre pontos
-  let linePath = `M ${points[0].x} ${points[0].y}`;
-  for (let i = 1; i < points.length; i++) {
-    const prev = points[i - 1];
-    const curr = points[i];
-    // Usar curvas suaves (quadratic) para criar fluidez no zig-zag
-    const controlX = (prev.x + curr.x) / 2;
-    const controlY = (prev.y + curr.y) / 2 + Math.sin(i * 0.8) * 2;
-    linePath += ` Q ${controlX} ${controlY}, ${curr.x} ${curr.y}`;
-  }
+  // Path da linha REAL - conecta pontos reais ponto a ponto (SharkScope)
+  const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
 
   // Área preenchida
   const areaPath = dataMin >= 0 
@@ -300,7 +288,7 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
         </div>
       </div>
 
-      {/* Gráfico Neon 3D Artístico */}
+      {/* Gráfico Neon 3D com Dados Reais (SharkScope + Premium Design) */}
       <div style={{ 
         position: 'relative', 
         background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 15, 50, 0.9) 50%, rgba(50, 15, 70, 0.85) 100%)',
@@ -308,7 +296,9 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
         borderRadius: 12, 
         border: '1px solid rgba(168, 85, 247, 0.2)',
         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(168, 85, 247, 0.1)',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        display: 'flex',
+        gap: 12
       }}>
         {/* Background Grid 3D */}
         <div style={{
@@ -323,10 +313,55 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
           transformOrigin: 'bottom'
         }} />
 
-        {/* Gráfico SVG Neon */}
+        {/* Eixo Y - Valores Reais */}
+        <div style={{ 
+          display: 'flex', 
+          flexDirection: 'column', 
+          justifyContent: 'space-between',
+          paddingTop: 8,
+          paddingBottom: 20,
+          minWidth: 70,
+          zIndex: 1
+        }}>
+          {yLabels.map((label, i) => (
+            <div 
+              key={i}
+              style={{ 
+                fontSize: 10, 
+                color: '#e879f9', 
+                fontWeight: 600,
+                textAlign: 'right',
+                textShadow: '0 0 10px rgba(232, 121, 249, 0.6)'
+              }}
+            >
+              {label.value === 0 ? 'R$ 0' : (label.value > 0 ? '+' : '') + label.value.toLocaleString('pt-BR', { 
+                style: 'currency', 
+                currency: 'BRL',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+              })}
+            </div>
+          ))}
+        </div>
+
+        {/* Área do Gráfico */}
+        <div style={{ flex: 1, position: 'relative' }}>
+          <div style={{ 
+            fontSize: 10, 
+            color: '#c084fc', 
+            marginBottom: 8, 
+            fontWeight: 600, 
+            textTransform: 'uppercase', 
+            letterSpacing: '0.8px',
+            textShadow: '0 0 10px rgba(192, 132, 252, 0.5)'
+          }}>
+            Evolução do Lucro
+          </div>
+
+        {/* Gráfico SVG com Linha Real */}
         <svg 
           width="100%" 
-          height="280"
+          height="240"
           viewBox="0 0 100 100" 
           preserveAspectRatio="none" 
           style={{ display: 'block', position: 'relative', zIndex: 1 }}
@@ -335,16 +370,16 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
           <defs>
             {/* Gradiente Neon Rosa/Roxo */}
             <linearGradient id="neonGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#f0abfc" stopOpacity="0.4" />
-              <stop offset="50%" stopColor="#a855f7" stopOpacity="0.2" />
+              <stop offset="0%" stopColor="#f0abfc" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#a855f7" stopOpacity="0.15" />
               <stop offset="100%" stopColor="#7c3aed" stopOpacity="0" />
             </linearGradient>
 
             {/* Glow Filter Forte */}
             <filter id="neonGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur1"/>
-              <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur2"/>
-              <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur3"/>
+              <feGaussianBlur in="SourceGraphic" stdDeviation="1.5" result="blur1"/>
+              <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur2"/>
+              <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur3"/>
               <feMerge>
                 <feMergeNode in="blur3"/>
                 <feMergeNode in="blur2"/>
@@ -352,13 +387,6 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
                 <feMergeNode in="SourceGraphic"/>
               </feMerge>
             </filter>
-
-            {/* Gradiente das Barras 3D */}
-            <linearGradient id="barGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#7c3aed" stopOpacity="0.6" />
-              <stop offset="50%" stopColor="#a855f7" stopOpacity="0.8" />
-              <stop offset="100%" stopColor="#c084fc" stopOpacity="0.4" />
-            </linearGradient>
           </defs>
 
           {/* Grid horizontal futurista */}
@@ -369,50 +397,22 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
               y1={y} 
               x2="100" 
               y2={y} 
-              stroke="rgba(168, 85, 247, 0.15)" 
-              strokeWidth="0.1"
-              strokeDasharray="2,2"
+              stroke="rgba(168, 85, 247, 0.12)" 
+              strokeWidth="0.15"
+              strokeDasharray="1,1"
             />
           ))}
 
-          {/* Barras 3D Verticais */}
-          {dataPoints.map((p, i) => {
-            const barHeight = Math.abs(100 - p.y);
-            const barWidth = 1.5;
-            return (
-              <g key={`bar-${i}`}>
-                {/* Sombra da barra */}
-                <rect
-                  x={p.x - barWidth / 2 + 0.3}
-                  y={p.y + 0.5}
-                  width={barWidth}
-                  height={barHeight}
-                  fill="rgba(0, 0, 0, 0.3)"
-                  rx="0.2"
-                />
-                {/* Barra principal */}
-                <rect
-                  x={p.x - barWidth / 2}
-                  y={p.y}
-                  width={barWidth}
-                  height={barHeight}
-                  fill="url(#barGradient)"
-                  rx="0.2"
-                  opacity="0.6"
-                />
-                {/* Brilho 3D no topo */}
-                <rect
-                  x={p.x - barWidth / 2}
-                  y={p.y}
-                  width={barWidth}
-                  height="2"
-                  fill="#f0abfc"
-                  rx="0.2"
-                  opacity="0.8"
-                />
-              </g>
-            );
-          })}
+          {/* Linha de referência zero */}
+          <line 
+            x1="0" 
+            y1={zeroY} 
+            x2="100" 
+            y2={zeroY} 
+            stroke="rgba(232, 121, 249, 0.4)" 
+            strokeWidth="0.3" 
+            strokeDasharray="2,2"
+          />
 
           {/* Área preenchida neon */}
           <path 
@@ -420,12 +420,12 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
             fill="url(#neonGradient)" 
           />
 
-          {/* Linha principal NEON com ZIG-ZAG */}
+          {/* Linha principal NEON - Dados Reais */}
           <path
             d={linePath}
             fill="none"
             stroke="#f0abfc"
-            strokeWidth="1.2"
+            strokeWidth="1.5"
             strokeLinecap="round"
             strokeLinejoin="round"
             filter="url(#neonGlow)"
@@ -436,10 +436,10 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
             d={linePath}
             fill="none"
             stroke="#e879f9"
-            strokeWidth="2.5"
+            strokeWidth="2.8"
             strokeLinecap="round"
             strokeLinejoin="round"
-            opacity="0.4"
+            opacity="0.3"
             filter="url(#neonGlow)"
           />
 
@@ -475,19 +475,40 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
           />
         </svg>
 
-        {/* Labels inferiores com visual neon */}
+        {/* Eixo X - Progressão Real (estilo SharkScope) */}
         <div style={{
           display: 'flex',
           justifyContent: 'space-between',
-          marginTop: 16,
-          padding: '0 8px'
+          marginTop: 12,
+          padding: '0 4px'
         }}>
-          <div style={{ fontSize: 9, color: '#a855f7', fontWeight: 600, textShadow: '0 0 10px rgba(168, 85, 247, 0.5)' }}>
-            {xLabels[0]?.label || ''}
-          </div>
-          <div style={{ fontSize: 9, color: '#a855f7', fontWeight: 600, textShadow: '0 0 10px rgba(168, 85, 247, 0.5)' }}>
-            {xLabels[xLabels.length - 1]?.label || ''}
-          </div>
+          {xLabels.slice(0, 5).map((label, i) => (
+            <div 
+              key={i}
+              style={{ 
+                fontSize: 9, 
+                color: '#c084fc',
+                fontWeight: 600,
+                textShadow: '0 0 8px rgba(192, 132, 252, 0.5)'
+              }}
+            >
+              {label.label}
+            </div>
+          ))}
+        </div>
+
+        <div style={{
+          fontSize: 8,
+          color: '#a855f7',
+          textAlign: 'center',
+          marginTop: 6,
+          textTransform: 'uppercase',
+          letterSpacing: '1px',
+          fontWeight: 600,
+          textShadow: '0 0 10px rgba(168, 85, 247, 0.5)'
+        }}>
+          Dias / Sessões
+        </div>
         </div>
 
         {/* Tooltip Neon */}
