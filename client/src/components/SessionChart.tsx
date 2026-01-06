@@ -74,7 +74,7 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
   // Converter para array ordenado por data
   const dailySessions = Object.values(dailyData).sort((a, b) => a.timestamp - b.timestamp);
   
-  // LÓGICA BRIEFING: 1 ponto por dia, lucro acumulado real
+  // LÓGICA SHARKSCOPE: 1 ponto por dia, lucro acumulado REAL evento por evento
   const chartData = dailySessions.map((day, index) => {
     const accumulated = dailySessions
       .slice(0, index + 1)
@@ -83,14 +83,21 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
     return {
       dayNumber: index + 1,
       date: day.date,
-      dayNet: day.totalNet,
+      dayNet: day.totalNet, // Profit daquele dia (pode ser +120, -50, +85...)
       dayGains: day.totalGains,
       dayLosses: day.totalLosses,
       sessionCount: day.sessionCount,
-      accumulated,
-      isSignificant: Math.abs(day.totalNet) > 500 // Marcar dias > R$ 500
+      accumulated, // Soma acumulada até aqui (zig-zag real)
+      isSignificant: Math.abs(day.totalNet) > 500
     };
   });
+
+  // DEBUG: Ver formato dos dados (SharkScope style)
+  console.log('📊 Dados do gráfico (cada ponto):', chartData.map(d => ({
+    dia: d.dayNumber,
+    profit: d.dayNet,
+    accumulated: d.accumulated
+  })));
 
   const totalProfit = chartData[chartData.length - 1]?.accumulated || 0;
 
@@ -157,11 +164,22 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
     };
   });
 
+  // DEBUG: Ver coordenadas do path SVG
+  console.log('📈 Coordenadas SVG (cada ponto na linha):', dataPoints.map((p, i) => ({
+    index: i + 1,
+    x: p.x.toFixed(2),
+    y: p.y.toFixed(2),
+    accumulated: p.data.accumulated
+  })));
+
   // Combinar ponto inicial + dados reais
   const points = [initialPoint, ...dataPoints];
 
   // Path da linha REAL - conecta pontos reais ponto a ponto (SharkScope)
+  // Formato: M x0 y0 L x1 y1 L x2 y2 L x3 y3... (NÃO é reta, é zig-zag)
   const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+  
+  console.log('🎨 Path SVG gerado:', linePath);
 
   // Área preenchida
   const areaPath = dataMin >= 0 
