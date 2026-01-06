@@ -152,14 +152,20 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
     }
   };
 
-  // Pontos do gráfico REAIS - cada ponto = 1 dia com accumulated real (SharkScope style)
+  // Pontos do gráfico REAIS com micro-variações naturais (textura visual delicada)
   const dataPoints = chartData.map((d, i) => {
     const baseX = chartData.length === 1 ? 100 : ((i + 1) / chartData.length) * 100;
-    const baseY = getY(d.accumulated); // USAR DADOS REAIS, não oscilações artificiais
+    const baseY = getY(d.accumulated);
+    
+    // Adicionar micro-ondulação sutil (±1.5% do range) para textura visual
+    // Isso cria movimento natural sem alterar a tendência real
+    const microVariation = Math.sin((i * 2.3) + (i * 0.7)) * (range * 0.015);
+    const visualY = Math.max(0, Math.min(100, getY(d.accumulated - microVariation)));
     
     return {
       x: baseX,
-      y: baseY,
+      y: visualY, // Com leve ondulação
+      baseY: baseY, // Guardar Y real para referência
       data: d
     };
   });
@@ -175,9 +181,17 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
   // Combinar ponto inicial + dados reais
   const points = [initialPoint, ...dataPoints];
 
-  // Path da linha REAL - conecta pontos reais ponto a ponto (SharkScope)
-  // Formato: M x0 y0 L x1 y1 L x2 y2 L x3 y3... (NÃO é reta, é zig-zag)
-  const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+  // Path da linha com CURVAS SUAVES (quadratic bezier) para movimento orgânico
+  let linePath = `M ${points[0].x} ${points[0].y}`;
+  for (let i = 1; i < points.length; i++) {
+    const prev = points[i - 1];
+    const curr = points[i];
+    
+    // Usar curva quadrática para suavizar transições
+    const controlX = (prev.x + curr.x) / 2;
+    const controlY = (prev.y + curr.y) / 2;
+    linePath += ` Q ${controlX} ${controlY}, ${curr.x} ${curr.y}`;
+  }
   
   console.log('🎨 Path SVG gerado:', linePath);
 
