@@ -11,6 +11,8 @@ interface SessionResult {
   losses: number;
   net: number;
   timestamp: number;
+  gameType?: 'MTT' | 'SNG' | 'CASH';
+  buyin?: number;
 }
 
 export default function History() {
@@ -71,6 +73,18 @@ export default function History() {
   const avgProfit = sessions.length > 0 ? totalNet / sessions.length : 0;
   const bestSession = sessions.length > 0 ? Math.max(...sessions.map(s => s.net)) : 0;
   const worstSession = sessions.length > 0 ? Math.min(...sessions.map(s => s.net)) : 0;
+
+  // Métricas de ROI (apenas torneios MTT/SNG com buy-in)
+  const tournamentSessions = sessions.filter(s => 
+    (s.gameType === 'MTT' || s.gameType === 'SNG') && 
+    s.buyin !== undefined && 
+    s.buyin > 0
+  );
+  
+  const totalBuyins = tournamentSessions.reduce((acc, s) => acc + (s.buyin || 0), 0);
+  const tournamentProfit = tournamentSessions.reduce((acc, s) => acc + s.net, 0);
+  const roi = totalBuyins > 0 ? ((tournamentProfit / totalBuyins) * 100) : null;
+  const hasTournamentData = tournamentSessions.length > 0;
 
   // Dados para gráfico de pizza (Ganhos vs Perdas)
   const totalGainsPercent = totalGains + totalLosses > 0 ? (totalGains / (totalGains + totalLosses)) * 100 : 50;
@@ -259,10 +273,10 @@ export default function History() {
                 <div style={{ 
                   fontSize: 28, 
                   fontWeight: 800, 
-                  color: '#a855f7',
-                  textShadow: '0 0 20px rgba(168, 85, 247, 0.5)'
+                  color: hasTournamentData ? (roi && roi > 0 ? '#10b981' : roi && roi < 0 ? '#ef4444' : '#a855f7') : '#a855f7',
+                  textShadow: `0 0 20px ${hasTournamentData ? (roi && roi > 0 ? 'rgba(16, 185, 129, 0.5)' : roi && roi < 0 ? 'rgba(239, 68, 68, 0.5)' : 'rgba(168, 85, 247, 0.5)') : 'rgba(168, 85, 247, 0.5)'}`
                 }}>
-                  Em breve
+                  {hasTournamentData && roi !== null ? `${roi.toFixed(1)}%` : 'Em breve'}
                 </div>
                 <div style={{ fontSize: 10, color: '#64748b', marginTop: 4 }}>
                   (Lucro ÷ Buy-ins) × 100
@@ -282,7 +296,7 @@ export default function History() {
                   Buy-ins Totais
                 </div>
                 <div style={{ fontSize: 28, fontWeight: 800, color: '#c084fc' }}>
-                  Em breve
+                  {hasTournamentData ? `R$ ${totalBuyins.toFixed(2)}` : 'Em breve'}
                 </div>
                 <div style={{ fontSize: 10, color: '#64748b', marginTop: 4 }}>
                   Soma de todas as entradas
@@ -302,7 +316,7 @@ export default function History() {
                   Nº de Torneios
                 </div>
                 <div style={{ fontSize: 28, fontWeight: 800, color: '#e879f9' }}>
-                  Em breve
+                  {hasTournamentData ? tournamentSessions.length : 'Em breve'}
                 </div>
                 <div style={{ fontSize: 10, color: '#64748b', marginTop: 4 }}>
                   Apenas MTT e SNG

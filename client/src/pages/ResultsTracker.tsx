@@ -10,6 +10,8 @@ interface SessionResult {
   losses: number;
   net: number;
   timestamp: number;
+  gameType?: 'MTT' | 'SNG' | 'CASH'; // Opcional: tipo de jogo
+  buyin?: number; // Opcional: valor de entrada (apenas para torneios)
 }
 
 interface Cycle {
@@ -64,6 +66,8 @@ export default function ResultsTracker() {
   // Estados
   const [gains, setGains] = useState('');
   const [losses, setLosses] = useState('');
+  const [gameType, setGameType] = useState<'MTT' | 'SNG' | 'CASH' | ''>('');
+  const [buyin, setBuyin] = useState('');
   const [sessions, setSessions] = useState<SessionResult[]>([]);
   const [showHistory, setShowHistory] = useState(false);
   const [animateRing, setAnimateRing] = useState(false);
@@ -153,7 +157,9 @@ export default function ResultsTracker() {
       gains: gainsValue,
       losses: lossesValue,
       net: netValue,
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      ...(gameType && { gameType: gameType as 'MTT' | 'SNG' | 'CASH' }),
+      ...(buyin && parseFloat(buyin) > 0 && { buyin: parseFloat(buyin) })
     };
 
     const updatedSessions = [newSession, ...sessions];
@@ -162,6 +168,8 @@ export default function ResultsTracker() {
     // Reset inputs
     setGains('');
     setLosses('');
+    setGameType('');
+    setBuyin('');
 
     // Trigger animation
     setAnimateRing(true);
@@ -1285,6 +1293,71 @@ export default function ResultsTracker() {
               onBlur={(e) => !isBlocked && (e.currentTarget.style.border = '1px solid rgba(239, 68, 68, 0.3)')}
             />
           </div>
+
+          {/* Tipo de Jogo (Opcional) */}
+          <div>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#a855f7', marginBottom: 8 }}>
+              🎮 Tipo de Jogo (Opcional)
+            </label>
+            <select
+              value={gameType}
+              onChange={(e) => setGameType(e.target.value as 'MTT' | 'SNG' | 'CASH' | '')}
+              disabled={isBlocked}
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                background: isBlocked ? 'rgba(107, 114, 128, 0.1)' : 'rgba(168, 85, 247, 0.05)',
+                border: `1px solid ${isBlocked ? 'rgba(107, 114, 128, 0.3)' : 'rgba(168, 85, 247, 0.3)'}`,
+                borderRadius: 8,
+                color: isBlocked ? '#6b7280' : '#a855f7',
+                fontSize: 16,
+                fontWeight: 600,
+                outline: 'none',
+                transition: 'all 0.3s ease',
+                cursor: isBlocked ? 'not-allowed' : 'pointer'
+              }}
+            >
+              <option value="">Não especificado</option>
+              <option value="MTT">🏆 MTT (Multi-Table Tournament)</option>
+              <option value="SNG">🎲 SNG (Sit & Go)</option>
+              <option value="CASH">💵 Cash Game</option>
+            </select>
+          </div>
+
+          {/* Buy-in (apenas se for torneio) */}
+          {(gameType === 'MTT' || gameType === 'SNG') && (
+            <div>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#f0abfc', marginBottom: 8 }}>
+                💰 Buy-in do Torneio (R$)
+              </label>
+              <input
+                type="number"
+                value={buyin}
+                onChange={(e) => setBuyin(e.target.value)}
+                placeholder="0.00"
+                step="0.01"
+                disabled={isBlocked}
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  background: isBlocked ? 'rgba(107, 114, 128, 0.1)' : 'rgba(240, 171, 252, 0.05)',
+                  border: `1px solid ${isBlocked ? 'rgba(107, 114, 128, 0.3)' : 'rgba(240, 171, 252, 0.3)'}`,
+                  borderRadius: 8,
+                  color: isBlocked ? '#6b7280' : '#f0abfc',
+                  fontSize: 16,
+                  fontWeight: 600,
+                  outline: 'none',
+                  transition: 'all 0.3s ease',
+                  cursor: isBlocked ? 'not-allowed' : 'text'
+                }}
+                onFocus={(e) => !isBlocked && (e.currentTarget.style.border = '1px solid rgba(240, 171, 252, 0.6)')}
+                onBlur={(e) => !isBlocked && (e.currentTarget.style.border = '1px solid rgba(240, 171, 252, 0.3)')}
+              />
+              <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 6 }}>
+                ℹ️ Necessário para cálculo de ROI (Return on Investment)
+              </div>
+            </div>
+          )}
 
           {/* Limite FREE */}
           {!isReallyPremium && (
