@@ -1,5 +1,3 @@
-import axios from 'axios';
-
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 export interface TournamentSession {
@@ -29,11 +27,15 @@ export async function fetchUserROI(): Promise<ROIData> {
     throw new Error('Token não encontrado');
   }
 
-  const response = await axios.get(`${API_URL}/api/roi`, {
+  const response = await fetch(`${API_URL}/api/roi`, {
     headers: { Authorization: `Bearer ${token}` }
   });
 
-  return response.data;
+  if (!response.ok) {
+    throw new Error(`Erro ao buscar ROI: ${response.status}`);
+  }
+
+  return response.json();
 }
 
 /**
@@ -50,11 +52,20 @@ export async function createTournamentSession(data: {
     throw new Error('Token não encontrado');
   }
 
-  const response = await axios.post(`${API_URL}/api/roi/sessions`, data, {
-    headers: { Authorization: `Bearer ${token}` }
+  const response = await fetch(`${API_URL}/api/roi/sessions`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(data)
   });
 
-  return response.data;
+  if (!response.ok) {
+    throw new Error(`Erro ao criar sessão: ${response.status}`);
+  }
+
+  return response.json();
 }
 
 /**
@@ -66,11 +77,16 @@ export async function fetchTournamentSessions(limit = 50): Promise<TournamentSes
     throw new Error('Token não encontrado');
   }
 
-  const response = await axios.get(`${API_URL}/api/roi/sessions?limit=${limit}`, {
+  const response = await fetch(`${API_URL}/api/roi/sessions?limit=${limit}`, {
     headers: { Authorization: `Bearer ${token}` }
   });
 
-  return response.data.sessions;
+  if (!response.ok) {
+    throw new Error(`Erro ao buscar sessões: ${response.status}`);
+  }
+
+  const result = await response.json();
+  return result.sessions;
 }
 
 /**
@@ -82,9 +98,14 @@ export async function deleteTournamentSession(sessionId: string): Promise<{ succ
     throw new Error('Token não encontrado');
   }
 
-  const response = await axios.delete(`${API_URL}/api/roi/sessions/${sessionId}`, {
+  const response = await fetch(`${API_URL}/api/roi/sessions/${sessionId}`, {
+    method: 'DELETE',
     headers: { Authorization: `Bearer ${token}` }
   });
 
-  return response.data;
+  if (!response.ok) {
+    throw new Error(`Erro ao deletar sessão: ${response.status}`);
+  }
+
+  return response.json();
 }
