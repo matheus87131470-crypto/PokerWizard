@@ -100,6 +100,10 @@ export async function initDatabase(): Promise<void> {
     // Initialize leaderboard-related tables
     await initLeaderboardTables();
     console.log('[database] ✅ Leaderboard tables initialized');
+    
+    // Initialize tournament sessions table for ROI tracking
+    await initTournamentSessionsTable();
+    console.log('[database] ✅ Tournament sessions table initialized');
   } catch (err) {
     console.error('[database] Error initializing tables:', err);
     throw err;
@@ -152,6 +156,27 @@ async function initLeaderboardTables(): Promise<void> {
       FOREIGN KEY (player_id) REFERENCES players(id)
     )
   `);
+}
+
+// Tournament sessions table for ROI tracking
+async function initTournamentSessionsTable(): Promise<void> {
+  const db = getPool();
+  
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS tournament_sessions (
+      id VARCHAR(255) PRIMARY KEY,
+      user_id VARCHAR(255) NOT NULL,
+      tipo_jogo VARCHAR(10) NOT NULL CHECK (tipo_jogo IN ('MTT', 'SNG')),
+      buy_in DECIMAL(10,2) NOT NULL CHECK (buy_in > 0),
+      premio DECIMAL(10,2) NOT NULL DEFAULT 0,
+      data TIMESTAMP NOT NULL DEFAULT NOW(),
+      created_at TIMESTAMP DEFAULT NOW(),
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `);
+  
+  await db.query(`CREATE INDEX IF NOT EXISTS idx_tournament_sessions_user ON tournament_sessions(user_id)`);
+  await db.query(`CREATE INDEX IF NOT EXISTS idx_tournament_sessions_date ON tournament_sessions(data)`);
 }
 
 // User operations
@@ -469,6 +494,88 @@ function mapPaymentFromDb(row: any): any {
     createdAt: new Date(row.created_at),
     confirmedAt: row.confirmed_at ? new Date(row.confirmed_at) : null,
   };
+}
+
+// Tournament session operations
+export async function dbCreateTournamentSession(session: {
+  id: string;
+  userId: string;
+  tipoJogo: 'MTT' | 'SNG';
+  buyIn: number;
+  premio: number;
+  data: Date;
+}): Promise<void> {
+  const db = getPool();
+  await db.query(
+    `INSERT INTO tournament_sessions (id, user_id, tipo_jogo, buy_in, premio, data)
+     VALUES ($1, $2, $3, $4, $5, $6)`,
+    [session.id, session.userId, session.tipoJogo, session.buyIn, session.premio, session.data]
+  );
+}
+
+export async function dbGetUserROI(userId: string): Promise<{
+  totalBuyins: number;
+  totalPremios: number;
+  roi: number;
+  numTorneios: number;
+} | null> {
+  const db = getPool();
+  const result = await db.query(
+    `SELECT 
+       COUNT(*) as num_torneios,
+       SUM(buy_in) as total_buyins,
+       SUM(premio) as total_premios
+     FROM tournament_sessions
+     WHERE user_id = $1`,
+    [userId]
+  );
+  
+  const row = result.rows[0];
+  const numTorneios = parseInt(row.num_torneios || '0');
+  const totalBuyins = parseFloat(row.total_buyins || '0');
+  const totalPremios = parseFloat(row.total_premios || '0');
+  
+  if (numTorneios === 0 || totalBuyins === 0) {
+    return null;
+  }
+  
+  const roi = ((totalPremios - totalBuyins) / totalBuyins) * 100;
+  
+  return {
+    totalBuyins,
+    totalPremios,
+    roi,
+    numTorneios
+  };
+}
+
+export async function dbGetUserTournamentSessions(userId: string, limit = 50): Promise<any[]> {
+  const db = getPool();
+  const result = await db.query(
+    `SELECT * FROM tournament_sessions
+     WHERE user_id = $1
+     ORDER BY data DESC
+     LIMIT $2`,
+    [userId, limit]
+  );
+  
+  return result.rows.map(row => ({
+    id: row.id,
+    userId: row.user_id,
+    tipoJogo: row.tipo_jogo,
+    buyIn: parseFloat(row.buy_in),
+    premio: parseFloat(row.premio),
+    data: new Date(row.data),
+    createdAt: new Date(row.created_at)
+  }));
+}
+
+export async function dbDeleteTournamentSession(sessionId: string, userId: string): Promise<void> {
+  const db = getPool();
+  await db.query(
+    `DELETE FROM tournament_sessions WHERE id = $1 AND user_id = $2`,
+    [sessionId, userId]
+  );
 }
 
 export default {

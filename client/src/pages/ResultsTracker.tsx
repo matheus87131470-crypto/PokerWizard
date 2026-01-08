@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { usePaywall } from '../hooks/usePaywall';
 import { useNavigate } from 'react-router-dom';
+import { createTournamentSession } from '../services/roiService';
 
 interface SessionResult {
   id: string;
@@ -142,7 +143,7 @@ export default function ResultsTracker() {
   };
 
   // Adicionar nova sessão
-  const handleAddSession = () => {
+  const handleAddSession = async () => {
     const gainsValue = parseFloat(gains) || 0;
     const lossesValue = parseFloat(losses) || 0;
     const netValue = gainsValue - lossesValue;
@@ -161,6 +162,22 @@ export default function ResultsTracker() {
       ...(gameType && { gameType: gameType as 'MTT' | 'SNG' | 'CASH' }),
       ...(buyin && parseFloat(buyin) > 0 && { buyin: parseFloat(buyin) })
     };
+
+    // Se for torneio com buy-in, enviar para o backend
+    if ((gameType === 'MTT' || gameType === 'SNG') && buyin && parseFloat(buyin) > 0) {
+      try {
+        await createTournamentSession({
+          tipo_jogo: gameType,
+          buy_in: parseFloat(buyin),
+          premio: gainsValue, // Prêmio = ganhos
+          data: new Date().toISOString()
+        });
+        console.log('✅ Sessão de torneio salva no backend');
+      } catch (error) {
+        console.error('❌ Erro ao salvar torneio no backend:', error);
+        // Continua mesmo se falhar (dados ficam no localStorage)
+      }
+    }
 
     const updatedSessions = [newSession, ...sessions];
     saveSessions(updatedSessions);

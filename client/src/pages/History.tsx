@@ -3,6 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { usePaywall } from '../hooks/usePaywall';
 import { useNavigate } from 'react-router-dom';
 import { SessionChart } from '../components/SessionChart';
+import { fetchUserROI, ROIData } from '../services/roiService';
 
 interface SessionResult {
   id: string;
@@ -20,6 +21,8 @@ export default function History() {
   const { isPremium } = usePaywall(token);
   const navigate = useNavigate();
   const [sessions, setSessions] = useState<SessionResult[]>([]);
+  const [roiData, setRoiData] = useState<ROIData | null>(null);
+  const [loadingROI, setLoadingROI] = useState(false);
 
   // Verificação PRO
   const checkIsReallyPremium = (): boolean => {
@@ -57,6 +60,27 @@ export default function History() {
       console.error('Erro ao carregar sessões:', error);
     }
   }, []);
+
+  // Carregar ROI do backend
+  useEffect(() => {
+    const loadROI = async () => {
+      if (!token) return;
+      
+      try {
+        setLoadingROI(true);
+        const data = await fetchUserROI();
+        setRoiData(data);
+      } catch (error) {
+        console.error('Erro ao carregar ROI:', error);
+        // Em caso de erro, fallback para cálculo local
+        setRoiData(null);
+      } finally {
+        setLoadingROI(false);
+      }
+    };
+
+    loadROI();
+  }, [token]);
 
   // Verificar se deve borrar (FREE atingiu limite)
   const shouldBlurChart = !isReallyPremium && sessions.length > FREE_SESSION_LIMIT;
@@ -273,10 +297,16 @@ export default function History() {
                 <div style={{ 
                   fontSize: 28, 
                   fontWeight: 800, 
-                  color: hasTournamentData ? (roi && roi > 0 ? '#10b981' : roi && roi < 0 ? '#ef4444' : '#a855f7') : '#a855f7',
-                  textShadow: `0 0 20px ${hasTournamentData ? (roi && roi > 0 ? 'rgba(16, 185, 129, 0.5)' : roi && roi < 0 ? 'rgba(239, 68, 68, 0.5)' : 'rgba(168, 85, 247, 0.5)') : 'rgba(168, 85, 247, 0.5)'}`
+                  color: roiData?.roi !== null && roiData?.roi !== undefined ? (roiData.roi > 0 ? '#10b981' : roiData.roi < 0 ? '#ef4444' : '#a855f7') : '#a855f7',
+                  textShadow: `0 0 20px ${roiData?.roi !== null && roiData?.roi !== undefined ? (roiData.roi > 0 ? 'rgba(16, 185, 129, 0.5)' : roiData.roi < 0 ? 'rgba(239, 68, 68, 0.5)' : 'rgba(168, 85, 247, 0.5)') : 'rgba(168, 85, 247, 0.5)'}`
                 }}>
-                  {hasTournamentData && roi !== null ? `${roi.toFixed(1)}%` : 'Em breve'}
+                  {loadingROI ? (
+                    <span style={{ fontSize: 16, color: '#94a3b8' }}>Carregando...</span>
+                  ) : roiData?.roi !== null && roiData?.roi !== undefined ? (
+                    `${roiData.roi.toFixed(1)}%`
+                  ) : (
+                    'Em breve'
+                  )}
                 </div>
                 <div style={{ fontSize: 10, color: '#64748b', marginTop: 4 }}>
                   (Lucro ÷ Buy-ins) × 100
@@ -296,7 +326,13 @@ export default function History() {
                   Buy-ins Totais
                 </div>
                 <div style={{ fontSize: 28, fontWeight: 800, color: '#c084fc' }}>
-                  {hasTournamentData ? `R$ ${totalBuyins.toFixed(2)}` : 'Em breve'}
+                  {loadingROI ? (
+                    <span style={{ fontSize: 16, color: '#94a3b8' }}>...</span>
+                  ) : roiData && roiData.total_buyins > 0 ? (
+                    `R$ ${roiData.total_buyins.toFixed(2)}`
+                  ) : (
+                    'Em breve'
+                  )}
                 </div>
                 <div style={{ fontSize: 10, color: '#64748b', marginTop: 4 }}>
                   Soma de todas as entradas
@@ -316,7 +352,13 @@ export default function History() {
                   Nº de Torneios
                 </div>
                 <div style={{ fontSize: 28, fontWeight: 800, color: '#e879f9' }}>
-                  {hasTournamentData ? tournamentSessions.length : 'Em breve'}
+                  {loadingROI ? (
+                    <span style={{ fontSize: 16, color: '#94a3b8' }}>...</span>
+                  ) : roiData && roiData.num_torneios > 0 ? (
+                    roiData.num_torneios
+                  ) : (
+                    'Em breve'
+                  )}
                 </div>
                 <div style={{ fontSize: 10, color: '#64748b', marginTop: 4 }}>
                   Apenas MTT e SNG

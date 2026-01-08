@@ -16,6 +16,7 @@ import sharkscopeRouter from './routes/sharkscope';
 import pokerRouter from './routes/poker';
 import gtoRouter from './routes/gto';
 import gtoAnalyzeRouter from './routes/gtoAnalyze';
+import roiRouter from './routes/roi';
 import { initUserService } from './services/userService';
 import db from './services/database';
 import leaderboardRouter from './routes/leaderboard';
@@ -61,6 +62,7 @@ app.use('/api/sharkscope', sharkscopeRouter);
 app.use('/api/poker', pokerRouter);
 app.use('/api/gto', gtoRouter);
 app.use('/api/gto-analyze', gtoAnalyzeRouter);
+app.use('/api/roi', roiRouter);
 app.use('/api/leaderboard', leaderboardRouter);
 app.use('/api/health', healthRouter);
 
