@@ -199,6 +199,135 @@ export default function History() {
             </div>
           </div>
         </div>
+
+        {/* Bloco de Métricas de Torneios (ROI) - NOVO */}
+        <div style={{
+          maxWidth: 1400,
+          margin: '0 auto 40px',
+          padding: '0 5%'
+        }}>
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(168, 85, 247, 0.12) 100%)',
+            border: '1px solid rgba(168, 85, 247, 0.3)',
+            borderRadius: 16,
+            padding: '24px 28px',
+            backdropFilter: 'blur(10px)'
+          }}>
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'space-between',
+              marginBottom: 20
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ fontSize: 24 }}>🎯</div>
+                <h3 style={{ fontSize: 16, fontWeight: 700, color: '#f8fafc', margin: 0 }}>
+                  Métricas de Torneios (MTT/SNG)
+                </h3>
+              </div>
+              <div style={{
+                fontSize: 11,
+                color: '#a855f7',
+                fontWeight: 600,
+                background: 'rgba(168, 85, 247, 0.15)',
+                padding: '6px 12px',
+                borderRadius: 8,
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px'
+              }}>
+                All-time
+              </div>
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+              gap: 20
+            }}>
+              {/* ROI */}
+              <div>
+                <div style={{ 
+                  fontSize: 11, 
+                  color: '#94a3b8', 
+                  marginBottom: 8,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.8px',
+                  fontWeight: 600
+                }}>
+                  ROI (Return on Investment)
+                </div>
+                <div style={{ 
+                  fontSize: 28, 
+                  fontWeight: 800, 
+                  color: '#a855f7',
+                  textShadow: '0 0 20px rgba(168, 85, 247, 0.5)'
+                }}>
+                  Em breve
+                </div>
+                <div style={{ fontSize: 10, color: '#64748b', marginTop: 4 }}>
+                  (Lucro ÷ Buy-ins) × 100
+                </div>
+              </div>
+
+              {/* Buy-ins Totais */}
+              <div>
+                <div style={{ 
+                  fontSize: 11, 
+                  color: '#94a3b8', 
+                  marginBottom: 8,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.8px',
+                  fontWeight: 600
+                }}>
+                  Buy-ins Totais
+                </div>
+                <div style={{ fontSize: 28, fontWeight: 800, color: '#c084fc' }}>
+                  Em breve
+                </div>
+                <div style={{ fontSize: 10, color: '#64748b', marginTop: 4 }}>
+                  Soma de todas as entradas
+                </div>
+              </div>
+
+              {/* Nº de Torneios */}
+              <div>
+                <div style={{ 
+                  fontSize: 11, 
+                  color: '#94a3b8', 
+                  marginBottom: 8,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.8px',
+                  fontWeight: 600
+                }}>
+                  Nº de Torneios
+                </div>
+                <div style={{ fontSize: 28, fontWeight: 800, color: '#e879f9' }}>
+                  Em breve
+                </div>
+                <div style={{ fontSize: 10, color: '#64748b', marginTop: 4 }}>
+                  Apenas MTT e SNG
+                </div>
+              </div>
+            </div>
+
+            {/* Nota informativa */}
+            <div style={{
+              marginTop: 20,
+              padding: '12px 16px',
+              background: 'rgba(59, 130, 246, 0.08)',
+              border: '1px solid rgba(59, 130, 246, 0.2)',
+              borderRadius: 10,
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: 12
+            }}>
+              <div style={{ fontSize: 16, marginTop: 2 }}>ℹ️</div>
+              <div style={{ fontSize: 12, color: '#94a3b8', lineHeight: 1.6 }}>
+                <strong style={{ color: '#f8fafc' }}>Funcionalidade em desenvolvimento:</strong> Para ativar o ROI, você precisará registrar suas sessões com informações de tipo de jogo (Torneio/Cash) e valor de buy-in. Cash games não entram no cálculo de ROI.
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Gráfico */}
