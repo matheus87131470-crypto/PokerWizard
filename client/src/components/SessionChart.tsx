@@ -96,13 +96,32 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
   console.log('📊 Dados do gráfico (cada ponto):', chartData.map(d => ({
     dia: d.dayNumber,
     profit: d.dayNet,
-    accumulated: d.accumulated
+    accumulated: d.accumulated,
+    hasNull: d.accumulated === null || isNaN(d.accumulated)
   })));
 
-  const totalProfit = chartData[chartData.length - 1]?.accumulated || 0;
+  // VALIDAÇÃO: Garantir que não há null/undefined/NaN nos dados
+  const validChartData = chartData.filter(d => 
+    d.accumulated !== null && 
+    d.accumulated !== undefined && 
+    !isNaN(d.accumulated) &&
+    d.dayNet !== null &&
+    d.dayNet !== undefined &&
+    !isNaN(d.dayNet)
+  );
+
+  if (validChartData.length !== chartData.length) {
+    console.warn('⚠️ Dados inválidos removidos:', chartData.length - validChartData.length);
+  }
+
+  if (validChartData.length !== chartData.length) {
+    console.warn('⚠️ Dados inválidos removidos:', chartData.length - validChartData.length);
+  }
+
+  const totalProfit = validChartData[validChartData.length - 1]?.accumulated || 0;
 
   // Range do gráfico (comportamento financeiro com baseline em zero)
-  const values = chartData.map(d => d.accumulated);
+  const values = validChartData.map(d => d.accumulated);
   const dataMax = Math.max(...values, 0);
   const dataMin = Math.min(...values, 0);
   
@@ -153,9 +172,15 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
   };
 
   // Pontos do gráfico REAIS com micro-variações naturais (textura visual delicada)
-  const dataPoints = chartData.map((d, i) => {
-    const baseX = chartData.length === 1 ? 100 : ((i + 1) / chartData.length) * 100;
+  const dataPoints = validChartData.map((d, i) => {
+    const baseX = validChartData.length === 1 ? 100 : ((i + 1) / validChartData.length) * 100;
     const baseY = getY(d.accumulated);
+    
+    // VALIDAÇÃO: Garantir que baseY é um número válido
+    if (isNaN(baseY) || baseY === null || baseY === undefined) {
+      console.error('❌ Y inválido no ponto', i, ':', { accumulated: d.accumulated, baseY });
+      return null; // Marcar como inválido
+    }
     
     // Adicionar micro-ondulação sutil (±1.5% do range) para textura visual
     // Isso cria movimento natural sem alterar a tendência real
@@ -164,43 +189,78 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
     
     return {
       x: baseX,
-      y: visualY, // Com leve ondulação
+      y: isNaN(visualY) ? baseY : visualY, // Fallback se visualY der NaN
       baseY: baseY, // Guardar Y real para referência
       data: d
     };
-  });
+  }).filter(p => p !== null); // Remover pontos inválidos
+
+  // VALIDAÇÃO: Verificar se há pontos com coordenadas inválidas
+  const invalidPoints = dataPoints.filter(p => 
+    isNaN(p.x) || isNaN(p.y) || p.x === null || p.y === null
+  );
+  
+  if (invalidPoints.length > 0) {
+    console.error('❌ Pontos inválidos detectados:', invalidPoints);
+  }
 
   // DEBUG: Ver coordenadas do path SVG
   console.log('📈 Coordenadas SVG (cada ponto na linha):', dataPoints.map((p, i) => ({
     index: i + 1,
     x: p.x.toFixed(2),
     y: p.y.toFixed(2),
-    accumulated: p.data.accumulated
+    accumulated: p.data.accumulated,
+    isValid: !isNaN(p.x) && !isNaN(p.y)
   })));
 
   // Combinar ponto inicial + dados reais
   const points = [initialPoint, ...dataPoints];
 
+  // VALIDAÇÃO FINAL: Garantir que todos os pontos são válidos antes de gerar o path
+  const validPoints = points.filter(p => 
+    p && 
+    p.x !== null && 
+    p.y !== null && 
+    !isNaN(p.x) && 
+    !isNaN(p.y) &&
+    isFinite(p.x) &&
+    isFinite(p.y)
+  );
+
+  if (validPoints.length < points.length) {
+    console.warn('⚠️ Pontos removidos do path:', points.length - validPoints.length);
+  }
+
   // Path da linha com CURVAS SUAVES (quadratic bezier) para movimento orgânico
-  let linePath = `M ${points[0].x} ${points[0].y}`;
-  for (let i = 1; i < points.length; i++) {
-    const prev = points[i - 1];
-    const curr = points[i];
+  // GARANTINDO CONTINUIDADE: Todos os pontos conectados sem quebras
+  let linePath = `M ${validPoints[0].x.toFixed(2)} ${validPoints[0].y.toFixed(2)}`;
+  
+  for (let i = 1; i < validPoints.length; i++) {
+    const prev = validPoints[i - 1];
+    const curr = validPoints[i];
     
     // Usar curva quadrática para suavizar transições
     const controlX = (prev.x + curr.x) / 2;
     const controlY = (prev.y + curr.y) / 2;
-    linePath += ` Q ${controlX} ${controlY}, ${curr.x} ${curr.y}`;
+    
+    // IMPORTANTE: Garantir que todos os valores são finitos
+    if (isFinite(controlX) && isFinite(controlY) && isFinite(curr.x) && isFinite(curr.y)) {
+      linePath += ` Q ${controlX.toFixed(2)} ${controlY.toFixed(2)}, ${curr.x.toFixed(2)} ${curr.y.toFixed(2)}`;
+    } else {
+      // Fallback: linha reta se a curva falhar
+      console.warn('⚠️ Usando linha reta no ponto', i);
+      linePath += ` L ${curr.x.toFixed(2)} ${curr.y.toFixed(2)}`;
+    }
   }
   
-  console.log('🎨 Path SVG gerado:', linePath);
+  console.log('🎨 Path SVG gerado (comprimento):', linePath.length, 'caracteres');
 
-  // Área preenchida
+  // Área preenchida (usando pontos válidos)
   const areaPath = dataMin >= 0 
-    ? `M 0 100 ${dataPoints.map((p) => `L ${p.x} ${p.y}`).join(' ')} L 100 100 Z`
+    ? `M 0 100 ${dataPoints.map((p) => `L ${p.x.toFixed(2)} ${p.y.toFixed(2)}`).join(' ')} L 100 100 Z`
     : dataMax <= 0
-    ? `M 0 0 ${dataPoints.map((p) => `L ${p.x} ${p.y}`).join(' ')} L 100 0 Z`
-    : `M 0 ${zeroY} ${dataPoints.map((p) => `L ${p.x} ${p.y}`).join(' ')} L 100 ${zeroY} Z`;
+    ? `M 0 0 ${dataPoints.map((p) => `L ${p.x.toFixed(2)} ${p.y.toFixed(2)}`).join(' ')} L 100 0 Z`
+    : `M 0 ${zeroY.toFixed(2)} ${dataPoints.map((p) => `L ${p.x.toFixed(2)} ${p.y.toFixed(2)}`).join(' ')} L 100 ${zeroY.toFixed(2)} Z`;
 
   // Labels do eixo Y (valores de lucro acumulado) - padrão financeiro (4-5 marcadores)
   let yLabels;
@@ -233,25 +293,25 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
   }
 
   // Labels do eixo X (datas) - padrão financeiro limpo
-  const totalDays = chartData.length;
+  const totalDays = validChartData.length;
   let xLabels: Array<{ label: string; x: number }>;
   
   if (totalDays === 0) {
     xLabels = [];
   } else if (totalDays === 1) {
-    xLabels = [{ label: chartData[0].date, x: 50 }];
+    xLabels = [{ label: validChartData[0].date, x: 50 }];
   } else if (totalDays <= 4) {
     // Poucos pontos: mostrar todas as datas
-    xLabels = chartData.map((d, i) => ({
+    xLabels = validChartData.map((d, i) => ({
       label: d.date.substring(0, 5), // DD/MM
       x: ((i + 1) / totalDays) * 100
     }));
   } else {
     // Muitos pontos: 4 marcadores estratégicos
-    const first = chartData[0];
-    const third = chartData[Math.floor(totalDays / 3)];
-    const twoThirds = chartData[Math.floor((totalDays * 2) / 3)];
-    const last = chartData[totalDays - 1];
+    const first = validChartData[0];
+    const third = validChartData[Math.floor(totalDays / 3)];
+    const twoThirds = validChartData[Math.floor((totalDays * 2) / 3)];
+    const last = validChartData[totalDays - 1];
     
     xLabels = [
       { label: first.date.substring(0, 5), x: (1 / totalDays) * 100 },
@@ -311,7 +371,7 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
           </div>
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontSize: 10, color: '#94a3b8', marginBottom: 2, fontWeight: 500 }}>
-              {chartData.length} {chartData.length === 1 ? 'dia' : 'dias'}
+              {validChartData.length} {validChartData.length === 1 ? 'dia' : 'dias'}
             </div>
             <div style={{ fontSize: 11, fontWeight: 600, color: '#64748b' }}>
               {sessions.length} {sessions.length === 1 ? 'sessão' : 'sessões'}
@@ -489,9 +549,9 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
               const rect = svg.getBoundingClientRect();
               const x = ((e.clientX - rect.left) / rect.width) * 100;
               
-              const closestIndex = Math.round((x / 100) * (points.length - 1));
-              const clampedIndex = Math.max(0, Math.min(closestIndex, points.length - 1));
-              const point = points[clampedIndex];
+              const closestIndex = Math.round((x / 100) * (validPoints.length - 1));
+              const clampedIndex = Math.max(0, Math.min(closestIndex, validPoints.length - 1));
+              const point = validPoints[clampedIndex];
               
               if (point && point.data.dayNumber > 0) {
                 setHoveredPoint({ 
@@ -548,14 +608,14 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
           <div style={{
             position: 'absolute',
             top: 50,
-            left: hoveredPoint.index < points.length / 3 
+            left: hoveredPoint.index < validPoints.length / 3 
               ? '10%'  // Se está no início, alinha à esquerda
-              : hoveredPoint.index > (points.length * 2) / 3
+              : hoveredPoint.index > (validPoints.length * 2) / 3
               ? '90%'  // Se está no fim, alinha à direita
-              : `${(hoveredPoint.index / Math.max(points.length - 1, 1)) * 100}%`, // No meio, centraliza
-            transform: hoveredPoint.index < points.length / 3 
+              : `${(hoveredPoint.index / Math.max(validPoints.length - 1, 1)) * 100}%`, // No meio, centraliza
+            transform: hoveredPoint.index < validPoints.length / 3 
               ? 'translateX(0)'
-              : hoveredPoint.index > (points.length * 2) / 3
+              : hoveredPoint.index > (validPoints.length * 2) / 3
               ? 'translateX(-100%)'
               : 'translateX(-50%)',
             background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.98) 0%, rgba(20, 10, 30, 0.98) 100%)',
