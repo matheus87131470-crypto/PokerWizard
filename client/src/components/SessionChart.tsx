@@ -38,15 +38,27 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
   const now = Date.now();
   const dayMs = 24 * 60 * 60 * 1000;
   let filteredData = data;
+  let periodStartDate: Date | null = null;
 
   if (period === '7d') {
     filteredData = data.filter(s => s.timestamp >= now - 7 * dayMs);
+    periodStartDate = new Date(now - 7 * dayMs);
   } else if (period === '30d') {
     filteredData = data.filter(s => s.timestamp >= now - 30 * dayMs);
+    periodStartDate = new Date(now - 30 * dayMs);
   }
 
   // Ordem cronológica
   const sessions = [...filteredData].sort((a, b) => a.timestamp - b.timestamp);
+  
+  if (sessions.length === 0) {
+    return (
+      <div style={{ textAlign: 'center', padding: 60, color: '#6b7280' }}>
+        <div style={{ fontSize: 48, marginBottom: 16 }}>📈</div>
+        <p style={{ fontSize: 14 }}>Nenhuma sessão neste período</p>
+      </div>
+    );
+  }
   
   // AGRUPAMENTO DIÁRIO: agregar sessões do mesmo dia
   const dailyData = sessions.reduce((acc, session) => {
@@ -74,9 +86,61 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
   // Converter para array ordenado por data
   const dailySessions = Object.values(dailyData).sort((a, b) => a.timestamp - b.timestamp);
   
+  // PREENCHER GAPS: Adicionar todos os dias do período, mesmo sem sessões
+  let firstDate: Date;
+  let lastDate: Date;
+  
+  if (periodStartDate) {
+    // Se tem período definido (7d/30d), começar do início do período
+    firstDate = new Date(periodStartDate);
+    lastDate = new Date(now);
+  } else {
+    // Se é "all", usar primeiro e último dia com dados
+    firstDate = new Date(dailySessions[0].timestamp);
+    lastDate = new Date(dailySessions[dailySessions.length - 1].timestamp);
+  }
+  
+  // Normalizar para início do dia
+  firstDate.setHours(0, 0, 0, 0);
+  lastDate.setHours(0, 0, 0, 0);
+  
+  // Gerar array com TODOS os dias do período
+  const allDays: Array<{
+    date: string;
+    timestamp: number;
+    totalNet: number;
+    totalGains: number;
+    totalLosses: number;
+    sessionCount: number;
+  }> = [];
+  
+  const currentDate = new Date(firstDate);
+  while (currentDate <= lastDate) {
+    const dateStr = currentDate.toLocaleDateString('pt-BR');
+    const existingDay = dailySessions.find(d => d.date === dateStr);
+    
+    if (existingDay) {
+      allDays.push(existingDay);
+    } else {
+      // Dia sem sessões: manter saldo acumulado (net = 0)
+      allDays.push({
+        date: dateStr,
+        timestamp: currentDate.getTime(),
+        totalNet: 0,
+        totalGains: 0,
+        totalLosses: 0,
+        sessionCount: 0
+      });
+    }
+    
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+  
+  console.log('📅 Dias preenchidos:', allDays.length, '(gaps preenchidos:', allDays.length - dailySessions.length, ')');
+  
   // LÓGICA SHARKSCOPE: 1 ponto por dia, lucro acumulado REAL evento por evento
-  const chartData = dailySessions.map((day, index) => {
-    const accumulated = dailySessions
+  const chartData = allDays.map((day, index) => {
+    const accumulated = allDays
       .slice(0, index + 1)
       .reduce((acc, d) => acc + d.totalNet, 0);
     
@@ -109,10 +173,6 @@ export const SessionChart = ({ data, isBlurred }: SessionChartProps) => {
     d.dayNet !== undefined &&
     !isNaN(d.dayNet)
   );
-
-  if (validChartData.length !== chartData.length) {
-    console.warn('⚠️ Dados inválidos removidos:', chartData.length - validChartData.length);
-  }
 
   if (validChartData.length !== chartData.length) {
     console.warn('⚠️ Dados inválidos removidos:', chartData.length - validChartData.length);
